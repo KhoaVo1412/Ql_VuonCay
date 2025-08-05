@@ -2,92 +2,62 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-md-flex d-block align-items-center justify-content-between my-2 page-header-breadcrumb">
-        <h5 class="page-title fw-semibold fs-18 mb-0"></h5>
+        <h5 class="page-title fw-semibold fs-18 mb-0 title-header">Tồn Kho</h5>
         <div class="ms-md-1 ms-0">
             <nav>
                 <ol class="breadcrumb mb-0 padding">
                     <li class="breadcrumb-item"><a href="javascript:void(0);">Trang Chủ</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Danh Sách Cây Trồng</li>
+                    <li class="breadcrumb-item active" aria-current="page">Danh Sách Tồn Kho</li>
                 </ol>
             </nav>
         </div>
     </div>
 </div>
 
-<!-- Add crops Modal -->
-<form id="crops-form" action="{{ route('crops.save') }}" method="POST" enctype="multipart/form-data">
+<!-- Add stocks Modal -->
+{{-- <form id="stocks-form" action="{{ route('stocks.save') }}" method="POST" enctype="multipart/form-data">
     {{ csrf_field() }}
-    <div class="modal fade" id="create-crops" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="create-stocks" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h6 class="modal-title">Tạo Cây Trồng</h6>
+                    <h6 class="modal-title">Tạo Tồn Kho</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body px-4">
                     <div class="row gy-2">
-                        <!-- Mã cây -->
-                        <div class="col-xl-12">
-                            <label for="plantCode" class="form-label">Mã Cây</label>
-                            <input type="text" class="form-control" name="plantCode" id="plantCode" required
-                                placeholder="Mã cây">
-                        </div>
-                        {{-- <div class="col-xl-12">
-                            <label for="plantCode" class="form-label">Mã Cây</label>
-                            <input type="text" class="form-control" name="plantCode" id="plantCode" required
-                                placeholder="Mã cây tự động" readonly>
-                        </div> --}}
+                        <!-- Vườn (gardenID) -->
 
-                        <!-- Giống cây -->
+                        <!-- Tên Tồn Kho -->
                         <div class="col-xl-12">
-                            <label for="varietyID" class="form-label">Giống Cây</label>
-                            <select name="varietyID" id="varietyID" class="form-control" required>
-                                <option value="">-- Chọn giống cây --</option>
-                                @foreach($varieties as $variety)
-                                <option value="{{ $variety->id }}">{{ $variety->varietyName }}</option>
-                                @endforeach
-                            </select>
+                            <label for="plotName" class="form-label">Tên Tồn Kho</label>
+                            <input type="text" class="form-control" name="plotName" id="plotName" required
+                                placeholder="Tên Tồn Kho">
                         </div>
-
-                        <!-- Lô -->
+                        <!-- Diện tích Tồn Kho -->
                         <div class="col-xl-12">
-                            <label for="plotID" class="form-label">Lô</label>
-                            <select name="plotID" id="plotID" class="form-control" required>
-                                <option value="">-- Chọn lô --</option>
-                                @foreach($plots as $plot)
-                                <option value="{{ $plot->id }}">{{ $plot->plotName }}</option>
-                                @endforeach
-                            </select>
+                            <label for="plotArea" class="form-label">Diện Tích (m2)</label>
+                            <input type="number" min="0" step="0.01" class="form-control" name="plotArea" id="plotArea"
+                                required placeholder="Diện tích">
                         </div>
-
-                        <!-- RFID -->
+                        <!-- Số lượng cây -->
                         <div class="col-xl-12">
-                            <label for="rfID" class="form-label">Mã RFID</label>
-                            <input type="text" class="form-control" name="rfID" id="rfID" placeholder="Nhập mã RFID">
-                        </div>
-
-                        <!-- Năm trồng -->
-                        <div class="col-xl-12">
-                            <label for="year" class="form-label">Năm Trồng</label>
-                            <input type="number" min="2000" max="{{ date('Y') }}" class="form-control" name="year"
-                                id="year" placeholder="VD: 2024">
-                        </div>
-                        <div class="col-xl-12">
-                            <label for="year" class="form-label">Tình Trạng Cây</label>
-                            <input type="text" class="form-control" name="statusTree" placeholder="Tình trạng cây">
+                            <label for="plantCount" class="form-label">Số Lượng Cây</label>
+                            <input type="number" min="0" step="1" class="form-control" name="plantCount" id="plantCount"
+                                required placeholder="Số lượng cây">
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-success" id="submit-btn-crops">Lưu</button>
+                    <button type="submit" class="btn btn-success" id="submit-btn-stocks">Lưu</button>
                 </div>
             </div>
         </div>
     </div>
-</form>
+</form> --}}
 
-<!-- crops List -->
+<!-- stocks List -->
 <div class="row">
     <div class="col-xl-12">
         <div class="card custom-card">
@@ -100,33 +70,18 @@
                     </div>
                 </div>
             </div>
-            {{-- <div class="card-header d-flex justify-content-between align-items-center" style="grid-gap: 3px">
-                <h5>Danh Sách Cây Trồng</h5>
-                <button class="btn btn-sm btn-success btn-wave waves-light" data-bs-toggle="modal"
-                    data-bs-target="#create-crops">
-                    <i class="fa fa-plus"></i> Tạo Cây Trồng
-                </button>
-            </div> --}}
-            <div class="card">
+            {{-- <div class="card">
                 <div class="card-content">
                     <div class="form-section">
-                        <!-- First Filter Row -->
                         <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Lô Trồng</label>
-                                <select class="form-select" id="taskplot">
-                                    <option value="">Tất cả</option>
 
-                                </select>
-                            </div>
                             <div class="form-group">
                                 <label class="form-label">Diện Tích</label>
                                 <select class="form-select" id="taskLot">
                                     <option value=""></option>
-
                                 </select>
                             </div>
-                            <div class="form-group" style="display: flex; align-items: end; width: 20%;">
+                            <div class="form-group" style="display: flex; align-items: end;">
                                 <button class="btn btn-success btn-w" onclick="filterTasks()">
                                     <i class="fa-light fa-filter-list"></i>
                                     Lọc
@@ -136,66 +91,52 @@
                     </div>
 
                 </div>
-            </div>
+            </div> --}}
             <div class="card-body">
-                {{-- <div style="position: relative;"> --}}
-                    {{-- <div class="table-responsive"> --}}
-                        <table id="crops-table" class="table table-bordered text-nowrap w-100">
-                            <div id="buttons-container" class="d-flex justify-content-end gap-2">
-                                <button id="edit-selected-btn" class="btn btn-warning"
-                                    style="border-radius: 7px; color: #FFFFFF; display: none">Không/Hoạt
-                                    Động
-                                </button>
-                                <button id="delete-selected-btn" class="btn btn-danger"
-                                    style="border-radius: 7px; display: none;">
-                                    Xóa
-                                </button>
-                                <button id="add-selected-btn" class="btn btn-success" style="border-radius: 7px;"
-                                    data-bs-toggle="modal" data-bs-target="#create-crops">
-                                    <i class="fa fa-plus"></i>Tạo Cây Trồng
-                                </button>
-                            </div>
-                            <thead>
-                                <tr>
-                                    <th></th>
-                                    <th>
-                                        <input class="form-check-input check-all" type="checkbox" id="select-all-crops"
-                                            value="" aria-label="...">
-                                    </th>
-                                    {{-- <th scope="col">STT</th> --}}
-                                    <th scope="col">Mã Cây</th>
-                                    <th scope="col">Giống Cây</th>
-                                    <th scope="col">Vị Trí</th>
-                                    <th scope="col">Lô</th>
-                                    <th scope="col">Năm Trồng</th>
-                                    <th scope="col">Tình Trạng Cây</th>
-                                    <th scope="col">Trạng Thái</th>
-                                    <th scope="col">Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- DataTables will populate this section -->
+                <table id="stocks-table" class="table table-bordered text-nowrap w-100">
+                    <div id="buttons-container" class="d-flex justify-content-end gap-2">
+                        <button id="edit-selected-btn" class="btn btn-warning"
+                            style="border-radius: 30px; color: #FFFFFF; display: none">Không/Hoạt
+                            Động</button>
+                        <button id="delete-selected-btn" class="btn btn-danger"
+                            style="border-radius: 30px; display: none;">
+                            Xóa
+                        </button>
+                        {{-- <button id="add-selected-btn" class="btn btn-success" style="border-radius: 7px;">
+                            <a href="{{route('stocks.add')}}" class="text-white">
+                                <i class="fa fa-plus"></i>Tạo Tồn Kho</a>
+                        </button> --}}
+                    </div>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>
+                                <input class="form-check-input check-all" type="checkbox" id="select-all-stocks"
+                                    value="" aria-label="...">
+                            </th>
+                            <th scope="col"> Kho</th>
+                            <th scope="col">Tên Sản Phẩm</th>
+                            <th scope="col">Số Lượng </th>
+                            <th scope="col">Trạng Thái</th>
+                            <th scope="col">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- DataTables will populate this section -->
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th></th>
+                            <th></th>
+                            <th scope="col"> Kho</th>
+                            <th scope="col">Tên Sản Phẩm</th>
+                            <th scope="col">Số Lượng </th>
+                            <th scope="col">Trạng Thái</th>
+                            <th scope="col">Thao Tác</th>
+                        </tr>
+                    </tfoot>
+                </table>
 
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th></th>
-                                    <th></th>
-                                    {{-- <th scope="col">STT</th> --}}
-                                    <th scope="col">Mã Cây</th>
-                                    <th scope="col">Giống Cây</th>
-                                    <th scope="col">Vị Trí</th>
-                                    <th scope="col">Lô</th>
-                                    <th scope="col">Năm Trồng</th>
-                                    <th scope="col">Tình Trạng Cây</th>
-                                    <th scope="col">Trạng Thái</th>
-                                    <th scope="col">Thao tác</th>
-                                </tr>
-                            </tfoot>
-                        </table>
-                        {{--
-                    </div> --}}
-                    {{-- </div> --}}
             </div>
         </div>
     </div>
@@ -238,7 +179,7 @@
 <script>
     $(document).ready(function() {
             var selectedRows = new Set();
-            var dataTable = $('#crops-table').DataTable({
+            var dataTable = $('#stocks-table').DataTable({
                 "language": {
                     // "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
                     "emptyTable": "Không có dữ liệu",
@@ -272,7 +213,7 @@
                     }
                 },
                 ajax: {
-                    url: '{{ route('crops.index') }}',
+                    url: '{{ route('stocks.index') }}',
                     type: 'GET'
                 },
                 columns: [
@@ -293,29 +234,16 @@
                         searchable: false
                     },
                     {
-                        data: 'plantCode',
-                        name: 'plantCode'
+                        data: 'warehouseID',
+                        name: 'warehouseID'
                     },
                     {
-                        data: 'varietyID',
-                        name: 'varietyID'
+                        data: 'productID',
+                        name: 'productID'
                     },
                     {
-                        data: 'RF_id',
-                        name: 'RF_id'
-                    },
-                    {
-                        data: 'plotID',
-                        name: 'plotID'
-                    },
-                    {
-                        data: 'year',
-                        name: 'year'
-                    },
-                    
-                    {
-                        data: 'statusTree',
-                        name: 'statusTree'
+                        data: 'quantity',
+                        name: 'quantity'
                     },
                     {
                         data: 'status',
@@ -327,14 +255,14 @@
                     $(row).attr('data-id', data.id);
                 }
             });
-            $('#select-all-crops').on('change', function() {
+            $('#select-all-stocks').on('change', function() {
                 var checked = $(this).prop('checked');
-                $('#crops-table tbody .form-check-input').each(function() {
-                    var farmId = $(this).data('id');
+                $('#stocks-table tbody .form-check-input').each(function() {
+                    var plotId = $(this).data('id');
                     if (checked) {
-                        selectedRows.add(farmId);
+                        selectedRows.add(plotId);
                     } else {
-                        selectedRows.delete(farmId);
+                        selectedRows.delete(plotId);
                     }
                     $(this).prop('checked', checked);
                 });
@@ -342,22 +270,22 @@
 
                 console.log([...selectedRows]);
             });
-            $('#crops-table tbody').on('change', '.form-check-input', function() {
-                var farmId = $(this).data('id');
+            $('#stocks-table tbody').on('change', '.form-check-input', function() {
+                var plotId = $(this).data('id');
                 toggleButtons();
 
                 if ($(this).prop('checked')) {
-                    selectedRows.add(farmId);
+                    selectedRows.add(plotId);
                 } else {
-                    selectedRows.delete(farmId);
+                    selectedRows.delete(plotId);
                 }
                 console.log([...selectedRows]);
             });
 
-            $('#crops-table').on('draw.dt', function() {
-                $('#crops-table tbody .form-check-input').each(function() {
-                    var farmId = $(this).data('id');
-                    if (selectedRows.has(farmId)) {
+            $('#stocks-table').on('draw.dt', function() {
+                $('#stocks-table tbody .form-check-input').each(function() {
+                    var plotId = $(this).data('id');
+                    if (selectedRows.has(plotId)) {
                         $(this).prop('checked', true);
                     }
                 });
@@ -366,7 +294,7 @@
                 $('#confirmModal').modal('show');
                 $('#confirmUpdateBtn').on('click', function() {
                     $.ajax({
-                        url: '/crops/edit-multiple',
+                        url: '/stocks/edit-multiple',
                         type: 'POST',
                         data: {
                             ids: [...selectedRows], // Chuyển Set thành mảng
@@ -379,7 +307,7 @@
                                 text: 'Trạng thái đã được cập nhật.',
                                 confirmButtonText: 'OK'
                             }).then(() => {
-                                selectedRows.clear();
+                                selectedRows.clear(); // Reset danh sách đã chọn
                                 $('#confirmModal').modal('hide');
                                 // $('#buttons-container').hide();
                                 $('#edit-selected-btn').hide();
@@ -405,7 +333,7 @@
                 $('#deleteModal').modal('show');
                 $('#confirmDeleteBtn').on('click', function() {
                     $.ajax({
-                        url: '/crops/delete-multiple',
+                        url: '/stocks/delete-multiple',
                         type: 'POST',
                         data: {
                             ids: [...selectedRows]
@@ -446,26 +374,19 @@
                 }
             });
 
-            // function toggleButtons() {
-            //     var selectedRows = $('#crops-table tbody .form-check-input:checked');
-
-            //     if (selectedRows.length > 0) {
-            //         $('#edit-selected-btn').show();
-            //         $('#delete-selected-btn').show();
-            //     } else {
-            //         $('#edit-selected-btn').hide();
-            //         $('#delete-selected-btn').hide();
-            //     }
-            // }
-
             function toggleButtons() {
-                var selected = $('#crops-table tbody .form-check-input:checked').length;
+                var selected = $('#stocks-table tbody .form-check-input:checked').length;
+                // if (selected > 0) {
+                //     $('#buttons-container').css('visibility', 'visible');
+                // } else {
+                //     $('#buttons-container').css('visibility', 'hidden');
+                // }
                 if (selected > 0) {
-                        $('#edit-selected-btn').show();
-                        $('#delete-selected-btn').show();
-                    } else {
-                        $('#edit-selected-btn').hide();
-                        $('#delete-selected-btn').hide();
+                    $('#edit-selected-btn').show();
+                    $('#delete-selected-btn').show();
+                } else {
+                    $('#edit-selected-btn').hide();
+                    $('#delete-selected-btn').hide();
                 }
                 $('#add-selected-btn').show();
             }
@@ -487,7 +408,7 @@
 
             Swal.fire({
                 title: "Xác nhận thay đổi",
-                text: "Bạn có chắc chắn muốn thay đổi trạng thái của vườn cây này?",
+                text: "Bạn có chắc chắn muốn thay đổi Tồn Kho này?",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#3085d6",
@@ -497,7 +418,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '{{ route('crops.status') }}',
+                        url: '{{ route('stocks.status') }}',
                         type: 'POST',
                         data: {
                             _token: '{{ csrf_token() }}',
@@ -514,7 +435,7 @@
                                 }
 
                                 Swal.fire({
-                                    text: 'Trạng thái của vườn cây đã được cập nhật.',
+                                    text: 'Tồn Kho đã được cập nhật.',
                                     icon: 'success',
                                     confirmButtonText: 'OK',
                                     timer: 3000
@@ -522,7 +443,71 @@
                             } else {
                                 Swal.fire({
                                     text: response.message ||
-                                        'Không thể thay đổi trạng thái của vườn cây.',
+                                        'Không thể thay đổi Tồn Kho.',
+                                    icon: 'error',
+                                    confirmButtonText: 'OK',
+                                    timer: 3000
+                                });
+                            }
+                        },
+                        error: function() {
+                            Swal.fire({
+                                text: 'Không thể thay đổi trạng thái, vui lòng thử lại.',
+                                icon: 'error',
+                                confirmButtonText: 'OK',
+                                timer: 3000
+                            });
+                        }
+                    });
+                }
+            });
+        });
+</script>
+<script>
+    $(document).on('click', '.toggle-active', function(e) {
+            e.preventDefault();
+
+            let button = $(this);
+            let id = button.data('id');
+
+            Swal.fire({
+                title: "Xác nhận thay đổi",
+                text: "Bạn có chắc chắn muốn thay đổi Tồn Kho này?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Thay đổi",
+                cancelButtonText: "Hủy"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '{{ route('stocks.status') }}',
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            id: id
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                if (response.status === 'Hoạt động') {
+                                    button.removeClass('bg-danger').addClass('bg-success').text(
+                                        'Hoạt động');
+                                } else {
+                                    button.removeClass('bg-success').addClass('bg-danger').text(
+                                        'Không hoạt động');
+                                }
+
+                                Swal.fire({
+                                    text: 'Tồn Kho đã được cập nhật.',
+                                    icon: 'success',
+                                    confirmButtonText: 'OK',
+                                    timer: 3000
+                                });
+                            } else {
+                                Swal.fire({
+                                    text: response.message ||
+                                        'Không thể thay đổi Tồn Kho.',
                                     icon: 'error',
                                     confirmButtonText: 'OK',
                                     timer: 3000
@@ -573,3 +558,57 @@
     }
 </style>
 @endsection
+
+{{-- <script>
+    $(document).on('click', '.toggle-active', function (e) {
+        e.preventDefault();
+
+        let button = $(this);
+        let id = button.data('id');
+
+        Swal.fire({
+            title: "Xác nhận thay đổi trạng thái",
+            text: "Bạn có chắc chắn muốn chuyển trạng thái phiếu này?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Đồng ý",
+            cancelButtonText: "Hủy"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/pickings/' + id + '/toggle-active',
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            const isActive = response.status === 'Hoàn thành';
+
+                            button
+                                .removeClass(isActive ? 'bg-danger' : 'bg-success')
+                                .addClass(isActive ? 'bg-success' : 'bg-danger')
+                                .text(response.status);
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Thành công',
+                                text: response.message,
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        }
+                    },
+                    error: function (xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lỗi',
+                            text: xhr.responseJSON?.message || 'Đã xảy ra lỗi không xác định!',
+                            confirmButtonText: 'Đóng'
+                        });
+                    }
+                });
+            }
+        });
+    });
+</script> --}}

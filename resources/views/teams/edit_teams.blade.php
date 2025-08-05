@@ -47,7 +47,7 @@
                         <div class="row">
                             <div class="col-md-4">
                                 <label for="name" class="form-label">Tên</label>
-                                <input type="text" class="form-control" name="code" placeholder="Mã"
+                                <input type="text" class="form-control" name="name" placeholder="Tên"
                                     value="{{ $teams->name }}" required>
                             </div>
                             {{-- <div class="col-md-4">

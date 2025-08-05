@@ -2,7 +2,7 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-md-flex d-block align-items-center justify-content-between my-2 page-header-breadcrumb">
-        <h4 class="page-title fw-semibold fs-18 mb-0 title-header">Lô Trồng</h4>
+        <h5 class="page-title fw-semibold fs-18 mb-0 title-header">Lô Trồng</h5>
         <div class="ms-md-1 ms-0">
             <nav>
                 <ol class="breadcrumb mb-0 padding">

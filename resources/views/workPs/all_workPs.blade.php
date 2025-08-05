@@ -174,7 +174,7 @@
             var selectedRows = new Set();
             var dataTable = $('#workps-table').DataTable({
                 "language": {
-                    // "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
+                    "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
                     "emptyTable": "Không có dữ liệu",
                 },
                 processing: true,

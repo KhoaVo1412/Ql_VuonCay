@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('content')
 <div class="d-md-flex d-block align-items-center justify-content-between my-2 page-header-breadcrumb">
-    <h4 class="page-title fw-semibold fs-18 mb-0">Chỉnh sửa: {{ $gentasks->name }}</h4>
+    <h5 class="page-title fw-semibold fs-18 mb-0">Chỉnh sửa: {{ $gentasks->workName }}</h5>
     <div class="ms-md-1 ms-0">
         <nav>
             <ol class="breadcrumb mb-0 padding">
@@ -43,8 +43,18 @@
                     <div class="row gy-2">
 
                         <div class="form-row">
-                            <!-- Tên công việc -->
                             <div class="col-md-6">
+                                <label class="form-lable">Mã Công Việc</label>
+                                <input type="text" name="code" class="form-control" value="{{ $gentasks->code }}"
+                                    readonly>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-lable">Tên Công Việc</label>
+                                <input type="text" name="workName" class="form-control"
+                                    value="{{ $gentasks->workName }}" required>
+                            </div>
+
+                            {{-- <div class="col-md-6">
                                 <label class="form-lable">Tên Việc</label>
                                 <select name="workID" class="form-select" id="edit-workID-select" required>
                                     <option value="">Chọn công việc</option>
@@ -57,8 +67,23 @@
                                 <input type="text" id="edit-work-type-display" class="form-control mt-2" readonly
                                     value="{{ optional($gentasks->work)->workType }}"
                                     placeholder="Loại công việc sẽ hiển thị ở đây">
-                            </div>
+                            </div> --}}
 
+
+                        </div>
+
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <label class="form-lable">Loại Công Việc</label>
+                                <select name="workID" class="form-select" required>
+                                    <option value="">Chọn loại công việc</option>
+                                    @foreach ($works as $w)
+                                    <option value="{{ $w->id }}" @if ($gentasks->workID == $w->id) selected @endif>
+                                        {{ $w->workType }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                            </div>
                             <!-- Người phụ trách -->
                             <div class="col-md-6">
                                 <label class="form-lable">Người Phụ Trách</label>
@@ -72,8 +97,8 @@
                                 </select>
                             </div>
                         </div>
-
                         <div class="form-row">
+
                             <!-- Ngày bắt đầu -->
                             <div class="col-md-6">
                                 <label class="form-lable">Ngày Bắt Đầu</label>
@@ -87,11 +112,10 @@
                             </div>
                         </div>
                         <div class="form-row">
-
                             <!-- Lô -->
                             <div class="col-md-6">
-                                <label class="form-lable">Lô</label>
-                                <select name="plotID" class="form-select">
+                                <label class="form-label">Lô</label>
+                                <select name="plotID" id="plotID" class="form-select" required>
                                     @foreach ($plots as $plot)
                                     <option value="{{ $plot->id }}" @if ($gentasks->plotID == $plot->id) selected
                                         @endif>
@@ -101,19 +125,19 @@
                                 </select>
                             </div>
 
+                            <!-- Cây trồng -->
                             <div class="col-md-6">
-                                <label class="form-lable">Cây trồng</label>
+                                <label class="form-label">Cây trồng</label>
                                 <select name="plantIDs[]" id="plantIDs" class="form-select" multiple required>
-                                    @foreach ($gentasks->plants as $plant)
-                                    <option value="{{ $plant->id }}" selected>
+                                    @foreach ($plants as $plant)
+                                    <option value="{{ $plant->id }}" @if($gentasks->plants->contains($plant->id))
+                                        selected @endif>
                                         {{ $plant->variety->varietyName }}
-                                        <!-- Display varietyName -->
                                     </option>
                                     @endforeach
                                 </select>
                             </div>
                         </div>
-
                         <div class="form-row">
                             <!-- Loại nhiệm vụ -->
                             <div class="col-md-6">
@@ -153,7 +177,7 @@
 
                     <!-- Submit Button -->
                     <div class="col-md-12 mt-3">
-                        <button type="submit" class="btn btn-primary">Lưu Thay Đổi</button>
+                        <button type="submit" class="btn btn-success">Lưu Thay Đổi</button>
                     </div>
                 </div>
             </div>
@@ -161,40 +185,29 @@
     </div>
 </div>
 <script>
-    // Initialize Select2 on the plant select element
-    $(document).ready(function() {
+    $(document).ready(function () {
         $('#plantIDs').select2({
             placeholder: 'Chọn cây trồng',
-            allowClear: true
+            allowClear: true,
+            width: '100%',
         });
 
-        // Work Type Display Update
-        document.getElementById('edit-workID-select').addEventListener('change', function() {
-            var selectedOption = this.options[this.selectedIndex];
-            var workType = selectedOption.getAttribute('data-type');
-            document.getElementById('edit-work-type-display').value = workType || 'Loại công việc sẽ hiển thị ở đây';
-        });
-
-        // Load Plants Dynamically Based on Plot Selection
-        document.getElementById('plotID').addEventListener('change', function() {
-            var plotID = this.value;
+        $('#plotID').on('change', function () {
+            var plotID = $(this).val();
             if (plotID) {
-                fetch('/get-plants-for-plot/' + plotID)
+                fetch('/e-get-plants-for-plot/' + plotID)
                     .then(response => response.json())
                     .then(data => {
-                        var plantSelect = document.getElementById('plantIDs');
-                        plantSelect.innerHTML = '';
-                        data.forEach(function(plant) {
-                            var option = document.createElement('option');
-                            option.value = plant.id;
-                            option.text = plant.variety.varietyName;
-                            plantSelect.appendChild(option);
+                        const plantSelect = $('#plantIDs');
+                        plantSelect.empty(); // Xóa hết cây cũ
+                        plantSelect.val(null).trigger('change'); // Clear select2
+
+                        data.forEach(function (plant) {
+                            const option = new Option(plant.variety.varietyName, plant.id, false, false);
+                            plantSelect.append(option);
                         });
 
-                        $('#plantIDs').select2({
-                            placeholder: 'Chọn cây trồng',
-                            allowClear: true
-                        });
+                        plantSelect.trigger('change'); // Cập nhật select2
                     });
             }
         });

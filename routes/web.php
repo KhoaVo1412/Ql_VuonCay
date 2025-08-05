@@ -68,6 +68,7 @@ use App\Http\Controllers\Admin\WorkProposalsController;
 use App\Http\Controllers\Import\UpdatePlantingAreaImportController;
 use App\Http\Controllers\ChartController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InventoryStockController;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\Request;
@@ -160,6 +161,17 @@ Route::middleware(['login'])->group(function () {
     Route::post('/plots/delete-multiple', [PlotController::class, 'deleteMultiple'])->name('plots.deleteMultiple');
     Route::post('/toggle-plot-status', [PlotController::class, 'toggleStatus'])->name('plots.status');
 
+    Route::get('/stocks', [InventoryStockController::class, 'index'])->name('stocks.index');
+    Route::get('/add-stocks', [InventoryStockController::class, 'add'])->name('stocks.add');
+    Route::post('/save-stocks', [InventoryStockController::class, 'save'])->name('stocks.save');
+    Route::get('/edit-stocks/{id}', [InventoryStockController::class, 'edit'])->name('stocks.edit');
+    Route::post('/stocks/update/{id}', [InventoryStockController::class, 'update'])->name('stocks.update');
+    Route::get('stocks/delete/{id}', [InventoryStockController::class, 'destroy'])->name('stocks.delete');
+    Route::post('/stocks/edit-multiple', [InventoryStockController::class, 'editMultiple'])->name('stocks.editMultiple');
+    Route::post('/stocks/delete-multiple', [InventoryStockController::class, 'deleteMultiple'])->name('stocks.deleteMultiple');
+    Route::post('/toggle-stocks-status', [InventoryStockController::class, 'toggleStatus'])->name('stocks.status');
+    Route::post('/toggle-stocks-actives', [InventoryStockController::class, 'toggleActives'])->name('stocks.actives');
+
     Route::get('/crops', [CropController::class, 'index'])->name('crops.index');
     Route::post('/save-crops', [CropController::class, 'save'])->name('crops.save');
     Route::get('/edit-crops/{id}', [CropController::class, 'edit'])->name('crops.edit');
@@ -190,6 +202,8 @@ Route::middleware(['login'])->group(function () {
         $products = App\Models\Product::where('categoryID', $categoryID)->get();
         return response()->json($products);
     });
+    Route::post('/pickings/{id}/toggle-active', [PWareHouseController::class, 'toggleActive'])
+        ->name('pickings.toggleActive');
 
     Route::get('/product/{id}/unit', [PWareHouseController::class, 'getUnit']);
 

@@ -79,7 +79,7 @@
                         <div class="row">
                             <div class="col-md-4">
                                 <label for="image" class="form-label">Ảnh Công Nhân</label>
-                                <div class="image-container">
+                                {{-- <div class="image-container">
                                     <input type="file" class="form-control" name="image" accept="image/*" id="image"
                                         style="display: none;">
                                     <label for="image" class="image-label">
@@ -90,6 +90,21 @@
                                         <span class="placeholder">Chọn ảnh</span>
                                         @endif
                                     </label>
+                                </div> --}}
+                                <div style="justify-content: center;">
+                                    <div style="display: flex; grid-gap: 20px; justify-content: center;">
+                                        <div id="image-container"
+                                            style="position: relative; width: 80px; height: 80px;border: 3px solid rgb(38, 156, 52);border-radius: 50%;">
+                                            <img id="profile-image" src="{{ asset($workers->image) }}"
+                                                style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                            <input name="image" type="file" id="image-upload" value="" accept="image/*"
+                                                style="display: none;">
+                                        </div>
+                                        <a href="#" id="upload-link"
+                                            style="margin-top: 40px; color: rgb(148, 148, 214); font-size: 13px;">
+                                            Chọn Ảnh
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
 
@@ -176,11 +191,11 @@
                             <div class="col-md-4">
                                 <label for="status" class="form-label">Trạng thái</label>
                                 <select name="status" id="status" class="form-control" required>
-                                    <option value="Chưa Hoàn thành" @if ($workers->status == 'Chưa Hoàn thành') selected
+                                    <option value="Đang làm việc" @if ($workers->status == 'Đang làm việc') selected
                                         @endif>
-                                        Chưa Hoàn thành</option>
-                                    <option value="Hoàn thành" @if ($workers->status == 'Hoàn thành') selected
-                                        @endif>Hoàn thành</option>
+                                        Đang làm việc</option>
+                                    <option value="Nghỉ việc" @if ($workers->status == 'Nghỉ việc') selected
+                                        @endif>Nghỉ việc</option>
                                 </select>
                             </div>
 
@@ -208,5 +223,48 @@
     }
 });
 
+</script>
+<script>
+    document.getElementById('upload-link').addEventListener('click', function(event) {
+            event.preventDefault();
+            document.getElementById('image-upload').click();
+        });
+
+        document.getElementById('image-upload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profile-image').src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('submit-btn').addEventListener('click', function(event) {
+            let isValid = true;
+            const inputs = document.querySelectorAll('.modal-body input, .modal-body select');
+            inputs.forEach(input => {
+                const errorElement = input.nextElementSibling;
+                if (!input.value) {
+                    isValid = false;
+                    input.classList.add('error-border');
+                    if (errorElement) {
+                        errorElement.style.display = 'block';
+                    }
+                } else {
+                    input.classList.remove('error-border');
+                    if (errorElement) {
+                        errorElement.style.display = 'none';
+                    }
+                }
+            });
+            // If all fields are valid, submit the form
+            if (isValid) {
+                document.getElementById('account-form').submit();
+            } else {
+                event.preventDefault();
+            }
+        });
 </script>
 @endsection

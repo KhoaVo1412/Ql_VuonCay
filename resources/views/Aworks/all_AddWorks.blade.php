@@ -2,7 +2,7 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-md-flex d-block align-items-center justify-content-between my-2 page-header-breadcrumb">
-        <h4 class="page-title fw-semibold fs-18 mb-0 padding">Danh Sách Công Việc</h4>
+        <h5 class="page-title fw-semibold fs-18 mb-0 padding">Danh Sách Công Việc</h5>
         <div class="ms-md-1 ms-0">
             <nav>
                 <ol class="breadcrumb mb-0 padding">
@@ -21,20 +21,20 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h6 class="modal-title">Tạo Công Việc</h6>
+                    <h6 class="modal-title">Tạo Loại Công Việc</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body px-4">
                     <div class="row gy-2">
                         <!-- Tên -->
                         <div class="col-xl-12">
-                            <label for="workCode" class="form-label">Mã Công Việc</label>
+                            <label for="workCode" class="form-label">Mã Loại Công Việc</label>
                             <input type="text" class="form-control" name="workCode" id="workCode" required>
                         </div>
-                        <div class="col-xl-12">
+                        {{-- <div class="col-xl-12">
                             <label for="" class="form-label">Tên Công Việc</label>
                             <input type="text" class="form-control" name="workName" id="workName" required>
-                        </div>
+                        </div> --}}
                         <div class="col-xl-12">
                             <label for="" class="form-label">Loại Công Việc</label>
                             <input type="text" class="form-control" name="workType" id="workType" required>
@@ -91,11 +91,10 @@
                                 <input class="form-check-input check-all" type="checkbox" id="select-all-aworks"
                                     value="" aria-label="...">
                             </th>
-                            <th scope="col">Mã Công Việc</th>
-                            <th scope="col">Tên Công Việc</th>
+                            <th scope="col">Mã Loại Công Việc</th>
+                            {{-- <th scope="col">Tên Công Việc</th> --}}
                             <th scope="col">Loại Công Việc</th>
                             <th scope="col">Ngày Tạo</th>
-
                             {{-- <th scope="col">Tên</th> --}}
                             <th scope="col">Thao tác</th>
                         </tr>
@@ -107,8 +106,8 @@
                         <tr>
                             <th></th>
                             <th></th>
-                            <th scope="col">Mã Công Việc</th>
-                            <th scope="col">Tên Công Việc</th>
+                            <th scope="col">Mã Loại Công Việc</th>
+                            {{-- <th scope="col">Tên Công Việc</th> --}}
                             <th scope="col">Loại Công Việc</th>
                             <th scope="col">Ngày Tạo</th>
                             {{-- <th scope="col">Tên</th> --}}
@@ -217,10 +216,10 @@
                         data: 'workCode',
                         name: 'workCode'
                     },
-                    {
-                        data: 'workName',
-                        name: 'workName'
-                    },
+                    // {
+                    //     data: 'workName',
+                    //     name: 'workName'
+                    // },
                     {
                         data: 'workType',
                         name: 'workType'

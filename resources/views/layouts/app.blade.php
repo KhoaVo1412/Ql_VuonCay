@@ -334,13 +334,17 @@
                             || request()->is('categories*') || request()->is('edit-categories*')
                             || request()->is('products*') || request()->is('edit-products*')
                             || request()->is('decomposes*') 
+                            || request()->is('stocks*') || request()->is('add-stocks*') || request()->is('edit-stocks*')
                             || request()->is('pwarehouses*') || request()->is('add-pwarehouses*') || request()->is('edit-pwarehouses*') ? 'active' : '' }}">
                             <a href="#" class='sidebar-link {{ request()->is(' units*') || request()->is('edit-units*')
                                 || request()->is('warehouses*') || request()->is('edit-warehouses*')
                                 || request()->is('products*') || request()->is('edit-products*')
                                 || request()->is('decomposes*')
                                 || request()->is('categories*') || request()->is('edit-categories*')
-                                || request()->is('pwarehouses*') || request()->is('add-pwarehouses*') ||
+                                || request()->is('pwarehouses*') || request()->is('add-pwarehouses*')
+                                || request()->is('stocks*') || request()->is('add-stocks*') ||
+                                request()->is('edit-stocks*') ||
+
                                 request()->is('edit-pwarehouses*') ? 'active' : '' }} ' onclick="toggleActive(this)">
                                 <i class="fa-solid fa-warehouse-full"></i>
                                 <span>Quản Lý Kho</span>
@@ -377,6 +381,11 @@
                                     class="submenu-item d-flex align-items-center ms-3 {{ Route::is('decomposes.index') || Route::is('decomposes.add') ? 'active' : '' }}">
                                     <i class="fa-solid fa-industry text-green"></i>
                                     <a href="{{route('decomposes.index')}}">Phân Rã Vật Tư</a>
+                                </li>
+                                <li
+                                    class="submenu-item d-flex align-items-center ms-3 {{ Route::is('stocks.index') || Route::is('stocks.add') ? 'active' : '' }}">
+                                    <i class="fa-regular fa-garage-car text-green"></i>
+                                    <a href="{{route('stocks.index')}}">Tồn Kho</a>
                                 </li>
                                 <li class="submenu-item d-flex align-items-center ms-3">
                                     <i class="fa-solid fa-cash-register text-green"></i>

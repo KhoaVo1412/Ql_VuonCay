@@ -85,9 +85,9 @@ class WorkProposalsController extends Controller
     {
         $products = Product::all();
         $works = Work::all();
-        $gentasks = GenTask::all();
+        $gentasks = GenTask::Where('type', 1)->get();
         // Trả dữ liệu vào view
-        return view('workps.add_workps', compact('products', 'works', 'gentasks'));
+        return view('workPs.add_workPs', compact('products', 'works', 'gentasks'));
     }
     public function save(Request $request)
     {
@@ -131,16 +131,15 @@ class WorkProposalsController extends Controller
             'model_type' => 'Workp',
             'details' => "Đã tạo đề xuất: " . $request->proposaName,
         ]);
-        session()->flash('message', 'Tạo đề xuất thành công.');
-        return redirect()->back();
+        return redirect()->route('workps.index')->with('message', 'Tạo đề xuất thành công');
     }
     public function edit($id)
     {
         $proposal = TaskProductProposal::with('creator', 'task', 'proposalProducts')->findOrFail($id);
         $products = Product::all();
         $works = Work::all();
-        $gentasks = GenTask::all();
-        return view('workps.edit_workPs', compact('proposal', 'products', 'works', 'gentasks'));
+        $gentasks = GenTask::Where('type', 1)->get();
+        return view('workPs.edit_workPs', compact('proposal', 'products', 'works', 'gentasks'));
     }
     public function update(Request $request, $id)
     {
@@ -231,9 +230,9 @@ class WorkProposalsController extends Controller
 
         $workps = TaskProductProposal::whereIn('id', $request->ids)->get();
 
-        foreach ($workps as $farm) {
-            $farm->status = ($farm->status === 'Hoạt động') ? 'Không hoạt động' : 'Hoạt động';
-            $farm->save();
+        foreach ($workps as $w) {
+            $w->status = ($w->status === 'Hoạt động') ? 'Không hoạt động' : 'Hoạt động';
+            $w->save();
         }
         return response()->json(['message' => 'Thành Công']);
     }
@@ -247,12 +246,12 @@ class WorkProposalsController extends Controller
 
         TaskProductProposal::whereIn('id', $request->ids)->delete();
 
-        foreach ($workpsToDelete as $farm) {
+        foreach ($workpsToDelete as $w) {
             ActionHistory::create([
                 'user_id' => Auth::id(),  // ID của người thực hiện hành động
                 'action_type' => 'delete',  // Loại hành động "delete"
                 'model_type' => 'Workp',  // Model "Workp"
-                'details' => "Đã xóa đề xuất: " . $farm->proposaName . " với mã: " . $farm->proposaName,
+                'details' => "Đã xóa đề xuất: " . $w->proposaName . " với mã: " . $w->proposaName,
             ]);
         }
         return response()->json([
@@ -262,11 +261,11 @@ class WorkProposalsController extends Controller
     }
     public function toggleStatus(Request $request)
     {
-        $farm = TaskProductProposal::find($request->id);
-        if ($farm) {
-            $farm->status = $farm->status == 'Hoạt động' ? 'Không hoạt động' : 'Hoạt động';
-            $farm->save();
-            return response()->json(['success' => true, 'status' => $farm->status]);
+        $w = TaskProductProposal::find($request->id);
+        if ($w) {
+            $w->status = $w->status == 'Hoạt động' ? 'Không hoạt động' : 'Hoạt động';
+            $w->save();
+            return response()->json(['success' => true, 'status' => $w->status]);
         } else {
             return response()->json(['success' => false]);
         }

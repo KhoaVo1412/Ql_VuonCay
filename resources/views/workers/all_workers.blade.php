@@ -138,20 +138,15 @@
                                 <label class="form-label">Tổ</label>
                                 <select class="form-select" id="taskType">
                                     <option value="">-- Tất cả --</option>
-                                    <option value="T1">T1</option>
-                                    <option value="T2">T2</option>
+
                                 </select>
                             </div>
-                            {{-- <div class="form-group">
-                                <label class="form-label">Tên Công Nhân</label>
-                                <select class="form-select" id="taskGarden">
+                            <div class="form-group">
+                                <label class="form-label">Chức Vụ</label>
+                                <select class="form-select" id="duty">
                                     <option value="">-- Tất cả --</option>
-                                    <option value="NV a">NV a</option>
-                                    <option value="NV b">NV b</option>
-                                    <option value="NV c">NV c</option>
-                                    <option value="NV d">NV d</option>
                                 </select>
-                            </div> --}}
+                            </div>
                             <div class="form-group" style="display: flex; align-items: end;">
                                 <button class="btn btn-success btn-w" onclick="filterTasks()">
                                     <i class="fa-light fa-filter-list"></i>
@@ -268,10 +263,10 @@
     $(document).ready(function() {
             var selectedRows = new Set();
             var dataTable = $('#workers-table').DataTable({
-                // "language": {
-                //     "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
-                //     "emptyTable": "Không có dữ liệu",
-                // },
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
+                     "emptyTable": "Không có dữ liệu",
+                 },
                 processing: true,
                 serverSide: true,
                 columnDefs: [{

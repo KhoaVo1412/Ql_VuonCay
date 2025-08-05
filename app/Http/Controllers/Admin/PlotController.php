@@ -66,7 +66,7 @@ class PlotController extends Controller
                                         <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        Bạn có chắc chắn có muốn xóa thông tin <span style="color: red;">' . ($row->farm_name ?? 'N/A') . '</span>?
+                                        Bạn có chắc chắn có muốn xóa thông tin <span style="color: red;">' . ($row->plotName ?? 'N/A') . '</span>?
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -94,14 +94,21 @@ class PlotController extends Controller
     {
         // dd($request->all());
         $request->validate([
-            'plantCode' => 'required',
+            'plotCode' => 'required',
             'plotName' => 'required',
             'plotArea' => 'required',
-            'plantCount' => 'required',
-            'gardenID' => 'required|exists:gardens,id',
+            'year' => 'required',
+            'statusTree' => 'required',
+            'mapJs' => 'required',
             'status' => 'nullable',
+        ], [
+            'plotCode.required' => 'Mã cây trồng là bắt buộc.',
+            'plotName.required' => 'Tên lô là bắt buộc.',
+            'plotArea.required' => 'Diện tích lô là bắt buộc.',
+            'year.required' => 'Năm là bắt buộc.',
+            'statusTree.required' => 'Trạng thái cây trồng là bắt buộc.',
+            'mapJs.required' => 'Bản đồ là bắt buộc.',
         ]);
-        // $existingPlot = Plot::where('farm_name', $request->farm_name)->first();
         $existingCode = Plot::where('plotName', $request->plotName)->first();
 
         if ($existingCode) {
@@ -109,80 +116,63 @@ class PlotController extends Controller
         }
 
         Plot::create([
-            'plantCode' => $request->plantCode,
+            'plotCode' => $request->plotCode,
             'plotName' => $request->plotName,
             'plotArea' => $request->plotArea,
-            'plantCount' => $request->plantCount,
-            'gardenID' => $request->gardenID,
+            'mapJs' => $request->mapJs,
+            'statusTree' => $request->statusTree,
+            'year' => $request->year,
             'status' => $request->status ?? 'Hoạt động',
         ]);
         ActionHistory::create([
             'user_id' => Auth::id(),
             'action_type' => 'create',
             'model_type' => 'Plot',
-            'details' => "Đã tạo lô: " . $request->farm_name . " với mã: " . $request->farm_code,
+            'details' => "Đã tạo lô: " . $request->plotName . " với mã: " . $request->plotCode,
         ]);
-        session()->flash('message', 'Tạo lô thành công.');
-        return redirect()->back();
+        return redirect()->route('plots.index')->with('message', 'Tạo lô thành công.');
     }
     public function edit($id)
     {
-        $gardens = Garden::all();
+        // $gardens = Garden::all();
         $plots = Plot::find($id);
-        $totalPlants = Plot::withCount('plants')->get()->sum('plants_count');
-
-        return view('plots.edit_plots', compact('plots', 'gardens', 'totalPlants'));
+        $totalPlants = $plots->plants()->count();
+        return view('plots.edit_plots', compact('plots', 'totalPlants'));
     }
     public function update(Request $request, $id)
     {
-        $existingPlot = Plot::where('plotName', $request->plotName)->where('id', '!=', $id)->first();
-
-        // if ($existingPlot) {
-        //     return redirect()->back()->with(['error' => 'Tên lô này đã tồn tại!']);
-        // }
-
-        $existingPlot = Plot::where(function ($query) use ($request, $id) {
-            $query->where('plotName', $request->plotName);
-            // $query->where('farm_name', $request->farm_name)
-            //     ->orWhere('farm_code', $request->farm_code);
-        })->where('id', '!=', $id)->first();
-
-        if ($existingPlot) {
-            // if ($existingPlot->farm_name === $request->farm_name) {
-            //     return redirect()->back()->with(['error' => 'Tên lô này đã tồn tại!']);
-            // }
-            if ($existingPlot->plotName === $request->plotName) {
-                return redirect()->back()->with(['error' => 'Lô này đã tồn tại!']);
-            }
-        }
-        $plots = Plot::find($id);
-        if (!$plots) {
-            return redirect()->back()->with('error', 'Lô không tồn tại');
-        }
         $request->validate([
-            'plantCode' => 'required',
+            'plotCode' => 'required',
             'plotName' => 'required',
             'plotArea' => 'required',
-            'plantCount' => 'required',
-            'gardenID' => 'required|exists:gardens,id',
+            'year' => 'required',
+            'statusTree' => 'required',
+            'mapJs' => 'required',
             'status' => 'nullable',
         ]);
-        $plots->update([
-            'plantCode' => $request->plantCode,
+
+        $plot = Plot::find($id);
+
+        if (!$plot) {
+            return redirect()->back()->with('error', 'Lô không tồn tại');
+        }
+
+        // Cập nhật thông tin
+        $plot->update([
+            'plotCode' => $request->plotCode,
             'plotName' => $request->plotName,
             'plotArea' => $request->plotArea,
-            'plantCount' => $request->plantCount,
-            'gardenID' => $request->gardenID,
+            'statusTree' => $request->statusTree,
+            'year' => $request->year,
             'status' => $request->status,
+            'mapJs' => $request->mapJs,
         ]);
-        ActionHistory::create([
-            'user_id' => Auth::id(),
-            'action_type' => 'update',
-            'model_type' => 'Plot',
-            'details' => "Đã cập nhật lô: " . $plots->plotName,
-        ]);
-        return redirect()->route('plots.index')->with('message', 'Cập nhật lô thành công');
+
+        session()->flash('message', 'Cập nhật lô thành công.');
+
+        return redirect()->route('plots.index'); // Redirect về danh sách hoặc trang thích hợp
     }
+
     public function destroy($id)
     {
         $plots = Plot::find($id);

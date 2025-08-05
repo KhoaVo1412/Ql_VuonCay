@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActionHistory;
 use App\Models\Category;
+use App\Models\InventoryStock;
 use App\Models\Picking;
 use App\Models\Product;
 use App\Models\ProductPicking;
@@ -50,9 +51,9 @@ class PWareHouseController extends Controller
                     return $row->createDate ?? 'Không rõ';
                 })
                 ->editColumn('active', function ($row) {
-                    $statusClass = $row->active == 'Hoàn thành' ? 'success' : 'danger';
-                    $statusText = $row->active == 'Hoàn thành' ? 'Hoàn thành' : 'Chưa hoàn thành';
-                    return '<button class="badge bg-' . $statusClass . ' toggle-status" data-id="' . $row->id . '">' . $statusText . '</button>';
+                    $activeClass = $row->active == 'Hoàn thành' ? 'success' : 'danger';
+                    $activeText = $row->active == 'Hoàn thành' ? 'Hoàn thành' : 'Chưa hoàn thành';
+                    return '<button class="badge bg-' . $activeClass . ' toggle-active" data-id="' . $row->id . '">' . $activeText . '</button>';
                 })
                 ->editColumn('status', function ($row) {
                     $statusClass = $row->status == 'Hoạt động' ? 'success' : 'danger';
@@ -95,6 +96,57 @@ class PWareHouseController extends Controller
         // return view('decomposes.all_decomposes', compact('gardens', 'workers', 'decomposes', 'plots'));
         return view('pwarehouses.all_pwarehouses');
     }
+    public function toggleActive(Request $request, $id)
+    {
+        $picking = Picking::with('productPickings')->findOrFail($id);
+        if ($picking->status !== 'Hoạt động') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Chỉ phiếu đang Hoạt động mới được phép thay đổi trạng thái.',
+            ]);
+        }
+
+        $isActivating = $picking->active == 'Chưa hoàn thành';
+        $picking->active = $isActivating ? 'Hoàn thành' : 'Chưa hoàn thành';
+
+        if ($isActivating) {
+            foreach ($picking->productPickings as $item) {
+                $productID = $item->productID;
+                $warehouseID = $picking->warehouseID;
+                $quantity = $item->quantity;
+
+                $stock = InventoryStock::firstOrCreate(
+                    ['productID' => $productID, 'warehouseID' => $warehouseID],
+                    ['quantity' => 0]
+                );
+
+                if ($picking->type === 'Nhập') {
+                    $stock->quantity += $quantity;
+                } elseif ($picking->type === 'Xuất') {
+                    if ($stock->quantity < $quantity) {
+                        $picking->active = 0;
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Không đủ tồn kho để xuất sản phẩm: $productID.",
+                        ]);
+                    }
+                    $stock->quantity -= $quantity;
+                }
+
+                $stock->save();
+            }
+        }
+
+        $picking->save();
+
+        return response()->json([
+            'success' => true,
+            'status' => $picking->active == 1 ? 'Hoàn thành' : 'Chưa hoàn thành',
+            'message' => 'Cập nhật phiếu thành công.',
+        ]);
+    }
+
+
     public function getUnit($id)
     {
         $product = Product::find($id);
@@ -107,6 +159,10 @@ class PWareHouseController extends Controller
             'unitID' => $product->unitID
         ]);
     }
+    // <button data-id="{{ $picking->id }}"
+    //         class="btn toggle-active {{ $picking->active ? 'bg-success' : 'bg-danger' }}">
+    //     {{ $picking->active ? 'Hoàn thành' : 'Chưa hoàn thành' }}
+    // </button>
 
     public function add(Request $request)
     {

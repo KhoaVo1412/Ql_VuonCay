@@ -45,8 +45,21 @@
                         <div id="batch-container">
                             <div class="row gy-2">
                                 <div class="form-row">
-
                                     <div class="form-group">
+                                        <label class="form-label">Tên Công Việc</label>
+                                        <input type="text" name="workName" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Loại Công Việc</label>
+                                        <select name="workID" class="form-select" required>
+                                            <option value="">Chọn loại công việc</option>
+                                            @foreach($works as $work)
+                                            <option value="{{ $work->id }}">
+                                                {{ $work->workType }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    {{-- <div class="form-group">
                                         <label class="form-label">Tên Việc</label>
                                         <select name="workID" class="form-select" id="workID-select" required>
                                             <option value="">Chọn công việc</option>
@@ -58,7 +71,7 @@
                                         <input type="text" id="work-type-display" class="form-control mt-2" readonly
                                             placeholder="Loại công việc sẽ hiển thị ở đây">
 
-                                    </div>
+                                    </div> --}}
 
                                     <div class="form-group">
                                         <label class="form-label">Người phụ trách</label>
@@ -131,13 +144,13 @@
         </div>
     </div>
 </section>
-<script>
+{{-- <script>
     document.getElementById('workID-select').addEventListener('change', function () {
         const selected = this.options[this.selectedIndex];
         const type = selected.getAttribute('data-type');
         document.getElementById('work-type-display').value = type || '';
     });
-</script>
+</script> --}}
 <script>
     $(document).ready(function() {
             $('#taskID').select2({

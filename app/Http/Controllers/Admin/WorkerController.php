@@ -36,7 +36,7 @@ class WorkerController extends Controller
                     if ($row->image) {
                         return '<img src="' . asset($row->image) . '" alt="Worker Image" width="50" height="50">';
                     } else {
-                        return 'No Image';
+                        return 'Không có ảnh';
                     }
                 })
                 ->editColumn('code_name', function ($row) {
@@ -116,13 +116,13 @@ class WorkerController extends Controller
             'bdate' => 'required|date',
             'cccd' => 'nullable|numeric|digits_between:9,12',
             'address' => 'required|string',
-            'team_id' => 'required|exists:teams,id',
-            'duty_id' => 'nullable|exists:duties,id',
-            'gender' => 'required|in:0,1',
+            'team_id' => 'required',
+            'duty_id' => 'nullable',
+            'gender' => 'required',
             'phone' => 'required|regex:/^\d{10,11}$/',
             'status' => 'nullable|string',
         ]);
-        $existingCode = Worker::where('name', $request->name)->first();
+        $existingCode = Worker::where('code_name', $request->code_name)->first();
 
         if ($existingCode) {
             return redirect()->back()->with(['error' => 'Mã công nhân này đã tồn tại!']);
@@ -146,7 +146,7 @@ class WorkerController extends Controller
             'gender' => $request->gender,
             'phone' => $request->phone,
             'image' => $imagePath,
-            'status' => $request->status ?? 'Hoạt động',
+            'status' => $request->status ?? 'Đang làm việc',
         ]);
         ActionHistory::create([
             'user_id' => Auth::id(),
@@ -154,8 +154,7 @@ class WorkerController extends Controller
             'model_type' => 'Worker',
             'details' => "Đã tạo công nhân: " . $request->workers_name . " với mã: " . $request->workers_code,
         ]);
-        session()->flash('message', 'Tạo công nhân thành công.');
-        return redirect()->back();
+        return redirect()->route('workers.index')->with('message', 'Tạo công nhân thành công');
     }
     public function edit($id)
     {
@@ -205,7 +204,7 @@ class WorkerController extends Controller
             'duty_id' => $request->duty_id,
             'gender' => $request->gender,
             'phone' => $request->phone,
-            'status' => $request->status ?? 'Hoạt động',
+            'status' => $request->status,
         ]);
 
         return redirect()->route('workers.index')->with('message', 'Công Nhân đã được cập nhật!');
@@ -228,7 +227,7 @@ class WorkerController extends Controller
         $workers = Worker::whereIn('id', $request->ids)->get();
 
         foreach ($workers as $worker) {
-            $worker->status = ($worker->status === 'Hoạt động') ? 'Không hoạt động' : 'Hoạt động';
+            $worker->status = ($worker->status === 'Đang làm việc') ? 'Không hoạt động' : 'Đang làm việc';
             $worker->save();
         }
         return response()->json(['message' => 'Thành Công']);
@@ -260,7 +259,7 @@ class WorkerController extends Controller
     {
         $worker = Worker::find($request->id);
         if ($worker) {
-            $worker->status = $worker->status == 'Hoạt động' ? 'Không hoạt động' : 'Hoạt động';
+            $worker->status = $worker->status == 'Đang làm việc' ? 'Nghỉ việc' : 'Đang làm việc';
             $worker->save();
             return response()->json(['success' => true, 'status' => $worker->status]);
         } else {

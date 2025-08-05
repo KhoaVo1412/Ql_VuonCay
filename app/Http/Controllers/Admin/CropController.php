@@ -77,7 +77,7 @@ class CropController extends Controller
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                        <a href="/farms/delete/' . $row->id . '" class="btn btn-primary">Xóa</a>
+                                        <a href="/crops/delete/' . $row->id . '" class="btn btn-primary">Xóa</a>
                                     </div>
                                 </div>
                             </div>
@@ -100,32 +100,34 @@ class CropController extends Controller
             'RF_id' => 'required',
             'year' => 'required',
             'status' => 'nullable',
+            'statusTree' => 'nullable',
         ]);
-        $existingCode = Variety::where('plantCode', $request->plantCode)->first();
+        $existingCode = Plant::where('plantCode', $request->plantCode)->first();
 
         if ($existingCode) {
             return redirect()->back()->with(['error' => 'Mã cây này đã tồn tại!']);
         }
 
-        $variety = Variety::find($request->varietyID);
-        $varietyNameSlug = Str::slug($variety->varietyName, '_');
-        $prefix = '#' . $varietyNameSlug . '_';
-        do {
-            $randomCode = $prefix . rand(100, 999);
-        } while (Variety::where('plantCode', $randomCode)->exists());
-        Variety::create([
-            'plantCode' => $request->randomCode,
-            'plotID' => $request->plotID,
+        // $variety = Plant::find($request->varietyID);
+        // $varietyNameSlug = Str::slug($variety->varietyName, '_');
+        // $prefix = '#' . $varietyNameSlug . '_';
+        // do {
+        //     $randomCode = $prefix . rand(100, 999);
+        // } while (Plant::where('plantCode', $randomCode)->exists());
+        Plant::create([
+            'plantCode' => $request->plantCode,
             'varietyID' => $request->varietyID,
-            'RF_id' => $request->RF_id,
+            'plotID' => $request->plotID,
             'year' => $request->year,
+            'RF_id' => $request->RF_id,
+            'statusTree' => $request->statusTree,
             'status' => $request->status ?? 'Hoạt động',
         ]);
         ActionHistory::create([
             'user_id' => Auth::id(),
             'action_type' => 'create',
             'model_type' => 'Variety',
-            'details' => "Đã tạo cây: " . $request->farm_name . " với mã: " . $request->plantCode,
+            'details' => "Đã tạo cây: " . $request->plantCode,
         ]);
         session()->flash('message', 'Tạo cây thành công.');
         return redirect()->back();
@@ -139,13 +141,13 @@ class CropController extends Controller
     }
     public function update(Request $request, $id)
     {
-        $existingVariety = Variety::where('farm_name', $request->farm_name)->where('id', '!=', $id)->first();
+        $existingVariety = Plant::where('plantCode', $request->plantCode)->where('id', '!=', $id)->first();
 
         // if ($existingVariety) {
         //     return redirect()->back()->with(['error' => 'Tên cây này đã tồn tại!']);
         // }
 
-        $existingVariety = Variety::where(function ($query) use ($request, $id) {
+        $existingVariety = Plant::where(function ($query) use ($request, $id) {
             $query->where('plantCode', $request->plantCode);
             // $query->where('farm_name', $request->farm_name)
             //     ->orWhere('plantCode', $request->plantCode);
@@ -159,8 +161,8 @@ class CropController extends Controller
                 return redirect()->back()->with(['error' => 'Mã cây này đã tồn tại!']);
             }
         }
-        $farms = Variety::find($id);
-        if (!$farms) {
+        $plants = Plant::find($id);
+        if (!$plants) {
             return redirect()->back()->with('error', 'Nông trường không tồn tại');
         }
         $request->validate([
@@ -171,24 +173,27 @@ class CropController extends Controller
             'year' => 'required',
             'status' => 'nullable',
         ]);
-        $farms->update([
+        $plants->update([
             'plantCode' => $request->plantCode,
-            'farm_name' => $request->farm_name,
-            'unit_id' => $request->unit_id,
+            'varietyID' => $request->varietyID,
+            'plotID' => $request->plotID,
+            'year' => $request->year,
+            'RF_id' => $request->RF_id,
             'status' => $request->status,
+            'statusTree' => $request->statusTree,
         ]);
         ActionHistory::create([
             'user_id' => Auth::id(),
             'action_type' => 'update',
             'model_type' => 'Variety',
-            'details' => "Đã cập nhật cây: " . $farms->farm_name,
+            'details' => "Đã cập nhật cây: " . $plants->plantCode,
         ]);
-        return redirect()->route('farms.index')->with('message', 'Cập nhật cây thành công');
+        return redirect()->route('crops.index')->with('message', 'Cập nhật cây thành công');
     }
     public function destroy($id)
     {
-        $farms = Variety::find($id);
-        $farms->delete();
+        $crops = Plant::find($id);
+        $crops->delete();
         Session::put('message', 'Xóa thành công.');
         return redirect()->back();
     }
@@ -199,9 +204,9 @@ class CropController extends Controller
             'ids.*' => 'integer',
         ]);
 
-        $farms = Variety::whereIn('id', $request->ids)->get();
+        $crops = Plant::whereIn('id', $request->ids)->get();
 
-        foreach ($farms as $farm) {
+        foreach ($crops as $farm) {
             $farm->status = ($farm->status === 'Hoạt động') ? 'Không hoạt động' : 'Hoạt động';
             $farm->save();
         }
@@ -213,16 +218,16 @@ class CropController extends Controller
             'ids' => 'required|array',
             'ids.*' => 'integer',
         ]);
-        $farmsToDelete = Variety::whereIn('id', $request->ids)->get();
+        $cropsToDelete = Plant::whereIn('id', $request->ids)->get();
 
-        Variety::whereIn('id', $request->ids)->delete();
+        Plant::whereIn('id', $request->ids)->delete();
 
-        foreach ($farmsToDelete as $farm) {
+        foreach ($cropsToDelete as $p) {
             ActionHistory::create([
                 'user_id' => Auth::id(),  // ID của người thực hiện hành động
                 'action_type' => 'delete',  // Loại hành động "delete"
                 'model_type' => 'Variety',  // Model "Variety"
-                'details' => "Đã xóa cây: " . $farm->farm_name . " với mã: " . $farm->plantCode,
+                'details' => "Đã xóa cây: " . $p->plantCode,
             ]);
         }
         return response()->json([
@@ -232,11 +237,11 @@ class CropController extends Controller
     }
     public function toggleStatus(Request $request)
     {
-        $farm = Variety::find($request->id);
-        if ($farm) {
-            $farm->status = $farm->status == 'Hoạt động' ? 'Không hoạt động' : 'Hoạt động';
-            $farm->save();
-            return response()->json(['success' => true, 'status' => $farm->status]);
+        $p = Plant::find($request->id);
+        if ($p) {
+            $p->status = $p->status == 'Hoạt động' ? 'Không hoạt động' : 'Hoạt động';
+            $p->save();
+            return response()->json(['success' => true, 'status' => $p->status]);
         } else {
             return response()->json(['success' => false]);
         }

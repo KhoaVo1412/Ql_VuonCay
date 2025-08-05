@@ -29,7 +29,7 @@
                         <!-- Tên -->
                         <div class="col-xl-12">
                             <label for="code" class="form-label">Tên Chức Vụ</label>
-                            <input type="text" class="form-control" name="team" id="team" required>
+                            <input type="text" class="form-control" name="dutyName" id="team" required>
                         </div>
                         {{-- <div class="col-xl-12">
                             <label for="code" class="form-label">Tên Nhóm</label>
@@ -148,7 +148,7 @@
             var selectedRows = new Set();
             var dataTable = $('#duty-table').DataTable({
                 "language": {
-                    // "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
+                    "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
                     "emptyTable": "Không có dữ liệu",
                 },
                 processing: true,

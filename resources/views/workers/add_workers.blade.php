@@ -7,7 +7,7 @@
             <nav>
                 <ol class="breadcrumb mb-0 padding">
                     <li class="breadcrumb-item"><a href="javascript:void(0);">Trang Chủ</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('works.index') }}">Danh Sách</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('workers.index') }}">Danh Sách</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Thêm Nhân Sự</li>
                 </ol>
             </nav>
@@ -33,7 +33,7 @@
 
     <div class="row">
         <div class="col-xl-12">
-            <form id="form-works" action="{{ route('works.save')}}" method="POST" enctype="multipart/form-data">
+            <form id="form-workers" action="{{ route('workers.save')}}" method="POST" enctype="multipart/form-data">
                 {{ csrf_field() }}
                 <div class="card custom-card">
                     <div class="card-header justify-content-between d-flex">
@@ -41,7 +41,7 @@
 
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-md-4" style="text-align: center">
+                            {{-- <div class="col-md-4" style="text-align: center">
                                 <label class="form-label">Ảnh Công Nhân</label>
                                 <div class="image-container">
                                     <!-- Input file để chọn ảnh -->
@@ -58,7 +58,46 @@
                                             style="display: none;">
                                     </label>
                                 </div>
+                            </div> --}}
+                            <div class="col-md-4">
+                                <div style="justify-content: center;">
+                                    <div style="display: flex; grid-gap: 20px; justify-content: center;">
+                                        <div id="image-container"
+                                            style="position: relative; width: 80px; height: 80px;border: 3px solid rgb(38, 156, 52);border-radius: 50%;">
+                                            <img id="profile-image" src=""
+                                                style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                                            <input name="image" type="file" id="image-upload" accept="image/*"
+                                                style="display: none;">
+                                        </div>
+                                        <a href="#" id="upload-link"
+                                            style="margin-top: 40px; color: rgb(148, 148, 214); font-size: 13px;">
+                                            Chọn Ảnh
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
+
+                            <script>
+                                // Function to display the selected image
+                                function previewImage(event) {
+                                    const file = event.target.files[0];
+                                    const preview = document.getElementById('preview-image');
+
+                                    // Check if a file was selected
+                                    if (file) {
+                                        const reader = new FileReader();
+
+                                        // Set the image source once the file is read
+                                        reader.onload = function() {
+                                            preview.src = reader.result;
+                                            preview.style.display = 'block'; // Show the image
+                                        };
+
+                                        // Read the file as a Data URL
+                                        reader.readAsDataURL(file);
+                                    }
+                                }
+                            </script>
 
                             <div class="col-md-4">
                                 <label class="form-label">Mã Công Nhân</label>
@@ -175,5 +214,48 @@
     }
 });
 
+</script>
+<script>
+    document.getElementById('upload-link').addEventListener('click', function(event) {
+            event.preventDefault();
+            document.getElementById('image-upload').click();
+        });
+
+        document.getElementById('image-upload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profile-image').src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('submit-btn').addEventListener('click', function(event) {
+            let isValid = true;
+            const inputs = document.querySelectorAll('.modal-body input, .modal-body select');
+            inputs.forEach(input => {
+                const errorElement = input.nextElementSibling;
+                if (!input.value) {
+                    isValid = false;
+                    input.classList.add('error-border');
+                    if (errorElement) {
+                        errorElement.style.display = 'block';
+                    }
+                } else {
+                    input.classList.remove('error-border');
+                    if (errorElement) {
+                        errorElement.style.display = 'none';
+                    }
+                }
+            });
+            // If all fields are valid, submit the form
+            if (isValid) {
+                document.getElementById('account-form').submit();
+            } else {
+                event.preventDefault();
+            }
+        });
 </script>
 @endsection

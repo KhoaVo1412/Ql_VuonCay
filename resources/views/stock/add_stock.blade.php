@@ -2,7 +2,7 @@
 @section('content')
 <section>
     <div class="d-md-flex d-block align-items-center justify-content-between my-2 page-header-breadcrumb">
-        <h5 class="page-title fw-semibold fs-18 mb-0">Tạo Lô</h5>
+        <h4 class="page-title fw-semibold fs-18 mb-0">Tạo Lô</h4>
         <div class="ms-md-1 ms-0">
             <nav>
                 <ol class="breadcrumb mb-0 padding">
@@ -22,52 +22,59 @@
                 <div class="card custom-card">
                     <div class="card-body">
                         <div class="row modal-body gy-4">
-                            <!-- Mã Lô -->
+                            <!-- Vườn (gardenID) -->
                             <div class="col-xl-6">
-                                <label for="plotCode" class="form-label">Mã Lô</label>
-                                <input type="text" class="form-control" name="plotCode" id="plotCode" required
-                                    placeholder="Mã lô" value="{{ old('plotCode') }}">
+                                <label for="plantCode" class="form-label">Mã Lô</label>
+                                <input type="text" class="form-control" name="plantCode" id="plantCode" required
+                                    placeholder="Mã lô">
                             </div>
-
-                            <!-- Tên Lô -->
+                            <!-- Vườn (gardenID) -->
+                            {{-- <div class="col-xl-6">
+                                <label for="gardenID" class="form-label">Vườn</label>
+                                <select class="form-control" name="gardenID" id="gardenID" required>
+                                    <option value="">Chọn vườn</option>
+                                    @foreach($gardens as $garden)
+                                    <option value="{{ $garden->id }}">{{ $garden->gardenName }}</option>
+                                    @endforeach
+                                </select>
+                            </div> --}}
+                            <!-- Tên lô -->
                             <div class="col-xl-6">
                                 <label for="plotName" class="form-label">Tên Lô</label>
                                 <input type="text" class="form-control" name="plotName" id="plotName" required
-                                    placeholder="Tên lô" value="{{ old('plotName') }}">
+                                    placeholder="Tên lô">
                             </div>
-
-                            <!-- Diện Tích -->
+                            <!-- Diện tích lô -->
                             <div class="col-xl-6">
-                                <label for="plotArea" class="form-label">Diện Tích</label>
+                                <label for="plotArea" class="form-label">Diện Tích (m2)</label>
                                 <input type="number" min="0" step="0.01" class="form-control" name="plotArea"
-                                    id="plotArea" required placeholder="Diện tích" value="{{ old('plotArea') }}">
+                                    id="plotArea" required placeholder="Diện tích">
                             </div>
-
-                            <!-- Năm Trồng -->
+                            <!-- Số lượng cây -->
                             <div class="col-xl-6">
-                                <label for="year" class="form-label">Năm Trồng</label>
+                                <label for="plantCount" class="form-label">Số Lượng Cây</label>
+                                <input type="number" class="form-control" placeholder="0" readonly>
+                            </div>
+                            <div class="col-xl-6">
+                                <label for="plantCount" class="form-label">Năm Trồng</label>
                                 <input type="number" min="2000" class="form-control" name="year" id="year" required
-                                    placeholder="Năm" value="{{ old('year') }}">
+                                    placeholder="Năm">
                             </div>
-
-                            <!-- Tình Trạng Cây -->
                             <div class="col-xl-6">
-                                <label for="statusTree" class="form-label">Tình Trạng Cây</label>
+                                <label for="plantCount" class="form-label">Tình Trạng Cây</label>
                                 <input type="text" class="form-control" name="statusTree" id="statusTree" required
-                                    placeholder="Tình trạng cây" value="{{ old('statusTree') }}">
+                                    placeholder="Tình trạng cây">
                             </div>
-
-                            <!-- Map -->
                             <div class="col-xl-12">
-                                <label for="mapJs" class="form-label">Map</label>
+                                <label for="plantCount" class="form-label">Map</label>
                                 <textarea class="form-control" name="mapJs" id="mapJs" required
-                                    placeholder="">{{ old('mapJs') }}</textarea>
+                                    placeholder=""></textarea>
                             </div>
-
                             <div class="prism-toggle d-grid gap-2 d-md-flex p-">
                                 <button type="submit" class="btn btn-success">Lưu Thông Tin</button>
                             </div>
                         </div>
+
                     </div>
                 </div>
             </form>

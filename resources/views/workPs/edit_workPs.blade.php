@@ -124,7 +124,7 @@
                                             @foreach($works as $work)
                                             <option value="{{ $work->id }}" {{ $work->id == $item->job ? 'selected' : ''
                                                 }}>
-                                                {{ $work->workName }}
+                                                {{ $work->workType }}
                                             </option>
                                             @endforeach
                                         </select>
@@ -182,7 +182,7 @@
                 <select name="proposalProducts[${rowIndex}][job]" class="form-control">
                     <option value="">Chọn công việc</option>
                     @foreach($works as $work)
-                    <option value="{{ $work->id }}">{{ $work->workName }}</option>
+                    <option value="{{ $work->id }}">{{ $work->workType }}</option>
                     @endforeach
                 </select>
             </td>

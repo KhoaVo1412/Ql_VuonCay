@@ -40,7 +40,7 @@ class WorkController extends Controller
                     return $row->code;
                 })
                 ->addColumn('workName', function ($row) {
-                    return $row->work->workName ?? 'Không rõ';
+                    return $row->workName ?? 'Không rõ';
                 })
                 ->addColumn('workType', function ($row) {
                     return $row->work->workType ?? 'Không rõ';
@@ -77,7 +77,7 @@ class WorkController extends Controller
                                         <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        Bạn có chắc chắn có muốn xóa thông tin <span style="color: red;">' . ($row->farm_name ?? 'N/A') . '</span>?
+                                        Bạn có chắc chắn có muốn xóa thông tin <span style="color: red;">' . ($row->workType ?? 'N/A') . '</span>?
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -115,6 +115,7 @@ class WorkController extends Controller
         $request->validate([
             'workID' => 'required',
             'workerID' => 'required',
+            'workName' => 'required',
             'workDate' => 'required',
             'dateEnd' => 'required',
             'plotID' => 'required',
@@ -140,6 +141,7 @@ class WorkController extends Controller
         $task = GenTask::create([
             'code' => $randomCode,
             'workID' => $request->workID,
+            'workName' => $request->workName,
             'workerID' => $request->workerID,
             'workDate' => $request->workDate,
             'dateEnd' => $request->dateEnd,
@@ -155,7 +157,7 @@ class WorkController extends Controller
             'user_id' => Auth::id(),
             'action_type' => 'create',
             'model_type' => 'GenTask',
-            'details' => "Đã tạo công việc: " . $request->randomCode,
+            'details' => "Đã tạo công việc: " . $request->workName . 'với mã là: ' . $randomCode,
         ]);
         session()->flash('message', 'Tạo công việc thành công.');
         return redirect()->route('works.index');
@@ -167,25 +169,25 @@ class WorkController extends Controller
         $workers = Worker::all();
         $plots = Plot::all();
 
-        $gentasks = GenTask::find($id);
-        $plants = $gentasks->plants->pluck('id')->toArray(); // Get the associated plant IDs
-
+        $gentasks = GenTask::with(['plants.variety'])->findOrFail($id);
+        $plants = Plant::with('variety')->get();
         return view('works.edit_work', compact('gardens', 'workers', 'works', 'plots', 'gentasks', 'plants'));
     }
     public function update(Request $request, $id)
     {
+        // dd($request->all());
         $existingGenTask = GenTask::where('code', $request->code)->where('id', '!=', $id)->first();
 
-        $existingGenTask = GenTask::where(function ($query) use ($request, $id) {
-            $query->where('code', $request->code);
-        })->where('id', '!=', $id)->first();
+        // $existingGenTask = GenTask::where(function ($query) use ($request, $id) {
+        //     $query->where('code', $request->code);
+        // })->where('id', '!=', $id)->first();
 
-        if ($existingGenTask) {
+        // if ($existingGenTask) {
 
-            if ($existingGenTask->code === $request->code) {
-                return redirect()->back()->with(['error' => 'Mã công việc này đã tồn tại!']);
-            }
-        }
+        // if ($existingGenTask->code === $request->code) {
+        //     return redirect()->back()->with(['error' => 'Mã công việc này đã tồn tại!']);
+        // }
+        // }
         $gentasks = GenTask::find($id);
         if (!$gentasks) {
             return redirect()->back()->with('error', 'Công việc không tồn tại');
@@ -199,12 +201,24 @@ class WorkController extends Controller
             'priority' => 'required',
             'description' => 'nullable',
         ]);
+        if ($gentasks->workID != $request->workID || $gentasks->workerID != $request->workerID) {
+            $taskSlug = Str::slug($request->workID, '_');
+            $taskSlug1 = Str::slug($request->workerID);
+            $prefix = '#' . $taskSlug . '_' . $taskSlug1;
+            do {
+                $randomCode = $prefix . rand(100, 999);
+            } while (GenTask::where('code', $randomCode)->exists());
+            $gentasks->code = $randomCode;
+        }
+
         $gentasks->update([
             'workID' => $request->workID,
+            'workName' => $request->workName,
             'workerID' => $request->workerID,
             'workDate' => $request->workDate,
             'plotID' => $request->plotID,
             'type' => $request->type,
+            'workDate' => $request->workDate,
             'priority' => $request->priority,
             'description' => $request->description,
             'workStatus' => $request->workStatus,
@@ -215,14 +229,14 @@ class WorkController extends Controller
             'user_id' => Auth::id(),
             'action_type' => 'update',
             'model_type' => 'GenTask',
-            'details' => "Đã cập nhật công việc: " . $gentasks->code,
+            'details' => "Đã cập nhật công việc: " . $gentasks->workName . " với mã: " . $gentasks->code,
         ]);
         return redirect()->route('works.index')->with('message', 'Cập nhật công việc thành công');
     }
     public function destroy($id)
     {
-        $farms = GenTask::find($id);
-        $farms->delete();
+        $gens = GenTask::find($id);
+        $gens->delete();
         Session::put('message', 'Xóa thành công.');
         return redirect()->back();
     }
@@ -233,11 +247,11 @@ class WorkController extends Controller
             'ids.*' => 'integer',
         ]);
 
-        $farms = GenTask::whereIn('id', $request->ids)->get();
+        $gens = GenTask::whereIn('id', $request->ids)->get();
 
-        foreach ($farms as $farm) {
-            $farm->status = ($farm->status === 'Hoàn thành') ? 'Chưa hoàn thành' : 'Hoàn thành';
-            $farm->save();
+        foreach ($gens as $g) {
+            $g->status = ($g->status === 'Hoàn thành') ? 'Chưa hoàn thành' : 'Hoàn thành';
+            $g->save();
         }
         return response()->json(['message' => 'Thành Công']);
     }
@@ -247,16 +261,16 @@ class WorkController extends Controller
             'ids' => 'required|array',
             'ids.*' => 'integer',
         ]);
-        $farmsToDelete = GenTask::whereIn('id', $request->ids)->get();
+        $gensToDelete = GenTask::whereIn('id', $request->ids)->get();
 
         GenTask::whereIn('id', $request->ids)->delete();
 
-        foreach ($farmsToDelete as $farm) {
+        foreach ($gensToDelete as $g) {
             ActionHistory::create([
                 'user_id' => Auth::id(),
                 'action_type' => 'delete',
                 'model_type' => 'GenTask',
-                'details' => "Đã xóa công việc: " . $farm->farm_name . " với mã: " . $farm->code,
+                'details' => "Đã xóa công việc: " . $g->workName . " với mã: " . $g->code,
             ]);
         }
         return response()->json([
@@ -266,11 +280,11 @@ class WorkController extends Controller
     }
     public function toggleStatus(Request $request)
     {
-        $farm = GenTask::find($request->id);
-        if ($farm) {
-            $farm->status = $farm->status == 'Hoàn thành' ? 'Chưa hoàn thành' : 'Hoàn thành';
-            $farm->save();
-            return response()->json(['success' => true, 'status' => $farm->status]);
+        $gen = GenTask::find($request->id);
+        if ($gen) {
+            $gen->status = $gen->status == 'Hoàn thành' ? 'Chưa hoàn thành' : 'Hoàn thành';
+            $gen->save();
+            return response()->json(['success' => true, 'status' => $gen->status]);
         } else {
             return response()->json(['success' => false]);
         }
@@ -324,7 +338,7 @@ class WorkController extends Controller
                                         <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        Bạn có chắc chắn có muốn xóa thông tin <span style="color: red;">' . ($row->farm_name ?? 'N/A') . '</span>?
+                                        Bạn có chắc chắn có muốn xóa thông tin <span style="color: red;">' . ($row->workType ?? 'N/A') . '</span>?
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -346,20 +360,20 @@ class WorkController extends Controller
         // dd($request->all());
         $request->validate([
             'workCode' => 'required',
-            'workName' => 'required',
+            // 'workName' => 'required',
             'workType' => 'required',
             'workDate' => 'required',
 
             'status' => 'nullable',
         ]);
-        $existingCode = Work::where('workName', $request->workName)->first();
+        $existingCode = Work::where('workType', $request->workType)->first();
 
         if ($existingCode) {
             return redirect()->back()->with(['error' => 'Công việc này đã tồn tại!']);
         }
 
         Work::create([
-            'workName' => $request->workName,
+            // 'workName' => $request->workName,
             'workType' => $request->workType,
             'workCode' => $request->workCode,
             'workDate' => $request->workDate,
@@ -367,8 +381,8 @@ class WorkController extends Controller
         ActionHistory::create([
             'user_id' => Auth::id(),
             'action_type' => 'create',
-            'model_type' => 'Work',
-            'details' => "Đã tạo công việc: " . $request->workName . " với mã: " . $request->workCode,
+            'model_type' => 'WorkType',
+            'details' => "Đã tạo công việc: " . $request->workCode,
         ]);
         session()->flash('message', 'Tạo công việc thành công.');
         return redirect()->back();
@@ -381,14 +395,14 @@ class WorkController extends Controller
     }
     public function update1(Request $request, $id)
     {
-        $existingWork = Work::where('workName', $request->workName)->where('id', '!=', $id)->first();
+        $existingWork = Work::where('workType', $request->workType)->where('id', '!=', $id)->first();
 
         $existingWork = Work::where(function ($query) use ($request, $id) {
-            $query->where('workName', $request->workName);
+            $query->where('workType', $request->workType);
         })->where('id', '!=', $id)->first();
 
         if ($existingWork) {
-            if ($existingWork->workName === $request->workName) {
+            if ($existingWork->workType === $request->workType) {
                 return redirect()->back()->with(['error' => 'Công việc này đã tồn tại!']);
             }
         }
@@ -398,12 +412,12 @@ class WorkController extends Controller
         }
         $request->validate([
             'workCode' => 'required',
-            'workName' => 'required',
+            // 'workName' => 'required',
             'workType' => 'required',
             'workDate' => 'required',
         ]);
         $Aworks->update([
-            'workName' => $request->workName,
+            // 'workName' => $request->workName,
             'workType' => $request->workType,
             'workCode' => $request->workCode,
             'workDate' => $request->workDate,
@@ -411,7 +425,7 @@ class WorkController extends Controller
         ActionHistory::create([
             'user_id' => Auth::id(),
             'action_type' => 'update',
-            'model_type' => 'Work',
+            'model_type' => 'WorkType',
             'details' => "Đã cập nhật công việc: " . $Aworks->workName,
         ]);
         return redirect()->route('aworks.index')->with('message', 'Cập nhật công việc thành công');
@@ -450,8 +464,8 @@ class WorkController extends Controller
             ActionHistory::create([
                 'user_id' => Auth::id(),
                 'action_type' => 'delete',
-                'model_type' => 'Work',
-                'details' => "Đã xóa công việc: " . $g->name . " với mã: " . $g->workName,
+                'model_type' => 'WorkType',
+                'details' => "Đã xóa công việc: " . $g->workName,
             ]);
         }
         return response()->json([

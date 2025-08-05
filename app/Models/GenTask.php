@@ -13,6 +13,7 @@ class GenTask extends Model
 
     protected $fillable = [
         'code',
+        'workName',
         'workerID',
         'workID',
         'workDate',

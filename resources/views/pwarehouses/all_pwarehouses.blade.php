@@ -372,6 +372,68 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.3.5/dist/sweetalert2.min.js"></script>
 
 <script>
+    $(document).ready(function() {
+        $(document).on('click', '.toggle-active', function() {
+            var id = $(this).data('id'); // Lấy id của phiếu kho
+            var row = $(this).closest('tr'); // Lấy dòng của phiếu kho tương ứng
+            var button = $(this); // Nút toggle-active trong dòng
+
+            Swal.fire({
+                title: 'Bạn có chắc chắn muốn xác nhận?',
+                text: "Xác nhận kiểm duyệt.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Xác nhận',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/pickings/' + id + '/toggle-active', 
+                        method: 'POST',
+                        data: {
+                            id: id,
+                            _token: $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                button.text(response.status);
+                                button.removeClass('bg-success bg-danger');
+                                button.addClass(response.status === 'Hoàn thành' ? 'bg-success' : 'bg-danger');
+                                
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Cập nhật phiếu thành công!',
+                                    text: response.message,
+                                    confirmButtonText: 'OK'
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Lỗi!',
+                                    text: response.message,
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        },
+                        error: function() {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Lỗi kết nối!',
+                                text: 'Không thể kết nối đến máy chủ. Vui lòng thử lại sau.',
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    });
+</script>
+
+
+<script>
     $(document).on('click', '.toggle-status', function(e) {
             e.preventDefault();
 
@@ -415,7 +477,7 @@
                             } else {
                                 Swal.fire({
                                     text: response.message ||
-                                        'Không thể thay đổi trạng thái của Sản Lượng.',
+                                        'Không thể thay đổi trạng thái.',
                                     icon: 'error',
                                     confirmButtonText: 'OK',
                                     timer: 3000
@@ -436,13 +498,6 @@
         });
 </script>
 <script>
-    // JS: Gán loại công việc tương ứng
-    document.getElementById('workID-select').addEventListener('change', function () {
-        const selected = this.options[this.selectedIndex];
-        const type = selected.getAttribute('data-type');
-        document.getElementById('work-type-display').value = type || '';
-    });
-
     function updateTaskCounts() {
             const total = tasks.length;
             const completed = tasks.filter(task => task.completed).length;

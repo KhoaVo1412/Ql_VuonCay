@@ -55,7 +55,7 @@ class TeamController extends Controller
                                         <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        Bạn có chắc chắn có muốn xóa thông tin <span style="color: red;">' . ($row->farm_name ?? 'N/A') . '</span>?
+                                        Bạn có chắc chắn có muốn xóa thông tin <span style="color: red;">' . ($row->name ?? 'N/A') . '</span>?
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -99,7 +99,7 @@ class TeamController extends Controller
             'user_id' => Auth::id(),
             'action_type' => 'create',
             'model_type' => 'Team',
-            'details' => "Đã tạo tổ: " . $request->name . " với mã: " . $request->teamName,
+            'details' => "Đã tạo tổ: " . $request->name,
         ]);
         session()->flash('message', 'Tạo tổ thành công.');
         return redirect()->back();
@@ -112,7 +112,7 @@ class TeamController extends Controller
     }
     public function update(Request $request, $id)
     {
-        $existingTeam = Team::where('name', $request->teamName)->where('id', '!=', $id)->first();
+        $existingTeam = Team::where('name', $request->name)->where('id', '!=', $id)->first();
 
         // if ($existingTeam) {
         //     return redirect()->back()->with(['error' => 'Tên tổ này đã tồn tại!']);
@@ -128,7 +128,7 @@ class TeamController extends Controller
             // if ($existingTeam->farm_name === $request->farm_name) {
             //     return redirect()->back()->with(['error' => 'Tên tổ này đã tồn tại!']);
             // }
-            if ($existingTeam->farm_code === $request->farm_code) {
+            if ($existingTeam->name === $request->name) {
                 return redirect()->back()->with(['error' => 'Tên tổ này đã tồn tại!']);
             }
         }
@@ -137,13 +137,13 @@ class TeamController extends Controller
             return redirect()->back()->with('error', 'Tên tổ không tồn tại');
         }
         $request->validate([
-            'teamName' => 'nullable',
+            // 'teamName' => 'nullable',
             'name' => 'nullable',
             'status' => 'nullable',
         ]);
         $teams->update([
-            'teamName' => $request->teamName,
-            'name' => $request->team,
+            // 'teamName' => $request->teamName,
+            'name' => $request->name,
             'status' => $request->status,
         ]);
         ActionHistory::create([
@@ -152,7 +152,7 @@ class TeamController extends Controller
             'model_type' => 'Team',
             'details' => "Đã cập nhật tổ: " . $teams->name,
         ]);
-        return redirect()->route('farms.index')->with('message', 'Cập nhật tổ thành công');
+        return redirect()->route('teams.index')->with('message', 'Cập nhật tổ thành công');
     }
     public function destroy($id)
     {
@@ -189,7 +189,7 @@ class TeamController extends Controller
                 'user_id' => Auth::id(),
                 'action_type' => 'delete',
                 'model_type' => 'Team',
-                'details' => "Đã xóa tổ: " . $g->name . " với mã: " . $g->teamName,
+                'details' => "Đã xóa tổ: " . $g->name . " với mã: " . $g->name,
             ]);
         }
         return response()->json([

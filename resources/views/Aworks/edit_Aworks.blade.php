@@ -46,15 +46,15 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-6">
-                                <label for="workCode" class="form-label">Mã Công Việc</label>
+                                <label for="workCode" class="form-label">Mã Loại Công Việc</label>
                                 <input type="text" class="form-control" name="workCode" placeholder="Mã"
                                     value="{{ $aworks->workCode }}" required>
                             </div>
-                            <div class="col-md-6">
+                            {{-- <div class="col-md-6">
                                 <label for="" class="form-label">Tên Công Việc</label>
                                 <input type="text" class="form-control" name="workName" placeholder="Tên"
                                     value="{{ $aworks->workName }}" required>
-                            </div>
+                            </div> --}}
                             <div class="col-md-6">
                                 <label for="" class="form-label">Loại Công Việc</label>
                                 <input type="text" class="form-control" name="workType" placeholder="Loại"

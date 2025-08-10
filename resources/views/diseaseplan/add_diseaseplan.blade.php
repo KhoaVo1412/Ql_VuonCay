@@ -2,12 +2,12 @@
 @section('content')
 <section>
     <div class="d-md-flex d-block align-items-center justify-content-between my-2 page-header-breadcrumb">
-        <h4 class="page-title fw-semibold fs-18 mb-0">Tạo Phiếu Cây Bệnh</h4>
+        <h5 class="page-title fw-semibold fs-18 mb-0">Tạo Phiếu Cây Bệnh</h5>
         <div class="ms-md-1 ms-0">
             <nav>
                 <ol class="breadcrumb mb-0 padding">
                     <li class="breadcrumb-item"><a href="javascript:void(0);">Trang Chủ</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('plantingareas.index') }}">Danh sách</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('diseaseplans.index') }}">Danh sách</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Thêm Phiếu Bệnh</li>
                 </ol>
             </nav>
@@ -25,97 +25,101 @@
                         <div class="row modal-body gy-4">
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="medicalRecordId" class="form-label required">Mã Bệnh án</label>
-                                    <input type="text" id="medicalRecordId" class="form-input"
-                                        placeholder="Nhập mã bệnh án" required>
+                                    <label for="medicalRecordId" class="form-label required">Mã Phiếu Trị</label>
+                                    <input type="text" name="code" id="" class="form-input"
+                                        placeholder="Nhập mã phiếu trị" value="{{ old('code') }}" required>
                                 </div>
-                                <div class="form-group wide">
-                                    <label for="medicalRecordName" class="form-label required">Tên Bệnh án</label>
-                                    <input type="text" id="medicalRecordName" class="form-input"
-                                        placeholder="Nhập tên bệnh án" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="gardenId" class="form-label">Mã Vườn</label>
-                                    <input type="text" id="gardenId" class="form-input" placeholder="Nhập mã vườn">
+                                <div class="form-group ">
+                                    <label for="medicalRecordName" class="form-label required">Tên Phiếu Trị</label>
+                                    <input type="text" name="name" class="form-input" placeholder="Nhập tên phiếu trị"
+                                        value="{{ old('name') }}" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="lotId" class="form-label">Mã Lô</label>
-                                    <input type="text" id="lotId" class="form-input" placeholder="Nhập mã lô">
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="recordDate" class="form-label required">Ngày Ghi Nhận</label>
-                                    <input type="date" id="recordDate" class="form-input" required>
-                                </div>
-                                <div class="form-group wide">
-                                    <label for="diseaseName" class="form-label required">Tên Bệnh</label>
-                                    <input type="text" id="diseaseName" class="form-input" placeholder="Nhập tên bệnh"
-                                        required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="quantity" class="form-label">Số Lượng</label>
-                                    <input type="number" id="quantity" class="form-input" placeholder="Nhập số lượng">
-                                </div>
-                                <div class="form-group">
-                                    <label for="teamName" class="form-label">Tên Tổ</label>
-                                    <input type="text" id="teamName" class="form-input" placeholder="Nhập tên tổ">
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="form-group wide">
-                                    <label for="symptoms" class="form-label required">Biểu Hiện Bệnh</label>
-                                    <textarea id="symptoms" class="form-textarea"
-                                        placeholder="Mô tả chi tiết biểu hiện bệnh..." required></textarea>
-                                </div>
-                                <div class="form-group">
-                                    <label for="spreadLevel" class="form-label required">Mức Độ Lây Lan</label>
-                                    <select id="spreadLevel" class="form-select" required>
-                                        <option value="">Chọn mức độ</option>
-                                        <option value="low">Thấp</option>
-                                        <option value="medium">Trung bình</option>
-                                        <option value="high">Cao</option>
-                                        <option value="critical">Nghiêm trọng</option>
+                                    <label for="Plant" class="form-label">Cây</label>
+                                    <select name="plantID" id="plantID" class="form-select" required>
+                                        <option value="">Chọn cây</option>
+                                        @foreach($plants as $p)
+                                        <option value="{{ $p->id }}" {{ old('plantID')==$p->id ?
+                                            'selected' : '' }}>{{ $p->variety->varietyName }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                             </div>
-
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="recordDate" class="form-label required">Ngày Ghi Nhận</label>
+                                    <input type="date" name="detectionDate" id="recordDate" class="form-input"
+                                        value="{{ old('detectionDate') }}" required>
+                                </div>
+                                <div class="form-group ">
+                                    <label for="diseaseName" class="form-label required">Tên Bệnh</label>
+                                    <select name="diseaseID" id="diseaseName" class="form-select" required>
+                                        <option value="">Chọn tên bệnh</option>
+                                        @foreach($diseases as $disease)
+                                        <option value="{{ $disease->id }}" {{ old('diseaseID')==$disease->id ?
+                                            'selected' : '' }}>{{ $disease->diseaseName }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group ">
+                                    <label for="workerID" class="form-label required">Người Tạo</label>
+                                    <select name="workerID" id="workerID" class="form-select" required>
+                                        <option value="">Chọn tên bệnh</option>
+                                        @foreach($workers as $worker)
+                                        <option value="{{ $worker->id }}" {{ old('workerID')==$worker->id ?
+                                            'selected' : '' }}>{{ $worker->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group ">
+                                    <label for="symptoms" class="form-label required">Biểu Hiện Bệnh</label>
+                                    <textarea id="symptoms" class="form-textarea" name="symptoms"
+                                        value="{{ old('symptoms') }}" placeholder="Mô tả chi tiết biểu hiện bệnh..."
+                                        required></textarea>
+                                </div>
+                            </div>
                             <div class="form-row">
                                 <div class="form-group" style="flex: 1;">
                                     <label for="cause" class="form-label required">Nguyên Nhân</label>
-                                    <textarea id="cause" class="form-textarea"
+                                    <textarea name="cause" id="cause" class="form-textarea" value="{{ old('cause') }}"
                                         placeholder="Mô tả nguyên nhân gây bệnh..." required></textarea>
                                 </div>
                             </div>
-
                             <!-- Treatment Plan Section -->
-                            <div class="treatment-plan">
+                            {{-- <div class="treatment-plan">
                                 <h2 class="treatment-plan-title">Kế Hoạch Điều Trị</h2>
 
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="startDate" class="form-label">Ngày Bắt Đầu</label>
-                                        <input type="date" id="startDate" class="form-input">
+                                        <input type="date" name="sessionStart" id="startDate" class="form-input"
+                                            value="{{ old('startDate') }}">
                                     </div>
                                     <div class="form-group">
-                                        <label for="endDate" class="form-label">Ngày Kết Thúc (Dự Kiến)</label>
-                                        <input type="date" id="endDate" class="form-input">
+                                        <label for="sessionEnd" class="form-label">Ngày Kết Thúc (Dự Kiến)</label>
+                                        <input type="date" name="sessionEnd" id="endDate" class="form-input"
+                                            value="{{old('sessionEnd')}}">
                                     </div>
                                     <div class="form-group">
                                         <label for="assignedTo" class="form-label">Người Phụ Trách</label>
-                                        <input type="text" id="assignedTo" class="form-input"
-                                            placeholder="Nhập tên người phụ trách">
+                                        <select name="assigned_to" id="assigned_to" class="form-select" required>
+                                            <option value="">Chọn người phụ trách</option>
+                                            @foreach($workers as $worker)
+                                            <option value="{{ $worker->id }}" {{ old('assigned_to')==$worker->id ?
+                                                'selected' : '' }}>{{ $worker->name }}</option>
+                                            @endforeach
+                                        </select>
                                     </div>
                                     <div class="form-group">
                                         <label for="priority" class="form-label">Mức Độ Ưu Tiên</label>
-                                        <select id="priority" class="form-select">
+                                        <select name="priority" id="priority" class="form-select">
                                             <option value="">Chọn Mức Độ</option>
-                                            <option value="low">Thấp</option>
-                                            <option value="medium">Trung Bình</option>
-                                            <option value="high">Cao</option>
-                                            <option value="urgent">Khẩn Cấp</option>
+                                            <option value="Thấp">Thấp</option>
+                                            <option value="Trung Bình">Trung Bình</option>
+                                            <option value="Cao">Cao</option>
+                                            <option value="Khẩn Cấp">Khẩn Cấp</option>
                                         </select>
                                     </div>
                                 </div>
@@ -127,23 +131,29 @@
                                             <div class="form-row">
                                                 <div class="form-group">
                                                     <label class="form-label">Tên Thuốc/Vật Tư</label>
-                                                    <input type="text" class="form-input"
-                                                        placeholder="Nhập tên thuốc hoặc vật tư">
+                                                    <select name="steps[0][productID]" class="form-select" required>
+                                                        @foreach($products as $product)
+                                                        <option value="{{ $product->id }}">{{ $product->name }}</option>
+                                                        @endforeach
+                                                    </select>
                                                 </div>
                                                 <div class="form-group">
                                                     <label class="form-label">Liều Lượng</label>
-                                                    <input type="text" class="form-input" placeholder="Nhập liều lượng">
+                                                    <input type="number" min="0" name="steps[0][dose]"
+                                                        class="form-input" placeholder="Nhập liều lượng">
                                                 </div>
                                                 <div class="form-group">
                                                     <label class="form-label">Ngày Thực Hiện</label>
-                                                    <input type="date" class="form-input">
+                                                    <input type="date" name="steps[0][execution_date]"
+                                                        class="form-input">
                                                 </div>
                                             </div>
                                             <div class="form-row" style="margin-bottom: 0;">
                                                 <div class="form-group" style="flex: 1;">
                                                     <label class="form-label">Hướng Dẫn</label>
-                                                    <textarea class="form-textarea" style="min-height: 60px;"
+                                                    <textarea name="steps[0][instructions]" class="form-textarea"
                                                         placeholder="Nhập hướng dẫn chi tiết..."></textarea>
+
                                                 </div>
                                             </div>
                                         </div>
@@ -152,56 +162,20 @@
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
-                                    </div>
-
-                                    <div class="treatment-step">
-                                        <div class="step-number">2</div>
-                                        <div class="step-content">
-                                            <div class="form-row">
-                                                <div class="form-group">
-                                                    <label class="form-label">Tên Thuốc/Vật Tư</label>
-                                                    <input type="text" class="form-input"
-                                                        placeholder="Nhập tên thuốc hoặc vật tư">
-                                                </div>
-                                                <div class="form-group">
-                                                    <label class="form-label">Liều Lượng</label>
-                                                    <input type="text" class="form-input" placeholder="Nhập liều lượng">
-                                                </div>
-                                                <div class="form-group">
-                                                    <label class="form-label">Ngày Thực Hiện</label>
-                                                    <input type="date" class="form-input">
-                                                </div>
-                                            </div>
-                                            <div class="form-row" style="margin-bottom: 0;">
-                                                <div class="form-group" style="flex: 1;">
-                                                    <label class="form-label">Hướng Dẫn</label>
-                                                    <textarea class="form-textarea" style="min-height: 60px;"
-                                                        placeholder="Nhập hướng dẫn chi tiết..."></textarea>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="step-actions">
-                                            <button type="button" class="btn btn-outline" style="color: #ef4444;">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div class="add-step-btn" onclick="alert('Thêm bước điều trị mới')">
-                                        <i class="fas fa-plus" style="margin-right: 0.5rem;"></i>
-                                        Thêm bước điều trị
                                     </div>
                                 </div>
+                                <div class="add-step-btn" onclick="addStep()">
+                                    <i class="fas fa-plus" style="margin-right: 0.5rem;"></i>
+                                    Thêm bước điều trị
+                                </div>
                             </div>
-
-                            <!-- Results and Notes -->
                             <div class="form-row" style="margin-top: 1.5rem;">
                                 <div class="form-group" style="flex: 1;">
                                     <label for="results" class="form-label">Kết Quả Điều Trị</label>
                                     <textarea id="results" class="form-textarea"
                                         placeholder="Ghi chú kết quả sau khi điều trị..."></textarea>
                                 </div>
-                            </div>
+                            </div> --}}
                         </div>
                         <div class="prism-toggle d-grid gap-2 d-md-flex">
                             <button type="submit" class="btn btn-success">Lưu Thông Tin</button>
@@ -214,20 +188,67 @@
     </div>
 </section>
 <script>
+    let stepCount = 1; // Số bước điều trị hiện tại
+    function addStep() {
+        stepCount++;
+        const container = document.querySelector('.treatment-steps');  // Chọn container để chèn bước điều trị mới
+        const newStepId = `step-${stepCount}`;
+
+        const newStepHTML = `
+            <div class="treatment-steps">
+                <div class="treatment-step" id="${newStepId}">
+                    <div class="step-number">${stepCount}</div>
+                    <div class="step-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Tên Thuốc/Vật Tư</label>
+                                <select name="steps[${stepCount}][productID]" class="form-select" required>
+                                    <option value="">Chọn sản phẩm</option>
+                                    @foreach($products as $product)
+                                        <option value="{{ $product->id }}">{{ $product->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Liều Lượng</label>
+                                <input type="text" name="steps[${stepCount}][dose]" class="form-input" placeholder="Nhập liều lượng" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Ngày Thực Hiện</label>
+                                <input type="date" name="steps[${stepCount}][execution_date]" class="form-input" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Hướng Dẫn</label>
+                                <textarea name="steps[${stepCount}][instructions]" class="form-textarea" placeholder="Nhập hướng dẫn chi tiết..." required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step-actions">
+                        <button type="button" onclick="removeTreatmentStep(this)" class="btn btn-outline" style="color: #ef4444;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', newStepHTML);
+
+    }
+   function removeTreatmentStep(button) {
+        button.closest('.treatment-step').remove();
+    }
+
+</script>
+<script>
     function autoResize(textarea) {
         textarea.style.height = 'auto'; 
         textarea.style.height = textarea.scrollHeight + 'px';
     }
-</script>
-<script>
-    $(document).ready(function () {
-        $('#farm_id').select2({
-            placeholder: "Chọn Nông Trường",
-            allowClear: true,
-            minimumResultsForSearch: 0,
-            width: '100%',
-        });
-    });
 </script>
 <style>
     .form-label {
@@ -288,7 +309,7 @@
     .form-select,
     .form-textarea {
         width: 100%;
-        padding: 0.75rem;
+        padding: 0.5rem;
         border: 1px solid #d1d5db;
         border-radius: 0.375rem;
         font-size: 0.875rem;

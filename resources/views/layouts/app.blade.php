@@ -119,13 +119,13 @@
                 <div class="sidebar-header position-relative">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="logo text-center" style="display: flex; justify-content: center; align-items: center;
-                            padding: 15px; background-color: #ffffff; border-radius: 50%; box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+                            padding: 15px; background-color: #ffffff00; border-radius: 50%; box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
                             transition: all 0.3s ease-in-out;
                             width: 115px; height: 115px; margin: 0 auto;">
                             {{-- <a href="/"><img src="/imgs/HRC-removebg-preview.png" alt="Logo" srcset=""
                                     style="width:100px; height: auto"></a> --}}
                             <a href="/"><img src="/imgs/logo_vc.jpg" alt="Logo" srcset=""
-                                    style="width:96%; height: auto;"></a>
+                                    style="width:145px; height: auto;"></a>
                             {{-- <p class="">HOA BINH</p>
                             <p>TRACEBILITY</p> --}}
                         </div>
@@ -143,6 +143,7 @@
                             </a>
                         </li>
                         {{-- Quản Lý Nông trường --}}
+                        @hasanyrole('Admin')
                         <li
                             class="sidebar-item has-sub {{ request()->is('plots*') || request()->is('add-plots*') || request()->is('edit-plots*') || 
                                 request()->is('seedgardens*') || request()->is('edit-seedgardens*') || 
@@ -201,12 +202,15 @@
 
                             </ul>
                         </li>
+                        @endhasanyrole
+
                         {{-- <li class="sidebar-item one-sub {{ request()->is('workers*') ? 'active' : '' }}">
                             <a href="{{route('workers.index')}}" class='sidebar-link' onclick="toggleActive(this)">
                                 <i class="fas fa-users"></i>
                                 <span>Công Nhân</span>
                             </a>
                         </li> --}}
+                        @hasanyrole('Admin|Quản Lý Công Nhân')
                         <li
                             class="sidebar-item has-sub {{ request()->is('duty*') || request()->is('edit-duty*') || request()->is('teams*') || request()->is('edit-teams*') 
                                 || request()->is('workers*') || request()->is('edit-workers*') || request()->is('add-workers*')  ? 'active' : '' }}">
@@ -220,7 +224,7 @@
                                 <span>Quản Lý Nhân Sự</span>
                             </a>
                             <ul
-                                class="submenu {{ request()->is('workers*') || request()->is('add-workers*') || request()->is('edit-workers*') || request()->is('outputs*') ? 'active' : '' }}">
+                                class="submenu {{ request()->is('workers*') || request()->is('add-workers*') || request()->is('edit-workers*') ? 'active' : '' }}">
                                 <li
                                     class="submenu-item d-flex d-flex align-items-center ms-3 {{Route::is('duty.index') || Route::is('duty.edit') ? 'active' : '' }}">
                                     <i class="fa-solid fa-list-check text-green"></i>
@@ -248,14 +252,13 @@
                                 request()->is('workps*') || request()->is('add-workps*') ||
                                 request()->is('edit-workps*') ||
                                 request()->is('aworks*') || request()->is('edit-aworks*')||
-                                request()->is('comments*') || request()->is('outputs*') ?
-                                'active' : '' }}'
+                                request()->is('comments*') ? 'active' : '' }}'
                                 onclick="toggleActive(this)">
                                 <img src="/imgs/spade.png" width="25px" height="25px">
                                 <span>Công Việc</span>
                             </a>
                             <ul
-                                class="submenu {{ request()->is('works*') || request()->is('workps*') || request()->is('comments*') || request()->is('outputs*') ? 'active' : '' }}">
+                                class="submenu {{ request()->is('works*') || request()->is('workps*') || request()->is('comments*') ? 'active' : '' }}">
                                 <li
                                     class="submenu-item d-flex d-flex align-items-center ms-3 {{ Route::is('aworks.index') || Route::is('aworks.edit') ? 'active' : '' }}">
                                     <i class="fa-solid fa-list-check text-green"></i>
@@ -277,13 +280,14 @@
                                     <i class="fas fa-clipboard-check text-green"></i>
                                     <a href="{{ route('comments.index')}}">Đánh Giá</a>
                                 </li>
-                                <li
+                                {{-- <li
                                     class="submenu-item d-flex align-items-center ms-3 {{ Route::is('outputs.index') ? 'active' : '' }}">
                                     <i class="fa-solid fa-industry text-green"></i>
                                     <a href="{{ route('outputs.index')}}">Sản Lượng</a>
-                                </li>
+                                </li> --}}
                             </ul>
                         </li>
+                        @endhasrole
                         {{-- Quản Lý cây bệnh --}}
                         <li class="sidebar-item has-sub {{ request()->is('diseaseplans*') || request()->is('add-diseaseplans*') ||  request()->is('edit-diseaseplans*') ||
                             request()->is('treatmentslips*') || request()->is('add-treatmentslips') || request()->is('edit-treatmentslips') ||
@@ -301,12 +305,12 @@
                             <ul class="submenu {{ Route::is('diseaseplans.index') || Route::is('materialproposals.index') 
                                 || Route::is('treatmentslips.index') ? 'active' : '' }}">
                                 <li
-                                    class="submenu-item d-flex align-items-center ms-3 {{ Route::is('diseaseplans.index') || Route::is('diseaseplans.add')  ? 'active' : '' }}">
+                                    class="submenu-item d-flex align-items-center ms-3 {{ Route::is('diseaseplans.index') || Route::is('diseaseplans.add') || Route::is('diseaseplans.edit') ? 'active' : '' }}">
                                     <i class="fas fa-file-medical text-green"></i>
                                     <a href="{{ route('diseaseplans.index')}}">Phiếu Cây Bệnh</a>
                                 </li>
                                 <li
-                                    class="submenu-item d-flex align-items-center ms-3 {{ Route::is('treatmentslips.index') || Route::is('treatmentslips.add') ? 'active' : '' }}">
+                                    class="submenu-item d-flex align-items-center ms-3 {{ Route::is('treatmentslips.index') || Route::is('treatmentslips.add') || Route::is('treatmentslips.edit') ? 'active' : '' }}">
                                     <i class="fas fa-stethoscope text-green"></i>
                                     <a href="{{ route('treatmentslips.index') }}">Phiếu Trị</a>
                                 </li>
@@ -319,6 +323,7 @@
                         </li>
 
                         {{-- Quản Lý cây đỗ --}}
+                        @hasanyrole('Admin|Quản Lý Kho')
                         <li class="sidebar-item one-sub {{ request()->is('treesfelleds*') ? 'active' : '' }}">
                             <a href="{{ route('treesfelleds.index') }}" class='sidebar-link'
                                 onclick="toggleActive(this)">
@@ -326,26 +331,32 @@
                                 <span>Cây Gãy/Đổ</span>
                             </a>
                         </li>
+                        @endhasanyrole
 
                         {{-- Quản Lý kho --}}
-                        <li
-                            class="sidebar-item has-sub {{ request()->is('units*') || request()->is('edit-units*') 
+                        @hasanyrole('Admin|Quản Lý Kho')
+                        <li class="sidebar-item has-sub {{ request()->is('units*') || request()->is('edit-units*') 
                             || request()->is('warehouses*') || request()->is('edit-warehouses*') 
                             || request()->is('categories*') || request()->is('edit-categories*')
                             || request()->is('products*') || request()->is('edit-products*')
-                            || request()->is('decomposes*') 
+                            || request()->is('decomposes*') || request()->is('add-decomposes*') || request()->is('edit-decomposes*')
+                            || request()->is('pwarehouses*') || request()->is('add-pwarehouses*') || request()->is('edit-pwarehouses*') 
+                            || request()->is('outputs*') || request()->is('add-outputs*') || request()->is('edit-outputs*') 
                             || request()->is('stocks*') || request()->is('add-stocks*') || request()->is('edit-stocks*')
-                            || request()->is('pwarehouses*') || request()->is('add-pwarehouses*') || request()->is('edit-pwarehouses*') ? 'active' : '' }}">
+                            ? 'active' : '' }}">
                             <a href="#" class='sidebar-link {{ request()->is(' units*') || request()->is('edit-units*')
                                 || request()->is('warehouses*') || request()->is('edit-warehouses*')
                                 || request()->is('products*') || request()->is('edit-products*')
-                                || request()->is('decomposes*')
+                                || request()->is('decomposes*') || request()->is('add-decomposes*') ||
+                                request()->is('edit-decomposes*')
                                 || request()->is('categories*') || request()->is('edit-categories*')
-                                || request()->is('pwarehouses*') || request()->is('add-pwarehouses*')
+                                || request()->is('pwarehouses*') || request()->is('add-pwarehouses*') ||
+                                request()->is('edit-pwarehouses*')
                                 || request()->is('stocks*') || request()->is('add-stocks*') ||
-                                request()->is('edit-stocks*') ||
-
-                                request()->is('edit-pwarehouses*') ? 'active' : '' }} ' onclick="toggleActive(this)">
+                                request()->is('edit-stocks*') || request()->is('outputs*')
+                                || request()->is('outputs*') || request()->is('add-outputs*') ||
+                                request()->is('edit-outputs*') ? 'active' : '' }} '
+                                onclick="toggleActive(this)">
                                 <i class="fa-solid fa-warehouse-full"></i>
                                 <span>Quản Lý Kho</span>
                             </a>
@@ -378,236 +389,38 @@
                                     <a href="{{route('pwarehouses.index')}}">Phiếu Kho</a>
                                 </li>
                                 <li
-                                    class="submenu-item d-flex align-items-center ms-3 {{ Route::is('decomposes.index') || Route::is('decomposes.add') ? 'active' : '' }}">
+                                    class="submenu-item d-flex align-items-center ms-3 {{ Route::is('decomposes.index') || Route::is('decomposes.add') || Route::is('decomposes.edit') ? 'active' : '' }}">
                                     <i class="fa-solid fa-industry text-green"></i>
                                     <a href="{{route('decomposes.index')}}">Phân Rã Vật Tư</a>
+                                </li>
+                                <li
+                                    class="submenu-item d-flex align-items-center ms-3 {{ Route::is('outputs.index') || Route::is('outputs.add') || Route::is('outputs.edit') ? 'active' : '' }}">
+                                    <i class="fa-solid fa-cash-register text-green"></i>
+                                    <a href="{{route('outputs.index')}}">Thu Mua Sản Lượng</a>
                                 </li>
                                 <li
                                     class="submenu-item d-flex align-items-center ms-3 {{ Route::is('stocks.index') || Route::is('stocks.add') ? 'active' : '' }}">
                                     <i class="fa-regular fa-garage-car text-green"></i>
                                     <a href="{{route('stocks.index')}}">Tồn Kho</a>
                                 </li>
-                                <li class="submenu-item d-flex align-items-center ms-3">
-                                    <i class="fa-solid fa-cash-register text-green"></i>
-                                    <a href="">Thu Mua Sản Lượng</a>
-                                </li>
                             </ul>
                         </li>
-
-                        {{-- Quản Lý Nhà Máy --}}
-                        {{-- @hasanyrole(' Nhà Máy XNCB|Admin|Danh Sách Nhà Máy XNCB|Quản Lý Mã Lô|Danh Sách Mã Lô|Quản
-                        Lý Kết Nối TTNL|Danh Sách TTNL|Quản Lý LXH|Danh Sách LXH') <li
-                            class="sidebar-item has-sub {{ request()->is('edit-orderbatchs*') || request()->is('add-orderbatchs*') || request()->is('edit-batches*') || request()->is('add-batches*') || request()->is('edit-batchesB*') || request()->is('add-batchesB*') || request()->is('qrCode*') || request()->is('import-batchIng*') || request()->is('batchesB*') || request()->is('batches*') || request()->is('orderbatch*') ? 'active' : '' }}">
-                            <a href="#" class='sidebar-link {{ request()->is(' qrCode*') || request()->is('import
-                                -batchIng*') ||
-                                request()->is(' batchesB*') ||
-                                request()->is('batches*') ||
-                                request()->is('orderbatch*') ||
-                                request()->is('add-batchesB*') ||
-                                request()->is('add-batches*') ||
-                                request()->is('edit-batches*') ||
-                                request()->is('add-orderbatchs*') ||
-                                request()->is('edit-orderbatchs*')
-                                ? 'active'
-                                : '' }}'
-                                onclick="toggleActive(this)">
-                                <i class="fa-sharp-duotone fa-thin fa-industry-windows text-green"></i>
-                                <span>Nhà Máy XNCB</span>
-                            </a>
-                            <ul class="submenu {{ Route::is('batchesB.index') ||
-                                    Route::is('add-batchesB') ||
-                                    Route::is('edit-batchesB') ||
-                                    Route::is('batches.index') ||
-                                    Route::is('add-batches') ||
-                                    Route::is('edit-batches') ||
-                                    Route::is('orderbatchs.index') ||
-                                    Route::is('add-orderbatchs') ||
-                                    Route::is('edit-orderbatchs') ||
-                                    Route::is('index_qr.index') ||
-                                    Route::is('importBatchIng.index')
-                                        ? 'active'
-                                        : '' }}">
-
-                                @hasanyrole('Nhà Máy XNCB|Admin|Quản Lý Mã Lô|Danh Sách Mã Lô')
-                                <li
-                                    class="submenu-item d-flex d-flex  align-items-center ms-3 {{ Route::is('batchesB.index') ? 'active' : '' }}">
-                                    <i class="fa-solid fa-octagon-plus text-green"></i>
-                                    <a href="{{ route('batchesB.index') }}">Tạo Mã Lô Hàng</a>
-                                </li>
-                                @endhasanyrole
-
-                                @hasanyrole('Nhà Máy XNCB|Admin|Danh Sách Nhà Máy XNCB|Kết Nối TTNL|Danh Sách TTNL')
-                                <li
-                                    class="submenu-item d-flex  align-items-center ms-3 {{ Route::is('batches.index') ? 'active' : '' }}">
-                                    <i class="bi bi-list-check text-green"></i>
-                                    <a href="{{ route('batches.index') }}">Danh Sách Lô Hàng</a>
-                                </li>
-                                @endhasanyrole
-                                <li
-                                    class="submenu-item d-flex  align-items-center ms-3 {{ Route::is('importBatchIng.index') ? 'active' : '' }}">
-                                    <i class="fa-regular fa-cloud-arrow-down text-green"></i>
-                                    <a href="{{ route('importBatchIng.index') }}">Nhập Excel KNTTNL</a>
-                                </li>
-                                <li
-                                    class="submenu-item d-flex  align-items-center ms-3 {{ Route::is('index_qr.index') ? 'active' : '' }}">
-                                    <i class="fa-regular fa-download text-green"></i>
-                                    <a href="{{ route('index_qr.index') }}">Tải Mã Lô</a>
-                                </li>
-                                @hasanyrole('Nhà Máy XNCB|Admin|Quản Lý Lệnh Xuất Hàng|Danh Sách LXH')
-                                <li
-                                    class="submenu-item d-flex  align-items-center ms-3 {{ Route::is('orderbatchs.index') ? 'active' : '' }}">
-                                    <i class="bi bi-file-earmark-binary text-green"></i>
-                                    <a href="{{ route('orderbatchs.index') }}">Mã Lệnh Xuất Hàng</a>
-                                </li>
-                                @endhasanyrole
-                            </ul>
-                        </li>
-                        @endhasanyrole --}}
-
-                        {{-- Quản Lý Chất LƯợng --}}
-                        {{-- @hasanyrole('Quản Lý Chất Lượng|Admin|Danh Sách Quản Lý Chất Lượng')
-                        <li
-                            class="sidebar-item has-sub {{ Route::is('testing.*') || Route::is('untested') || Route::is('showun') || Route::is('import.*') ? 'active' : '' }}">
-                            <a href="#" class='sidebar-link {{ Route::is(' testing.*') || Route::is('untested')
-                                ? 'active' : '' }}' onclick="toggleActive(this)">
-                                <i class="fa-brands fa-bandcamp"></i>
-                                <span>Quản Lý Chất Lượng</span>
-                            </a>
-                            <ul
-                                class="submenu {{ (Route::is('testing.*') && !Route::is('testing.show')) || Route::is('untested') || Route::is('import.*') || Route::is('showun') ? 'active' : '' }}">
-                                <li
-                                    class="submenu-item d-flex d-flex  align-items-center ms-3 {{ Route::is('testing.*') ? 'active' : '' }}">
-                                    <i class="bi bi-bookmark-check text-green"></i>
-                                    <a href="{{ route('testing.index') }}">Lô Đã Kiểm Nghiệm</a>
-                                </li>
-                                <li
-                                    class="submenu-item d-flex  align-items-center ms-3 {{ Route::is('untested') || Route::is('showun') ? 'active' : '' }}">
-                                    <i class="bi bi-bookmark-x text-green"></i>
-                                    <a href="/untested">Lô Chưa Kiểm Nghiệm</a>
-                                </li>
-                                <li
-                                    class="submenu-item d-flex  align-items-center ms-3 {{ Route::is('import.*') ? 'active' : '' }}">
-                                    <i class="fa fa-file-text text-green"></i>
-                                    <a href="{{ route('import.files') }}">File</a>
-                                </li>
-                            </ul>
-                        </li>
-                        @endhasanyrole --}}
-
-                        {{-- Quản Lý Hợp đồng --}}
-                        {{-- @hasanyrole('Admin|Danh Sách Hợp Đồng|Quản Lý Hợp Đồng|Quản Lý Loại Hợp Đồng|Danh Sách
-                        Loại
-                        Hợp
-                        Đồng')
-                        <li class="sidebar-item has-sub {{ Route::is('contract-types.*') ||
-                                Route::is('customers.*') ||
-                                Route::is('contracts.*') ||
-                                Route::is('contract-files.*') ||
-                                Route::is('edit.index') ||
-                                Route::is('create-file.index') ||
-                                Route::is('cont') ||
-                                Route::is('duedilistate.index')
-                                    ? 'active'
-                                    : '' }}">
-                            <a href="#" class='sidebar-link {{ Route::is(' contract-types.*') ||
-                                Route::is('customers.*') || Route::is('contract-files.*') || Route::is('edit.index') ||
-                                Route::is('create-file.index') || Route::is('contracts.*') || Route::is('cont') ||
-                                Route::is('duedilistate.index')
-                                ? "
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        active"
-                                : '' }}' onclick="toggleActive(this)">
-                                <i class="bi bi-file-earmark-medical-fill text-green"></i>
-                                <span>Hợp Đồng</span>
-                            </a>
-                            <ul class="submenu {{ Route::is('contract-types.*') ||
-                                    Route::is('customers.*') ||
-                                    Route::is('contracts.*') ||
-                                    Route::is('contract-files.*') ||
-                                    Route::is('edit.index') ||
-                                    Route::is('create-file.index') ||
-                                    Route::is('cont') ||
-                                    Route::is('duedilistate.index')
-                                        ? 'active'
-                                        : '' }}">
-                                @hasanyrole('Admin|Quản Lý Loại Hợp Đồng|Danh Sách Loại Hợp Đồng')
-                                <li
-                                    class="submenu-item d-flex d-flex  align-items-center ms-3 {{ Route::is('contract-types.*') ? 'active' : '' }}">
-                                    <i class="fa-solid fa-copy text-green"></i>
-                                    <a href="{{ route('contract-types.index') }}">Loại Hợp Đồng</a>
-                                </li>
-                                @endhasanyrole
-
-                                @hasanyrole('Admin|Quản Lý Khách Hàng|Danh Sách Khách Hàng')
-                                <li
-                                    class="submenu-item d-flex  align-items-center ms-3 {{ Route::is('customers.*') ? 'active' : '' }}">
-                                    <i class="bi bi-people text-green"></i>
-                                    <a href="{{ route('customers.index') }}">Khách Hàng</a>
-                                </li>
-                                @endhasanyrole
-
-                                @hasanyrole('Admin|Quản Lý Hợp Đồng|Danh Sách Hợp Đồng')
-                                <li
-                                    class="submenu-item d-flex d-flex  align-items-center ms-3 {{ Route::is('contracts.*') || Route::is('cont') ? 'active' : '' }}">
-                                    <i class="bi bi-list-check text-green"></i>
-                                    <a href="{{ route('cont') }}">Danh Sách Hợp Đồng</a>
-                                </li>
-                                @endhasanyrole
-                                <li
-                                    class="submenu-item d-flex d-flex  align-items-center ms-3 {{ Route::is('contract-files.*') ? 'active' : '' }}">
-                                    <i class="bi bi-file-earmark-binary text-green"></i>
-                                    <a href="{{ route('contract-files.index') }}">Mã Lệnh
-                                    </a>
-                                </li>
-                                <li
-                                    class="submenu-item d-flex d-flex  align-items-center ms-3 {{ Route::is('duedilistate.index') ? 'active' : '' }}">
-                                    <i class="bi bi-file-earmark-binary text-green"></i>
-                                    <a href="{{ route('duedilistate.index') }}">Due Diligence Statement</a>
-                                </li>
-                            </ul>
-                        </li>
-                        @endhasanyrole --}}
-
-                        {{-- Quản Lý Thông tin khác --}}
-                        {{-- @hasanyrole('Admin|Danh Sách Thông Tin Khác')
-                        <li
-                            class="sidebar-item has-sub {{ Route::is('certi.*') || Route::is('report.index') ? 'active' : '' }}">
-                            <a href="#" class='sidebar-link {{ Route::is(' certi.*') }}' onclick="toggleActive(this)">
-                                <i class="fa-thin fa-square-info"></i>
-                                <span>Thông Tin Khác</span>
-                            </a>
-                            <ul class="submenu {{ Route::is('certi.*') || Route::is('report.index') ? 'active' : '' }}">
-                                <li
-                                    class="submenu-item d-flex d-flex  align-items-center ms-3 {{ Route::is('certi.*') ? 'active' : '' }}">
-                                    <i class="bi bi-book text-green"></i>
-                                    <a href="{{ route('certi.index') }}">Chứng Chỉ</a>
-                                </li>
-                                <li
-                                    class="submenu-item d-flex d-flex  align-items-center ms-3 {{ Route::is('report.index') ? 'active' : '' }}">
-                                    <i class="fa fa-pie-chart text-green"></i>
-                                    <a href="{{ route('report.index') }}">Báo Cáo</a>
-                                </li>
-                            </ul>
-                        </li>
-                        @endhasanyrole --}}
-                        {{-- <li class="sidebar-item has-sub {{Route::is('certificates.index') ? " active" : "" }}">
-                            <a href="#" class='sidebar-link'>
-                                <i class="bi bi-stack"></i>
-                                <span>Thông tin khác</span>
-                            </a>
-                            <ul class="submenu {{Route::is('certificates.*') ? " active" : "" }}">
-                                <li class="submenu-item {{Route::is('certificates.*') ? " active" : "" }} ">
-                                    <a href=" {{route('certificates.index')}}">Chứng chỉ</a>
-                                </li>
-                            </ul>
-                        </li> --}}
+                        @endhasanyrole
 
                         {{-- Quản Lý Tài Khoản --}}
                         @hasanyrole('Admin|Quản Lý Tài Khoản')
-                        <li
-                            class="sidebar-item has-sub {{ request()->is('edit-*') || request()->is('give-*') || request()->is('all-*') ? 'active' : '' }}">
+                        <li class="sidebar-item has-sub {{ request()->is('add-permissions*') || request()->is('edit-permissions*') || request()->is('give-permission*') || request()->is('all-permissions*') 
+                                || request()->is('add-roles*') || request()->is('edit-roles*') || request()->is('all-roles*')
+                                || request()->is('add-users*') || request()->is('edit-users*') || request()->is('all-users*')
+                            ? 'active' : '' }}">
                             {{-- <a href="/account" class='sidebar-link '> --}}
-                                <a href="#" class='sidebar-link {{ request()->is(' edit-*') || request()->is('give-*')
-                                    || request()->is('all-*') ? 'active' : '' }}'
+                                <a href="#" class='sidebar-link {{ request()->is(' add-permissions*') ||
+                                    request()->is('edit-permissions*') || request()->is('give-permission*') ||
+                                    request()->is('all-permissions*')
+                                    || request()->is('add-roles*') || request()->is('edit-roles*') ||
+                                    request()->is('all-roles*')
+                                    || request()->is('add-users*') || request()->is('edit-users*') ||
+                                    request()->is('all-users*') ? 'active' : '' }}'
                                     onclick="toggleActive(this)">
                                     <i class="fa-solid fa-user"></i>
                                     <span>Thông Tin Tài Khoản</span>
@@ -938,6 +751,23 @@
     .select2-container--default .select2-selection--single .select2-selection__rendered {
         color: #444;
         line-height: 37px;
+    }
+
+    .select2-container .select2-selection--multiple {
+        min-height: 37px !important;
+    }
+
+    .select2-search__field {
+        height: 22px !important;
+    }
+
+    .select2-container--default .select2-selection--multiple {
+        border: 1px solid #d1d5db !important;
+
+    }
+
+    .select2-container--default .select2-selection--single {
+        height: 37px !important;
     }
 
     .swal-footer {
@@ -1387,7 +1217,6 @@ Session::put('error', null);
         dropdownMenu.classList.toggle('show');
     });
 
-    // Ẩn dropdown khi click ra ngoài
     document.addEventListener('click', function (event) {
         if (!dropdownButton.contains(event.target) && !dropdownMenu.contains(event.target)) {
             dropdownMenu.classList.remove('show');

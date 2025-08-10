@@ -13,460 +13,18 @@
         </div>
     </div>
 </div>
-
-<!-- Add diseaseplan Modal -->
-<form id="diseaseplan-form" action="{{ route('diseaseplans.save') }}" method="POST" enctype="multipart/form-data">
-    {{ csrf_field() }}
-    <div class="modal fade" id="create-diseaseplan" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h6 class="modal-title">Tạo mới</h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body px-4">
-                    <!-- Basic Information -->
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="medicalRecordId" class="form-label required">Mã Bệnh án</label>
-                            <input type="text" id="medicalRecordId" class="form-input" placeholder="Nhập mã bệnh án"
-                                required>
-                        </div>
-                        <div class="form-group wide">
-                            <label for="medicalRecordName" class="form-label required">Tên Bệnh án</label>
-                            <input type="text" id="medicalRecordName" class="form-input" placeholder="Nhập tên bệnh án"
-                                required>
-                        </div>
-                        <div class="form-group">
-                            <label for="gardenId" class="form-label">Mã Vườn</label>
-                            <input type="text" id="gardenId" class="form-input" placeholder="Nhập mã vườn">
-                        </div>
-                        <div class="form-group">
-                            <label for="lotId" class="form-label">Mã Lô</label>
-                            <input type="text" id="lotId" class="form-input" placeholder="Nhập mã lô">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="recordDate" class="form-label required">Ngày Ghi Nhận</label>
-                            <input type="date" id="recordDate" class="form-input" required>
-                        </div>
-                        <div class="form-group wide">
-                            <label for="diseaseName" class="form-label required">Tên Bệnh</label>
-                            <input type="text" id="diseaseName" class="form-input" placeholder="Nhập tên bệnh" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="quantity" class="form-label">Số Lượng</label>
-                            <input type="number" id="quantity" class="form-input" placeholder="Nhập số lượng">
-                        </div>
-                        <div class="form-group">
-                            <label for="teamName" class="form-label">Tên Tổ</label>
-                            <input type="text" id="teamName" class="form-input" placeholder="Nhập tên tổ">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group wide">
-                            <label for="symptoms" class="form-label required">Biểu Hiện Bệnh</label>
-                            <textarea id="symptoms" class="form-textarea" placeholder="Mô tả chi tiết biểu hiện bệnh..."
-                                required></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="spreadLevel" class="form-label required">Mức Độ Lây Lan</label>
-                            <select id="spreadLevel" class="form-select" required>
-                                <option value="">Chọn mức độ</option>
-                                <option value="low">Thấp</option>
-                                <option value="medium">Trung bình</option>
-                                <option value="high">Cao</option>
-                                <option value="critical">Nghiêm trọng</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group" style="flex: 1;">
-                            <label for="cause" class="form-label required">Nguyên Nhân</label>
-                            <textarea id="cause" class="form-textarea" placeholder="Mô tả nguyên nhân gây bệnh..."
-                                required></textarea>
-                        </div>
-                    </div>
-
-                    <!-- Treatment Plan Section -->
-                    <div class="treatment-plan">
-                        <h2 class="treatment-plan-title">Kế Hoạch Điều Trị</h2>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="startDate" class="form-label">Ngày Bắt Đầu</label>
-                                <input type="date" id="startDate" class="form-input">
-                            </div>
-                            <div class="form-group">
-                                <label for="endDate" class="form-label">Ngày Kết Thúc (Dự Kiến)</label>
-                                <input type="date" id="endDate" class="form-input">
-                            </div>
-                            <div class="form-group">
-                                <label for="assignedTo" class="form-label">Người Phụ Trách</label>
-                                <input type="text" id="assignedTo" class="form-input"
-                                    placeholder="Nhập tên người phụ trách">
-                            </div>
-                            <div class="form-group">
-                                <label for="priority" class="form-label">Mức Độ Ưu Tiên</label>
-                                <select id="priority" class="form-select">
-                                    <option value="">Chọn Mức Độ</option>
-                                    <option value="low">Thấp</option>
-                                    <option value="medium">Trung Bình</option>
-                                    <option value="high">Cao</option>
-                                    <option value="urgent">Khẩn Cấp</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="treatment-steps">
-                            <div class="treatment-step">
-                                <div class="step-number">1</div>
-                                <div class="step-content">
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label class="form-label">Tên Thuốc/Vật Tư</label>
-                                            <input type="text" class="form-input"
-                                                placeholder="Nhập tên thuốc hoặc vật tư">
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label">Liều Lượng</label>
-                                            <input type="text" class="form-input" placeholder="Nhập liều lượng">
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label">Ngày Thực Hiện</label>
-                                            <input type="date" class="form-input">
-                                        </div>
-                                    </div>
-                                    <div class="form-row" style="margin-bottom: 0;">
-                                        <div class="form-group" style="flex: 1;">
-                                            <label class="form-label">Hướng Dẫn</label>
-                                            <textarea class="form-textarea" style="min-height: 60px;"
-                                                placeholder="Nhập hướng dẫn chi tiết..."></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="step-actions">
-                                    <button type="button" class="btn btn-outline" style="color: #ef4444;">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="treatment-step">
-                                <div class="step-number">2</div>
-                                <div class="step-content">
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label class="form-label">Tên Thuốc/Vật Tư</label>
-                                            <input type="text" class="form-input"
-                                                placeholder="Nhập tên thuốc hoặc vật tư">
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label">Liều Lượng</label>
-                                            <input type="text" class="form-input" placeholder="Nhập liều lượng">
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label">Ngày Thực Hiện</label>
-                                            <input type="date" class="form-input">
-                                        </div>
-                                    </div>
-                                    <div class="form-row" style="margin-bottom: 0;">
-                                        <div class="form-group" style="flex: 1;">
-                                            <label class="form-label">Hướng Dẫn</label>
-                                            <textarea class="form-textarea" style="min-height: 60px;"
-                                                placeholder="Nhập hướng dẫn chi tiết..."></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="step-actions">
-                                    <button type="button" class="btn btn-outline" style="color: #ef4444;">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="add-step-btn" onclick="alert('Thêm bước điều trị mới')">
-                                <i class="fas fa-plus" style="margin-right: 0.5rem;"></i>
-                                Thêm bước điều trị
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Results and Notes -->
-                    <div class="form-row" style="margin-top: 1.5rem;">
-                        <div class="form-group" style="flex: 1;">
-                            <label for="results" class="form-label">Kết Quả Điều Trị</label>
-                            <textarea id="results" class="form-textarea"
-                                placeholder="Ghi chú kết quả sau khi điều trị..."></textarea>
-                        </div>
-                    </div>
-
-                    <!-- Form Footer -->
-                    <div class="form-footer">
-                        <div class="form-status">
-                            <span>Trạng thái:</span>
-                            <span class="status-badge status-draft">Bản Nháp</span>
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-outline">
-                                <i class="fas fa-times"></i>
-                                Hủy
-                            </button>
-                            <button type="button" class="btn btn-secondary">
-                                <i class="fas fa-save"></i>
-                                Lưu Nháp
-                            </button>
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-check"></i>
-                                Hoàn Thành
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-success" id="submit-btn-diseaseplan">Lưu</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</form>
-
 <!-- diseaseplan List -->
 <div class="row">
 
     <div class="col-xl-12">
         <div class="card custom-card">
-            {{-- <div class="container">
-                <div class="page-header">
-                    <h1 class="page-title">Phiếu điều trị</h1>
-                    <div class="form-actions">
-                        <button class="btn btn-outline">
-                            <i class="fas fa-print"></i>
-                            In phiếu
-                        </button>
-                        <button class="btn btn-success">
-                            <i class="fas fa-save"></i>
-                            Lưu phiếu
-                        </button>
+            <div class="row g-3">
+                <div class="col-md-12">
+                    <div class="search-box">
+                        <input type="text" class="search-inputs" placeholder="Tìm kiếm...">
                     </div>
                 </div>
-
-                <form class="treatment-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="medicalRecordId" class="form-label required">Mã Bệnh án</label>
-                            <input type="text" id="medicalRecordId" class="form-input" placeholder="Nhập mã bệnh án"
-                                required>
-                        </div>
-                        <div class="form-group wide">
-                            <label for="medicalRecordName" class="form-label required">Tên Bệnh án</label>
-                            <input type="text" id="medicalRecordName" class="form-input" placeholder="Nhập tên bệnh án"
-                                required>
-                        </div>
-                        <div class="form-group">
-                            <label for="gardenId" class="form-label">Mã Vườn</label>
-                            <input type="text" id="gardenId" class="form-input" placeholder="Nhập mã vườn">
-                        </div>
-                        <div class="form-group">
-                            <label for="lotId" class="form-label">Mã Lô</label>
-                            <input type="text" id="lotId" class="form-input" placeholder="Nhập mã lô">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="recordDate" class="form-label required">Ngày Ghi Nhận</label>
-                            <input type="date" id="recordDate" class="form-input" required>
-                        </div>
-                        <div class="form-group wide">
-                            <label for="diseaseName" class="form-label required">Tên Bệnh</label>
-                            <input type="text" id="diseaseName" class="form-input" placeholder="Nhập tên bệnh" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="quantity" class="form-label">Số Lượng</label>
-                            <input type="number" id="quantity" class="form-input" placeholder="Nhập số lượng">
-                        </div>
-                        <div class="form-group">
-                            <label for="teamName" class="form-label">Tên Tổ</label>
-                            <input type="text" id="teamName" class="form-input" placeholder="Nhập tên tổ">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group wide">
-                            <label for="symptoms" class="form-label required">Biểu Hiện Bệnh</label>
-                            <textarea id="symptoms" class="form-textarea" placeholder="Mô tả chi tiết biểu hiện bệnh..."
-                                required></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label for="spreadLevel" class="form-label required">Mức Độ Lây Lan</label>
-                            <select id="spreadLevel" class="form-select" required>
-                                <option value="">Chọn mức độ</option>
-                                <option value="low">Thấp</option>
-                                <option value="medium">Trung bình</option>
-                                <option value="high">Cao</option>
-                                <option value="critical">Nghiêm trọng</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group" style="flex: 1;">
-                            <label for="cause" class="form-label required">Nguyên Nhân</label>
-                            <textarea id="cause" class="form-textarea" placeholder="Mô tả nguyên nhân gây bệnh..."
-                                required></textarea>
-                        </div>
-                    </div>
-
-                    <div class="treatment-plan">
-                        <h2 class="treatment-plan-title">Kế Hoạch Điều Trị</h2>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="startDate" class="form-label">Ngày Bắt Đầu</label>
-                                <input type="date" id="startDate" class="form-input">
-                            </div>
-                            <div class="form-group">
-                                <label for="endDate" class="form-label">Ngày Kết Thúc (Dự Kiến)</label>
-                                <input type="date" id="endDate" class="form-input">
-                            </div>
-                            <div class="form-group">
-                                <label for="assignedTo" class="form-label">Người Phụ Trách</label>
-                                <input type="text" id="assignedTo" class="form-input"
-                                    placeholder="Nhập tên người phụ trách">
-                            </div>
-                            <div class="form-group">
-                                <label for="priority" class="form-label">Mức Độ Ưu Tiên</label>
-                                <select id="priority" class="form-select">
-                                    <option value="">Chọn Mức Độ</option>
-                                    <option value="low">Thấp</option>
-                                    <option value="medium">Trung Bình</option>
-                                    <option value="high">Cao</option>
-                                    <option value="urgent">Khẩn Cấp</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="treatment-steps">
-                            <div class="treatment-step">
-                                <div class="step-number">1</div>
-                                <div class="step-content">
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label class="form-label">Tên Thuốc/Vật Tư</label>
-                                            <input type="text" class="form-input"
-                                                placeholder="Nhập tên thuốc hoặc vật tư">
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label">Liều Lượng</label>
-                                            <input type="text" class="form-input" placeholder="Nhập liều lượng">
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label">Ngày Thực Hiện</label>
-                                            <input type="date" class="form-input">
-                                        </div>
-                                    </div>
-                                    <div class="form-row" style="margin-bottom: 0;">
-                                        <div class="form-group" style="flex: 1;">
-                                            <label class="form-label">Hướng Dẫn</label>
-                                            <textarea class="form-textarea" style="min-height: 60px;"
-                                                placeholder="Nhập hướng dẫn chi tiết..."></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="step-actions">
-                                    <button type="button" class="btn btn-outline" style="color: #ef4444;">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="treatment-step">
-                                <div class="step-number">2</div>
-                                <div class="step-content">
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label class="form-label">Tên Thuốc/Vật Tư</label>
-                                            <input type="text" class="form-input"
-                                                placeholder="Nhập tên thuốc hoặc vật tư">
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label">Liều Lượng</label>
-                                            <input type="text" class="form-input" placeholder="Nhập liều lượng">
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label">Ngày Thực Hiện</label>
-                                            <input type="date" class="form-input">
-                                        </div>
-                                    </div>
-                                    <div class="form-row" style="margin-bottom: 0;">
-                                        <div class="form-group" style="flex: 1;">
-                                            <label class="form-label">Hướng Dẫn</label>
-                                            <textarea class="form-textarea" style="min-height: 60px;"
-                                                placeholder="Nhập hướng dẫn chi tiết..."></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="step-actions">
-                                    <button type="button" class="btn btn-outline" style="color: #ef4444;">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="add-step-btn" onclick="alert('Thêm bước điều trị mới')">
-                                <i class="fas fa-plus" style="margin-right: 0.5rem;"></i>
-                                Thêm bước điều trị
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-row" style="margin-top: 1.5rem;">
-                        <div class="form-group" style="flex: 1;">
-                            <label for="results" class="form-label">Kết Quả Điều Trị</label>
-                            <textarea id="results" class="form-textarea"
-                                placeholder="Ghi chú kết quả sau khi điều trị..."></textarea>
-                        </div>
-                    </div>
-                    <div class="form-footer">
-                        <div class="form-status">
-                            <span>Trạng thái:</span>
-                            <span class="status-badge status-draft">Bản Nháp</span>
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-outline">
-                                <i class="fas fa-times"></i>
-                                Hủy
-                            </button>
-                            <button type="button" class="btn btn-secondary">
-                                <i class="fas fa-save"></i>
-                                Lưu Nháp
-                            </button>
-                            <button type="submit" class="btn btn-success">
-                                <i class="fas fa-check"></i>
-                                Hoàn Thành
-                            </button>
-                        </div>
-                    </div>
-                </form>
             </div>
-
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    const today = new Date().toISOString().split('T')[0];
-                    document.getElementById('recordDate').value = today;
-                    document.getElementById('startDate').value = today;
-                    
-                    const nextWeek = new Date();
-                    nextWeek.setDate(nextWeek.getDate() + 7);
-                    document.getElementById('endDate').value = nextWeek.toISOString().split('T')[0];
-                });
-            </script> --}}
             <div class="card-header d-flex justify-content-between align-items-center" style="grid-gap: 3px;">
                 {{-- <h5>Danh Sách Phiếu Cây Bệnh</h5> --}}
                 {{-- <button class="btn btn-sm btn-success btn-wave waves-light" data-bs-toggle="modal"
@@ -478,29 +36,34 @@
                         Cây Bệnh</a>
                 </button> --}}
             </div>
-            <div class="container mt-2">
-                <div class="row g-3">
-                    <div class="col-md-2">
-                        <input type="text" class="form-control" placeholder="Mã bệnh án" id="maBenhAn">
+            <div class="card">
+                <div class="card-content">
+                    <div class="form-section">
+                        <!-- First Filter Row -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Ngày Ghi Nhận</label>
+                                <input type="date" class="form-input" id="ngayGhiNhan">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Lô</label>
+                                <input type="text" class="form-input" placeholder="Lô" id="lo">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tên Bệnh</label>
+                                <input type="text" class="form-input" placeholder="Tên bệnh" id="tenBenh">
+                            </div>
+                            <div class="form-group" style="display: flex; align-items: end;">
+                                <button class="btn btn-success btn-w" onclick="locBenhAn()"><i
+                                        class="fa-light fa-filter-list"></i>
+                                    Lọc
+                                </button>
+                            </div>
+                        </div>
+
+
                     </div>
-                    <div class="col-md-2">
-                        <input type="date" class="form-control" id="ngayGhiNhan">
-                    </div>
-                    <div class="col-md-1">
-                        <input type="text" class="form-control" placeholder="Vườn" id="vuon">
-                    </div>
-                    <div class="col-md-1">
-                        <input type="text" class="form-control" placeholder="Lô" id="lo">
-                    </div>
-                    <div class="col-md-2">
-                        <input type="text" class="form-control" placeholder="Tên bệnh" id="tenBenh">
-                    </div>
-                    <div class="col-md-3 d-flex align-items-center">
-                        <button class="btn btn-success btn-w" onclick="locBenhAn()"><i
-                                class="fa-light fa-filter-list"></i>
-                            Lọc
-                        </button>
-                    </div>
+
                 </div>
             </div>
             <div class="card-body">
@@ -517,8 +80,7 @@
                                 </button>
                                 <button id="add-selected-btn" class="btn btn-success" style="border-radius: 7px;">
                                     <i class="fa fa-plus"></i><a href="{{ route('diseaseplans.add') }}"
-                                        class="text-white"> Tạo Phiếu
-                                        Cây Bệnh</a>
+                                        class="text-white"> Tạo Phiếu Cây Bệnh</a>
                                 </button>
                             </div>
                             <thead>
@@ -530,9 +92,10 @@
                                     </th>
                                     {{-- <th scope="col">STT</th> --}}
                                     <th scope="col">Mã</th>
+                                    <th scope="col">Tên Phiếu Trị</th>
                                     <th scope="col">Tên Phiếu Cây Bệnh</th>
-                                    <th scope="col">Loại Phiếu Cây Bệnh</th>
-                                    <th scope="col">Ngày Làm</th>
+                                    <th scope="col">Cây Bệnh</th>
+                                    <th scope="col">Ngày Ghi Nhận</th>
                                     <th scope="col">Thực Hiện</th>
                                     <th scope="col">Trạng Thái</th>
                                     <th scope="col">Thao Tác</th>
@@ -547,9 +110,10 @@
                                     <th></th>
                                     {{-- <th scope="col">STT</th> --}}
                                     <th scope="col">Mã</th>
+                                    <th scope="col">Tên Phiếu Trị</th>
                                     <th scope="col">Tên Phiếu Cây Bệnh</th>
-                                    <th scope="col">Loại Phiếu Cây Bệnh</th>
-                                    <th scope="col">Ngày Làm</th>
+                                    <th scope="col">Cây Bệnh</th>
+                                    <th scope="col">Ngày Ghi Nhận</th>
                                     <th scope="col">Thực Hiện</th>
                                     <th scope="col">Trạng Thái</th>
                                     <th scope="col">Thao Tác</th>
@@ -655,8 +219,12 @@
                         searchable: false
                     },
                     {
-                        data: 'id',
-                        name: 'id'
+                        data: 'code',
+                        name: 'code'
+                    },
+                    {
+                        data: 'name',
+                        name: 'name'
                     },
                     {
                         data: 'diseaseName',
@@ -671,8 +239,8 @@
                         name: 'detectionDate'
                     },
                     {
-                        data: 'name',
-                        name: 'name'
+                        data: 'workerID',
+                        name: 'workerID'
                     },
                     {
                         data: 'status',

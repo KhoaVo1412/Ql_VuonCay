@@ -178,7 +178,7 @@
                                 Xóa
                             </button>
                             <button id="add-selected-btn" class="btn btn-success" style="border-radius: 7px;">
-                                <a href="{{route('workers.add')}}" class="text-white"><i class="fa fa-plus"></i>Thêm
+                                <a href="{{ route('workers.add') }}" class="text-white"><i class="fa fa-plus"></i>Thêm
                                     Công Nhân</a>
                             </button>
                         </div>

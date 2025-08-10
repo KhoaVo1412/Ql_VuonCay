@@ -2,13 +2,13 @@
 @section('content')
 <section>
     <div class="d-md-flex d-block align-items-center justify-content-between my-2 page-header-breadcrumb">
-        <h5 class="page-title fw-semibold fs-18 mb-0">Chỉnh Sửa: {{$outputs->name}}</h5>
+        <h4 class="page-title fw-semibold fs-18 mb-0">Thu Mua Sản Lượng</h4>
         <div class="ms-md-1 ms-0">
             <nav>
                 <ol class="breadcrumb mb-0 padding">
                     <li class="breadcrumb-item"><a href="javascript:void(0);">Trang Chủ</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('outputs.index') }}">Danh Sách</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Chỉnh Sửa Thu Mua</li>
+                    <li class="breadcrumb-item active" aria-current="page">Thêm Thu Mua</li>
                 </ol>
             </nav>
         </div>
@@ -17,9 +17,9 @@
 
     <div class="row">
         <div class="col-xl-12">
-            <form id="form-treatmentslip" action="{{ route('outputs.update', $outputs->id) }}" method="POST"
+            <form id="form-treatmentslip" action="{{ route('outputs.save') }}" method="POST"
                 enctype="multipart/form-data">
-                @csrf
+                {{ csrf_field() }}
                 <div class="card custom-card">
                     <div class="card-body">
                         <div class="row modal-body gy-4">
@@ -30,13 +30,13 @@
                                     <div class="form-group">
                                         <label class="form-label">Mã Phiếu</label>
                                         <input type="text" class="form-input" name="code" placeholder="Tự động tạo"
-                                            readonly value="{{ old('code', $outputs->code ?? '') }}">
+                                            readonly value="{{ old('code') }}">
                                     </div>
 
                                     <div class="form-group">
                                         <label class="form-label">Tên Phiếu</label>
                                         <input type="text" class="form-input" name="name" placeholder="Tên phiếu"
-                                            value="{{ old('name', $outputs->name ?? '') }}">
+                                            value="{{ old('name') }}">
                                     </div>
                                 </div>
 
@@ -46,24 +46,23 @@
                                         <label class="form-label">Nhà Cung Cấp</label>
                                         <select class="form-select" name="supplier">
                                             <option value="">-- Chọn nhà cung cấp --</option>
-                                            <option value="CÔNG TY TTNHH HB" {{ old('supplier', $outputs->supplier) ==
-                                                'CÔNG TY TTNHH HB' ? 'selected' : '' }}>Hòa Bình Rubber</option>
-                                            <option value="CÔNG TY TTNHH BN" {{ old('supplier', $outputs->supplier) ==
-                                                'CÔNG TY TTNHH BN' ? 'selected' : '' }}>Bàu Non Rubber</option>
+                                            <option value="CÔNG TY TTNHH HB" {{ old('supplier')=='CÔNG TY TTNHH HB'
+                                                ? 'selected' : '' }}>Hòa Bình Rubber</option>
+                                            <option value="CÔNG TY TTNHH BN" {{ old('supplier')=='CÔNG TY TTNHH BN'
+                                                ? 'selected' : '' }}>Bàu Non Rubber</option>
                                         </select>
                                     </div>
 
                                     <div class="form-group">
                                         <label class="form-label">Người Tạo</label>
                                         <input type="text" class="form-input" name="created_by"
-                                            placeholder="Tên người lập"
-                                            value="{{ old('created_by', $outputs->created_by ?? '') }}">
+                                            placeholder="Tên người lập" value="{{ old('created_by') }}">
                                     </div>
 
                                     <div class="form-group">
                                         <label class="form-label">Ngày Tạo</label>
                                         <input type="date" class="form-input" name="date" required
-                                            value="{{ old('date', $outputs->date ?? '') }}">
+                                            value="{{ old('date') }}">
                                     </div>
                                 </div>
 
@@ -72,99 +71,15 @@
                                     <div class="form-group" style="flex: 1;">
                                         <label class="form-label">Ghi Chú</label>
                                         <textarea class="form-input" name="desc" placeholder="Ghi chú chi tiết"
-                                            style="min-height: 80px; resize: vertical;">{{ old('desc', $outputs->desc ?? '') }}</textarea>
+                                            style="min-height: 80px; resize: vertical;">{{ old('desc') }}</textarea>
                                     </div>
                                 </div>
 
-                                <input type="hidden" name="type" value="Thu Mua">
+                                {{-- <input type="hidden" name="type" value="Thu Mua"> --}}
 
                                 <!-- Treatment Plan Section -->
                                 <div style="border-top: 1px solid #e5e7eb; padding-top: 1.5rem; margin-top: 1.5rem;">
                                     <div id="treatmentSteps" style="margin-top: 1rem;">
-                                        @php
-                                        $oldProducts = old('invoiceProducts', $outputs->invoiceProducts ?? []);
-                                        @endphp
-
-                                        @if(count($oldProducts) > 0)
-                                        @foreach($oldProducts as $index => $item)
-                                        <div class="treatment-step"
-                                            style="display: flex; gap: 1rem; margin-bottom: 1rem; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; background-color: #D4F7D1;">
-                                            <div
-                                                style="display: flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; background-color: #3b82f6; color: white; border-radius: 50%; font-weight: bold;">
-                                                {{ $loop->iteration }}</div>
-                                            <div style="flex: 1;">
-                                                <div class="form-row" style="margin-bottom: 0.5rem;">
-                                                    <div class="form-group">
-                                                        <label class="form-label">Kho</label>
-                                                        <select class="form-select"
-                                                            name="invoiceProducts[{{ $index }}][warehouseID]">
-                                                            @foreach($warehouses as $w)
-                                                            <option value="{{ $w->id }}" {{ (isset($item['warehouseID'])
-                                                                && $item['warehouseID']==$w->id) ? 'selected' : '' }}>{{
-                                                                $w->name }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label class="form-label">Tên Vật Tư</label>
-                                                        <select class="form-select"
-                                                            name="invoiceProducts[{{ $index }}][productID]">
-                                                            <option value="">-- Chọn vật tư --</option>
-                                                            @foreach($products as $p)
-                                                            <option value="{{ $p->id }}" {{ (isset($item['productID'])
-                                                                && $item['productID']==$p->id) ? 'selected' : '' }}>{{
-                                                                $p->name }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label class="form-label">Số Lượng</label>
-                                                        <input type="number" class="form-input"
-                                                            name="invoiceProducts[{{ $index }}][quantity]"
-                                                            value="{{ $item['quantity'] ?? '' }}">
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label class="form-label">Đơn Vị</label>
-                                                        <select class="form-select"
-                                                            name="invoiceProducts[{{ $index }}][unitID]">
-                                                            <option value="">-- Chọn đơn vị --</option>
-                                                            @foreach($units as $u)
-                                                            <option value="{{ $u->id }}" {{ (isset($item['unitID']) &&
-                                                                $item['unitID']==$u->id) ? 'selected' : '' }}>{{
-                                                                $u->name }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div class="form-row" style="margin-bottom: 0;">
-                                                    <div class="form-group">
-                                                        <label class="form-label">Chất Lượng</label>
-                                                        <input type="text" class="form-input"
-                                                            name="invoiceProducts[{{ $index }}][quality]" placeholder=""
-                                                            value="{{ $item['quality'] ?? '' }}">
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label class="form-label">Số Lát Dao</label>
-                                                        <input type="number" class="form-input"
-                                                            name="invoiceProducts[{{ $index }}][slice]"
-                                                            value="{{ $item['slice'] ?? '' }}">
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label class="form-label">Thành Tiền</label>
-                                                        <input type="text" class="form-input"
-                                                            name="invoiceProducts[{{ $index }}][price]"
-                                                            value="{{ $item['price'] ?? '' }}">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <button type="button" class="remove-btn btn-danger"
-                                                onclick="removeTreatmentStep(this)" style="align-self: flex-start;">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                        @endforeach
-                                        @else
-                                        {{-- Nếu không có dữ liệu cũ thì hiện 1 dòng mặc định --}}
                                         <div class="treatment-step"
                                             style="display: flex; gap: 1rem; margin-bottom: 1rem; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; background-color: #D4F7D1;">
                                             <div
@@ -175,33 +90,40 @@
                                                     <div class="form-group">
                                                         <label class="form-label">Kho</label>
                                                         <select class="form-select"
-                                                            name="invoiceProducts[0][warehouseID]">
+                                                            name="invoice_products[0][warehouseID]">
                                                             @foreach($warehouses as $w)
-                                                            <option value="{{ $w->id }}">{{ $w->name }}</option>
+                                                            <option value="{{ $w->id }}" {{
+                                                                old('invoice_products.0.warehouseID')==$w->id ?
+                                                                'selected' : '' }}>{{ $w->name }}</option>
                                                             @endforeach
                                                         </select>
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Tên Vật Tư</label>
                                                         <select class="form-select"
-                                                            name="invoiceProducts[0][productID]">
+                                                            name="invoice_products[0][productID]">
                                                             <option value="">-- Chọn vật tư --</option>
                                                             @foreach($products as $p)
-                                                            <option value="{{ $p->id }}">{{ $p->name }}</option>
+                                                            <option value="{{ $p->id }}" {{
+                                                                old('invoice_products.0.productID')==$p->id ? 'selected'
+                                                                : '' }}>{{ $p->name }}</option>
                                                             @endforeach
                                                         </select>
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Số Lượng</label>
                                                         <input type="number" class="form-input"
-                                                            name="invoiceProducts[0][quantity]" value="">
+                                                            name="invoice_products[0][quantity]"
+                                                            value="{{ old('invoice_products.0.quantity') }}">
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Đơn Vị</label>
-                                                        <select class="form-select" name="invoiceProducts[0][unitID]">
+                                                        <select class="form-select" name="invoice_products[0][unitID]">
                                                             <option value="">-- Chọn đơn vị --</option>
                                                             @foreach($units as $u)
-                                                            <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                                            <option value="{{ $u->id }}" {{
+                                                                old('invoice_products.0.unitID')==$u->id ? 'selected' :
+                                                                '' }}>{{ $u->name }}</option>
                                                             @endforeach
                                                         </select>
                                                     </div>
@@ -210,17 +132,20 @@
                                                     <div class="form-group">
                                                         <label class="form-label">Chất Lượng</label>
                                                         <input type="text" class="form-input"
-                                                            name="invoiceProducts[0][quality]" placeholder="" value="">
+                                                            name="invoice_products[0][quality]" placeholder=""
+                                                            value="{{ old('invoice_products.0.quality') }}">
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Số Lát Dao</label>
                                                         <input type="number" class="form-input"
-                                                            name="invoiceProducts[0][slice]" value="">
+                                                            name="invoice_products[0][slice]"
+                                                            value="{{ old('invoice_products.0.slice') }}">
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Thành Tiền</label>
                                                         <input type="text" class="form-input"
-                                                            name="invoiceProducts[0][price]" value="">
+                                                            name="invoice_products[0][price]"
+                                                            value="{{ old('invoice_products.0.price') }}">
                                                     </div>
                                                 </div>
                                             </div>
@@ -229,24 +154,24 @@
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
-                                        @endif
                                     </div>
 
                                     <div class="add-material" onclick="addTreatmentStep()" style="margin-top: 1rem;">
                                         <i class="fas fa-plus"></i> Thêm Dòng
                                     </div>
                                 </div>
-
-                            </div>
-                            <div class="prism-toggle d-grid gap-2 d-md-flex">
-                                <button type="submit" class="btn btn-success" id="submit-btn-treatmentslip">Lưu Thông
-                                    Tin</button>
+                                <div class="prism-toggle d-grid gap-2 d-md-flex">
+                                    <button type="submit" class="btn btn-success" id="submit-btn-treatmentslip">Lưu
+                                        Thông
+                                        Tin</button>
+                                </div>
                             </div>
                         </div>
 
                     </div>
                 </div>
             </form>
+
 
         </div>
     </div>
@@ -278,7 +203,7 @@
                 <div class="form-row" style="margin-bottom: 0.5rem;">
                     <div class="form-group">
                          <label class="form-label">Kho</label>
-                        <select class="form-select" name="invoiceProducts[${treatmentIndex}][warehouseID]" required>
+                        <select class="form-select" name="invoice_products[${treatmentIndex}][warehouseID]" required>
                             @foreach($warehouses as $warehouse)
                                 <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
                             @endforeach
@@ -286,7 +211,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Tên Vật Tư</label>
-                        <select class="form-select" name="invoiceProducts[${treatmentIndex}][productID]" required>
+                        <select class="form-select" name="invoice_products[${treatmentIndex}][productID]" required>
                             <option value="">-- Chọn vật tư --</option>
                             @foreach($products as $p)
                                 <option value="{{ $p->id }}">{{ $p->name }}</option>
@@ -295,11 +220,11 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Số Lượng</label>
-                        <input type="number" class="form-input" name="invoiceProducts[${treatmentIndex}][quantity]">
+                        <input type="number" class="form-input" name="invoice_products[${treatmentIndex}][quantity]">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Đơn Vị</label>
-                        <select class="form-select" name="invoiceProducts[${treatmentIndex}][unitID]">
+                        <select class="form-select" name="invoice_products[${treatmentIndex}][unitID]">
                             <option value="">-- Chọn đơn vị --</option>
                             @foreach($units as $unit)
                                 <option value="{{ $unit->id }}">{{ $unit->name }}</option>
@@ -310,15 +235,15 @@
                 <div class="form-row" style="flex:1">
                     <div class="form-group">
                         <label class="form-label">Chất Lượng</label>
-                        <input type="text" class="form-input" name="invoiceProducts[${treatmentIndex}][quality]" placeholder="">
+                        <input type="text" class="form-input" name="invoice_products[${treatmentIndex}][quality]" placeholder="">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Số Lát Dao</label>
-                       <input type="number" class="form-input" name="invoiceProducts[${treatmentIndex}][slice]">
+                       <input type="number" class="form-input" name="invoice_products[${treatmentIndex}][slice]">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Thành Tiền</label>
-                        <input type="text" class="form-input" name="invoiceProducts[${treatmentIndex}][price]">    
+                        <input type="text" class="form-input" name="invoice_products[${treatmentIndex}][price]">    
                     </div>
                 </div>
             </div>

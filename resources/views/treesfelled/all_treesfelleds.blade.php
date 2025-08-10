@@ -2,12 +2,12 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-md-flex d-block align-items-center justify-content-between my-2 page-header-breadcrumb">
-        <h5 class="page-title fw-semibold mb-0" style="color: #22573E">Phiếu Cây Gãy/Đỗ</h5>
+        <h5 class="page-title fw-semibold mb-0" style="color: #22573E">Phiếu Cây Gãy/Đổ</h5>
         <div class="ms-md-1 ms-0">
             <nav>
                 <ol class="breadcrumb mb-0 padding">
                     <li class="breadcrumb-item"><a href="javascript:void(0);">Trang Chủ</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Danh Sách Cây Gãy/Đỗ</li>
+                    <li class="breadcrumb-item active" aria-current="page">Danh Sách Cây Gãy/Đổ</li>
                 </ol>
             </nav>
         </div>
@@ -108,25 +108,9 @@
                         <!-- First Filter Row -->
                         <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label">Tên Phiếu</label>
-                                <select class="form-select" id="taskName">
-                                    <option value="">-- Tất cả --</option>
-                                    <option value="T1">T1</option>
-                                    <option value="T2">T2</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
                                 <label class="form-label">Ngày Ghi Nhận</label>
                                 <input type="date" class="form-input datepicker" id="taskStartDate"
                                     placeholder="Chọn Ngày Bắt Đầu">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Tên Vườn</label>
-                                <select class="form-select" id="taskGarden">
-                                    <option value="">-- Tất cả --</option>
-                                    <option value="V1">V1</option>
-                                    <option value="V2">V2</option>
-                                </select>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Tên Lô</label>
@@ -138,7 +122,7 @@
                             </div>
                             <div class="form-group" style="display: flex; align-items: end;">
                                 <button class="btn btn-success" onclick="filterTasks()"
-                                    style="width: 100%;border-radius: 10px;">
+                                    style="width: 30%;border-radius: 10px;">
                                     <i class="fas fa-filter"></i>
                                     Lọc
                                 </button>

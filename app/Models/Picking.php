@@ -51,6 +51,6 @@ class Picking extends Model
     }
     public function productProposalPickings()
     {
-        return $this->hasMany(ProductProposalPicking::class, 'id', 'pickingID');
+        return $this->hasMany(ProductProposalPicking::class, 'pickingID');
     }
 }

@@ -32,6 +32,12 @@ class InventoryStockController extends Controller
                 ->addColumn('productID', function ($row) {
                     return $row->product ? $row->product->name : 'N/A';
                 })
+                ->addColumn('category', function ($row) {
+                    return $row->product->category ? $row->product->category->name : 'N/A';
+                })
+                ->addColumn('unit', function ($row) {
+                    return $row->unit ? $row->unit->name : 'N/A';
+                })
                 ->addColumn('warehouseID', function ($row) {
                     return $row->warehouse ? $row->warehouse->name : 'N/A';
                 })
@@ -74,7 +80,7 @@ class InventoryStockController extends Controller
                     ';
                     return $action;
                 })
-                ->rawColumns(['check', 'stt', 'quantity', 'warehouseID', 'productID', 'status', 'action'])
+                ->rawColumns(['check', 'category', 'stt', 'quantity', 'warehouseID', 'productID', 'status', 'action'])
                 ->make(true);
         }
         return view('stock.all_stock', compact('products', 'warehouses'));

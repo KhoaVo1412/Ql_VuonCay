@@ -11,6 +11,8 @@ class DiseasePlant extends Model
     protected $table = 'disease_plants';
 
     protected $fillable = [
+        'code',
+        'name',
         'detectionDate',
         'sessionID',
         'plantID',
@@ -21,7 +23,9 @@ class DiseasePlant extends Model
         'workerID',
         'infection_level',
         'treatmentResult',
-        'active',
+        'status',
+        'symptoms',
+        'cause'
     ];
 
     public function plant()
@@ -34,9 +38,13 @@ class DiseasePlant extends Model
         return $this->belongsTo(Worker::class, 'workerID', 'id');
     }
 
-    public function session()
+    // public function session()
+    // {
+    //     return $this->belongsTo(TreatmentSessions::class, 'sessionID');
+    // }
+    public function treatmentSessions()
     {
-        return $this->belongsTo(TreatmentSessions::class, 'sessionID');
+        return $this->hasMany(TreatmentSessions::class, 'diseasePlantID');
     }
 
     public function disease()

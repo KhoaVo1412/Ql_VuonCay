@@ -2,7 +2,7 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-md-flex d-block align-items-center justify-content-between my-2 page-header-breadcrumb">
-        <h4 class="page-title fw-semibold fs-18 mb-0">Danh Mục Vật Tư</h4>
+        <h5 class="page-title fw-semibold fs-18 mb-0">Danh Mục Vật Tư</h5>
         <div class="ms-md-1 ms-0">
             <nav>
                 <ol class="breadcrumb mb-0 padding">
@@ -86,6 +86,12 @@
                                 <label class="form-label">Kho</label>
                                 <select class="form-select" id="taskType">
                                     <option value="">Chọn kho</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Danh Mục</label>
+                                <select class="form-select" id="taskType">
+                                    <option value="">Chọn danh mục</option>
 
                                 </select>
                             </div>

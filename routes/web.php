@@ -197,6 +197,11 @@ Route::middleware(['login'])->group(function () {
         return response()->json($plants);
     });
 
+    Route::get('/e-get-plants-for-plot/{plotID}', function ($plotID) {
+        $plants = Plant::with('variety')->where('plotID', $plotID)->get();
+        return response()->json($plants);
+    });
+
     Route::get('/api/products-by-category/{categoryID}', function ($categoryID) {
         // $products = App\Models\Product::where('categoryID', $categoryID)->get(['id', 'name']);
         $products = App\Models\Product::where('categoryID', $categoryID)->get();
@@ -246,6 +251,7 @@ Route::middleware(['login'])->group(function () {
     Route::post('/toggle-comments-status', [CommentController::class, 'toggleStatus'])->name('comments.status');
 
     Route::get('/outputs', [OutputController::class, 'index'])->name('outputs.index');
+    Route::get('/add-outputs', [OutputController::class, 'add'])->name('outputs.add');
     Route::post('/save-outputs', [OutputController::class, 'save'])->name('outputs.save');
     Route::get('/edit-outputs/{id}', [OutputController::class, 'edit'])->name('outputs.edit');
     Route::post('/outputs/update/{id}', [OutputController::class, 'update'])->name('outputs.update');
@@ -255,7 +261,7 @@ Route::middleware(['login'])->group(function () {
     Route::post('/toggle-outputs-status', [OutputController::class, 'toggleStatus'])->name('outputs.status');
 
     Route::get('/workers', [WorkerController::class, 'index'])->name('workers.index');
-    Route::get('/add-workers', [WorkerController::class, 'add'])->name('workers.add');
+    Route::get('/add-workers', [WorkerController::class, 'add'])->name('aaa');
     Route::post('/save-workers', [WorkerController::class, 'save'])->name('workers.save');
     Route::get('/edit-workers/{id}', [WorkerController::class, 'edit'])->name('workers.edit');
     Route::post('/workers/update/{id}', [WorkerController::class, 'update'])->name('workers.update');
@@ -287,7 +293,7 @@ Route::middleware(['login'])->group(function () {
     Route::get('/treatmentslips', [TreatmentSlipController::class, 'index'])->name('treatmentslips.index');
     Route::get('/add-treatmentslips', [TreatmentSlipController::class, 'add'])->name('treatmentslips.add');
     Route::post('/save-treatmentslips', [TreatmentSlipController::class, 'save'])->name('treatmentslips.save');
-    Route::get('/treatmentslips/edit/{id}', [TreatmentSlipController::class, 'edit'])->name('treatmentslips.edit');
+    Route::get('/edit-treatmentslips/{id}', [TreatmentSlipController::class, 'edit'])->name('treatmentslips.edit');
     Route::post('/treatmentslips/update/{id}', [TreatmentSlipController::class, 'update'])->name('treatmentslips.update');
     Route::get('treatmentslips/delete/{id}', [TreatmentSlipController::class, 'destroy'])->name('treatmentslips.delete');
     Route::post('/treatmentslips/edit-multiple', [TreatmentSlipController::class, 'editMultiple'])->name('treatmentslips.editMultiple');
@@ -565,35 +571,40 @@ Route::group(['middleware' => ['isAdmin']], function () {
     Route::delete('delete-users/{users}', [UserController::class, 'delete'])->name('delete.users');
     Route::get('filter-selects', [UserController::class, 'all_users'])->name('filter.users');
 
-    Route::middleware(['permission:Xem Nông Trường'])->get('/farms', [FarmController::class, 'index'])->name('farms.index');
-    Route::middleware(['permission:Thêm Nông Trường'])->post('/save-farms', [FarmController::class, 'save'])->name('farms.save');
-    // Route::middleware(['permission:Sửa Nông Trường'])->get('edit-farms/{id}', [FarmController::class, 'edit'])->name('farms.edit');
-    Route::middleware(['permission:Xóa Nông Trường'])->post('/farms/delete-multiple', [FarmController::class, 'deleteMultiple'])->name('farms.deleteMultiple');
+    Route::middleware(['permission:Xem Chức Vụ'])->get('/duty', [DutyController::class, 'index'])->name('duty.index');
+    Route::middleware(['permission:Thêm Chức Vụ'])->post('/save-duty', [DutyController::class, 'save'])->name('duty.save');
+    Route::middleware(['permission:Sửa Chức Vụ'])->get('/edit-duty/{id}', [DutyController::class, 'edit'])->name('duty.edit');
+    Route::middleware(['permission:Xóa Chức Vụ'])->post('/duty/delete-multiple', [DutyController::class, 'deleteMultiple'])->name('farms.deleteMultiple');
 
-    Route::middleware(['permission:Xem Xe'])->get('/vehicles', [VehicleController::class, 'index'])->name('vehicles.index');
-    Route::middleware(['permission:Thêm Xe'])->post('/save-vehicles', [VehicleController::class, 'save'])->name('vehicles.save');
-    Route::middleware(['permission:Sửa Xe'])->get('/vehicles/edit/{id}', [VehicleController::class, 'edit'])->name('vehicles.edit');
-    Route::middleware(['permission:Xóa Xe'])->post('/vehicles/delete-multiple', [VehicleController::class, 'deleteMultiple'])->name('vehicles.deleteMultiple');
+    Route::middleware(['permission:Xem Tổ'])->get('/teams', [TeamController::class, 'index'])->name('teams.index');
+    Route::middleware(['permission:Thêm Tổ'])->post('/save-teams', [TeamController::class, 'save'])->name('teams.save');
+    Route::middleware(['permission:Sửa Tổ'])->get('/edit-teams/{id}', [TeamController::class, 'edit'])->name('teams.edit');
+    Route::middleware(['permission:Xóa Tổ'])->post('/teams/delete-multiple', [TeamController::class, 'deleteMultiple'])->name('teams.deleteMultiple');
 
-    Route::middleware(['permission:Xem Nguyên Liệu'])->get('/ingredients', [InfIngredientController::class, 'index'])->name('ingredients.index');
-    Route::middleware(['permission:Thêm Nguyên Liệu'])->get('/add-ingredients', [InfIngredientController::class, 'add'])->name('add-ingredients');
-    Route::middleware(['permission:Sửa Nguyên Liệu'])->post('/update-ingredients/{id}', [InfIngredientController::class, 'update'])->name('update-ingredients');
-    Route::middleware(['permission:Xóa Nguyên Liệu'])->post('/ingredients/delete-multiple', [InfIngredientController::class, 'deleteMultiple'])->name('ingredients.deleteMultiple');
+    Route::middleware(['permission:Xem Công Nhân'])->get('/workers', [WorkerController::class, 'index'])->name('workers.index');
+    Route::middleware(['permission:Thêm Công Nhân'])->get('/add-workers', [WorkerController::class, 'add'])->name('workers.add');
+    Route::middleware(['permission:Sửa Công Nhân'])->post('/update-workers/{id}', [WorkerController::class, 'update'])->name('workers.update');
+    Route::middleware(['permission:Xóa Công Nhân'])->post('/workers/delete-multiple', [WorkerController::class, 'deleteMultiple'])->name('workers.deleteMultiple');
 
-    Route::middleware(['permission:Xem Khu Vực Trồng'])->get('/plantingareas', [PlantingAreaController::class, 'index'])->name('plantingareas.index');
-    Route::middleware(['permission:Thêm Khu Vực Trồng'])->post('/add-plantingareas', [PlantingAreaController::class, 'save'])->name('add-plantingareas');
-    Route::middleware(['permission:Sửa Khu Vực Trồng'])->post('/update-plantingareas/{id}', [PlantingAreaController::class, 'update'])->name('update-plantingareas');
-    Route::middleware(['permission:Xóa Khu Vực Trồng'])->post('/plantingareas/delete-multiple', [PlantingAreaController::class, 'deleteMultiple'])->name('deletedeleteMultiple');
+    Route::middleware(['permission:Xem Loại Công Việc'])->get('/aworks', [WorkController::class, 'index1'])->name('aworks.index');
+    Route::middleware(['permission:Thêm Loại Công Việc'])->post('/add-aworks', [WorkController::class, 'save1'])->name('aworks.add');
+    Route::middleware(['permission:Sửa Loại Công Việc'])->post('/update-aworks/{id}', [WorkController::class, 'update1'])->name('aworks.update');
+    Route::middleware(['permission:Xóa Loại Công Việc'])->post('/aworks/delete-multiple', [WorkController::class, 'deleteMultiple1'])->name('deletedeleteMultiple');
 
-    Route::middleware(['permission:Xem Mã Lô'])->get('/batchesB', [BatchBController::class, 'index_b'])->name('batchesB.index');
-    Route::middleware(['permission:Thêm Mã Lô'])->get('/add-batchesB', [BatchBController::class, 'add_b'])->name('add-batchesB');
-    Route::middleware(['permission:Sửa Mã Lô'])->get('/edit-batchesB/{id}', [BatchBController::class, 'edit_b'])->name('edit-batchesB');
-    Route::middleware(['permission:Xóa Mã Lô'])->post('/batchB/delete-multiple', [BatchBController::class, 'deleteMultiple'])->name('batchB.deleteMultiple');
+    Route::middleware(['permission:Xem Phân Công'])->get('/works', [WorkController::class, 'index'])->name('works.index');
+    Route::middleware(['permission:Thêm Phân Công'])->get('/add-works', [WorkController::class, 'add'])->name('works.add');
+    Route::middleware(['permission:Sửa Phân Công'])->get('/edit-works/{id}', [WorkController::class, 'edit'])->name('works.edit');
+    Route::middleware(['permission:Xóa Phân Công'])->post('/works/delete-multiple', [WorkController::class, 'deleteMultiple'])->name('works.deleteMultiple');
 
-    Route::middleware(['permission:Xem Lô Hàng'])->get('/batches', [BatchController::class, 'index'])->name('batches.index');
-    Route::middleware(['permission:Thêm Lô Hàng'])->get('/add-batches', [BatchController::class, 'add'])->name('add-batches');
-    Route::middleware(['permission:Sửa Lô Hàng'])->post('/update-batches/{id}', [BatchController::class, 'update'])->name('update-batches');
-    Route::middleware(['permission:Xóa Lô Hàng'])->post('/batch/delete-multiple', [BatchController::class, 'deleteMultiple'])->name('batch.deleteMultiple');
+    Route::middleware(['permission:Xem Đề Xuất'])->get('/workps', [WorkProposalsController::class, 'index'])->name('workps.index');
+    Route::middleware(['permission:Thêm Đề Xuất'])->get('/add-workps', [WorkProposalsController::class, 'add'])->name('workps.add');
+    Route::middleware(['permission:Sửa Đề Xuất'])->post('/update-workps/{id}', [WorkProposalsController::class, 'update'])->name('workps.update');
+    Route::middleware(['permission:Xóa Đề Xuất'])->post('/workps/delete-multiple', [WorkProposalsController::class, 'deleteMultiple'])->name('workps.deleteMultiple');
+
+    Route::middleware(['permission:Xem Đánh Giá'])->get('/comments', [WorkProposalsController::class, 'index'])->name('comments.index');
+    Route::middleware(['permission:Thêm Đánh Giá'])->get('/add-comments', [WorkProposalsController::class, 'add'])->name('comments.add');
+    Route::middleware(['permission:Sửa Đánh Giá'])->post('/update-comments/{id}', [WorkProposalsController::class, 'update'])->name('comments.update');
+    Route::middleware(['permission:Xóa Đánh Giá'])->post('/comments/delete-multiple', [WorkProposalsController::class, 'deleteMultiple'])->name('comments.deleteMultiple');
 
     // MDF qlcl
     Route::middleware(['permission:Xem Quản Lý Chất Lượng'])->get('/untested', [TestingResultController::class, 'indexUntested'])->name('untested');
@@ -635,10 +646,10 @@ Route::group(['middleware' => ['isAdmin']], function () {
     Route::get('/contract-dueDiligenceStatement/{id}', [DueDiliStateController::class, 'exportExcel'])->name('duedilistate.export');
 
     //midw tài khoản
-    Route::middleware(['permission:Xem Tài Khoản'])->get('/all-users', [UserController::class, 'all_users'])->name('all.users');
-    Route::middleware(['permission:Thêm Tài Khoản'])->post('/add-users', [UserController::class, 'store'])->name('store.users');
-    Route::middleware(['permission:Sửa Tài Khoản'])->get('/edit-users/{users}', [UserController::class, 'show'])->name('show.users');
-    Route::middleware(['permission:Xóa Tài Khoản'])->delete('/delete-users/{users}', [UserController::class, 'delete'])->name('delete.users');
+    // Route::middleware(['permission:Xem Tài Khoản'])->get('/all-users', [UserController::class, 'all_users'])->name('all.users');
+    // Route::middleware(['permission:Thêm Tài Khoản'])->post('/add-users', [UserController::class, 'store'])->name('store.users');
+    // Route::middleware(['permission:Sửa Tài Khoản'])->get('/edit-users/{users}', [UserController::class, 'show'])->name('show.users');
+    // Route::middleware(['permission:Xóa Tài Khoản'])->delete('/delete-users/{users}', [UserController::class, 'delete'])->name('delete.users');
 });
 
 

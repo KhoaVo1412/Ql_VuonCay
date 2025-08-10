@@ -5,8 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActionHistory;
 use App\Models\DiseasePlant;
+use App\Models\Diseases;
+use App\Models\Plant;
+use App\Models\Product;
+use App\Models\TreatmentSessions;
+use App\Models\Worker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 use Yajra\DataTables\DataTables;
 
 class DiseaseplanController extends Controller
@@ -15,7 +21,6 @@ class DiseaseplanController extends Controller
     {
 
         $all_dis = DiseasePlant::with('disease', 'plant', 'worker')->get();
-        // dd($all_dis);
         if ($request->ajax()) {
             return DataTables::of($all_dis)
                 ->addColumn('check', function ($row) {
@@ -26,8 +31,8 @@ class DiseaseplanController extends Controller
                     $stt++;
                     return $stt;
                 })
-                ->editColumn('id', function ($row) {
-                    return $row->id;
+                ->editColumn('code', function ($row) {
+                    return $row->code;
                 })
                 ->editColumn('diseaseName', function ($row) {
                     return $row->disease->diseaseName ?? 'Không rõ';
@@ -38,8 +43,11 @@ class DiseaseplanController extends Controller
                 ->addColumn('detectionDate', function ($row) {
                     return $row->detectionDate;
                 })
-                ->addColumn('name', function ($row) {
-                    return optional($row->worker)->name ?? 'Chưa giao';
+                ->editColumn('name', function ($row) {
+                    return $row->name;
+                })
+                ->editColumn('workerID', function ($row) {
+                    return $row->worker->name;
                 })
                 ->editColumn('status', function ($row) {
                     $statusClass = $row->status == 'Hoạt động' ? 'success' : 'danger';
@@ -49,7 +57,7 @@ class DiseaseplanController extends Controller
                 ->addColumn('action', function ($row) {
                     $action = '
                         <div class="d-flex gap-1">
-                            <a href="/farms/edit/' . $row->id . '" class="btn btn-sm btn-primary">
+                            <a href="/edit-diseaseplans/' . $row->id . '" class="btn btn-sm btn-primary">
                                 <i class="fas fa-edit"></i>
                             </a>
                             <a class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal' . $row->id . '">
@@ -64,11 +72,11 @@ class DiseaseplanController extends Controller
                                         <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        Bạn có chắc chắn có muốn xóa thông tin <span style="color: red;">' . ($row->farm_name ?? 'N/A') . '</span>?
+                                        Bạn có chắc chắn có muốn xóa thông tin <span style="color: red;">' . ($row->code ?? 'N/A') . '</span>?
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                                        <a href="/farms/delete/' . $row->id . '" class="btn btn-primary">Xóa</a>
+                                        <a href="/diseaseplans/delete/' . $row->id . '" class="btn btn-primary">Xóa</a>
                                     </div>
                                 </div>
                             </div>
@@ -76,108 +84,184 @@ class DiseaseplanController extends Controller
                     ';
                     return $action;
                 })
-                ->rawColumns(['check', 'stt', 'diseaseName', 'name', 'detectionDate', 'plantCode', 'status', 'action'])
+                ->rawColumns(['check', 'workerID', 'code', 'stt', 'diseaseName', 'name', 'detectionDate', 'plantName', 'status', 'action'])
                 ->make(true);
         }
         return view('diseaseplan.all_diseaseplan');
     }
     public function add(Request $request)
     {
-        return view('diseaseplan.add_diseaseplan');
+        $diseases = Diseases::all();
+        $plants = Plant::with('variety')->get();
+        $workers = Worker::all();
+        $products = Product::all();
+        return view('diseaseplan.add_diseaseplan', compact('products', 'diseases', 'plants', 'workers'));
     }
     public function save(Request $request)
     {
-        // dd($request->all());
-        $request->validate([
-            'farm_code' => 'required',
-            'farm_name' => 'required',
-            'unit_id' => 'required|exists:units,id',
+        $validatedData = $request->validate([
+            'code' => 'required',
+            'name' => 'required',
+            'plantID' => 'required',
+            'workerID' => 'required',
+            'diseaseID' => 'required',
+            'detectionDate' => 'required',
+            'symptoms' => 'nullable',
+            'cause' => 'nullable',
             'status' => 'nullable',
+            // 'sessionStart' => 'required|date',
+            // 'sessionEnd' => 'nullable|date',
+            // 'assigned_to' => 'required',
+            // 'priority' => 'required',
+            // 'steps' => 'required|array',
+            // 'steps.*.productID' => 'required',
+            // 'steps.*.dose' => 'required',
+            // 'steps.*.execution_date' => 'required',
+            // 'steps.*.instructions' => 'required',
         ]);
-        // $existingFarm = Farm::where('farm_name', $request->farm_name)->first();
-        $existingCode = Farm::where('farm_code', $request->farm_code)->first();
+        $status = $validatedData['status'] ?? 'Hoạt động';
+        $diseasePlant = DiseasePlant::create([
+            'code' => $validatedData['code'],
+            'name' => $validatedData['name'],
+            'plantID' => $validatedData['plantID'],
+            'diseaseID' => $validatedData['diseaseID'],
+            'detectionDate' => $validatedData['detectionDate'],
+            'symptoms' => $validatedData['symptoms'],
+            'cause' => $validatedData['cause'],
+            'workerID' => $validatedData['workerID'],
+            'status' => $status,
+        ]);
 
-        if ($existingCode) {
-            return redirect()->back()->with(['error' => 'Mã nông trường này đã tồn tại!']);
-        }
-        // if ($existingFarm) {
-        //     return redirect()->back()->with(['error' => 'Tên nông trường này đã tồn tại!']);
+        // $treatmentSession = TreatmentSessions::create([
+        //     'sessionStart' => $validatedData['sessionStart'],
+        //     'sessionEnd' => $validatedData['sessionEnd'],
+        //     'assigned_to' => $validatedData['assigned_to'], // Lưu người phụ trách vào trường assigned_to
+        //     'priority' => $validatedData['priority'],
+        //     'results' => $request->results ?? null,
+        // ]);
+
+        // foreach ($validatedData['steps'] as $step) {
+        //     $treatmentSession->treatmentSteps()->create([
+        //         'productID' => $step['productID'],
+        //         'dose' => $step['dose'],
+        //         'execution_date' => $step['execution_date'],
+        //         'instructions' => $step['instructions'],
+        //     ]);
         // }
 
-        // $farmNameSlug = Str::slug($request->farm_name, '_');
-        // $prefix = '#' . $farmNameSlug . '_';
-        // do {
-        //     $randomCode = $prefix . rand(100, 999);
-        // } while (Farm::where('farm_code', $randomCode)->exists());
-        Farm::create([
-            'farm_code' => $request->farm_code,
-            'farm_name' => $request->farm_name,
-            'unit_id' => $request->unit_id,
-            'status' => $request->status ?? 'Hoạt động',
-        ]);
+        // $diseasePlant->update([
+        //     'sessionID' => $treatmentSession->id,
+        // ]);
+
         ActionHistory::create([
             'user_id' => Auth::id(),
             'action_type' => 'create',
-            'model_type' => 'Farm',
-            'details' => "Đã tạo nông trường: " . $request->farm_name . " với mã: " . $request->farm_code,
+            'model_type' => 'diseasePlant',
+            'details' => "Đã tạo cây bệnh: " . $request->name . " với mã: " . $request->code,
         ]);
-        session()->flash('message', 'Tạo nông trường thành công.');
-        return redirect()->back();
+        // return redirect()->route('treatmentslips.add', ['id' => $diseasePlant->id])
+        //     ->with('message', 'Tạo cây bệnh thành công. Tiếp tục tạo phiếu trị.');
+
+        return redirect()->route('diseaseplans.index')->with('message', 'Tạo cây bệnh thành công');
     }
     public function edit($id)
     {
-
-        return view('farms.edit_farms');
+        $diseases = Diseases::all();
+        $plants = Plant::with('variety')->get();
+        $workers = Worker::all();
+        $products = Product::all();
+        $diseaseplants = DiseasePlant::findOrFail($id);
+        $treatmentSession = TreatmentSessions::where('id', $diseaseplants->sessionID)->first();
+        return view('diseaseplan.edit_diseaseplan', compact('diseaseplants', 'products', 'diseases', 'plants', 'workers', 'treatmentSession'));
     }
+
     public function update(Request $request, $id)
     {
-        $existingFarm = Farm::where('farm_name', $request->farm_name)->where('id', '!=', $id)->first();
+        // Xác thực dữ liệu từ form
+        $validatedData = $request->validate([
+            'code' => 'required',
+            'name' => 'required',
+            'plantID' => 'required',
+            'workerID' => 'required',
+            'diseaseID' => 'required',
+            'detectionDate' => 'required',
+            'symptoms' => 'nullable',
+            'cause' => 'nullable',
+            'status' => 'nullable',
+            // 'sessionStart' => 'required|date',
+            // 'sessionEnd' => 'nullable|date',
+            // 'assigned_to' => 'required',
+            // 'priority' => 'required',
+            // 'steps' => 'required',
+            // 'steps.*.productID' => 'required',
+            // 'steps.*.dose' => 'required',
+            // 'steps.*.execution_date' => 'required',
+            // 'steps.*.instructions' => 'required',
+        ]);
 
-        // if ($existingFarm) {
-        //     return redirect()->back()->with(['error' => 'Tên nông trường này đã tồn tại!']);
+        $diseasePlant = DiseasePlant::findOrFail($id);
+        $diseasePlant->update([
+            'code' => $validatedData['code'],
+            'name' => $validatedData['name'],
+            'plantID' => $validatedData['plantID'],
+            'diseaseID' => $validatedData['diseaseID'],
+            'detectionDate' => $validatedData['detectionDate'],
+            'symptoms' => $validatedData['symptoms'],
+            'cause' => $validatedData['cause'],
+            'workerID' => $validatedData['workerID'],
+            'status' => $validatedData['status'] ?? 'Hoạt động',
+        ]);
+
+        // $treatmentSession = TreatmentSessions::findOrFail($diseasePlant->sessionID);
+        // $treatmentSession->update([
+        //     'sessionStart' => $validatedData['sessionStart'],
+        //     'sessionEnd' => $validatedData['sessionEnd'],
+        //     'assigned_to' => $validatedData['assigned_to'],
+        //     'priority' => $validatedData['priority'],
+        //     'results' => $request->results ?? null,
+        // ]);
+
+        // $existingStepIds = $treatmentSession->treatmentSteps()->pluck('id')->toArray();
+        // $submittedStepIds = [];
+
+        // foreach ($validatedData['steps'] as $step) {
+        //     if (isset($step['id'])) {
+        //         // Cập nhật nếu có ID
+        //         $treatmentSession->treatmentSteps()->where('id', $step['id'])->update([
+        //             'productID' => $step['productID'],
+        //             'dose' => $step['dose'],
+        //             'execution_date' => $step['execution_date'],
+        //             'instructions' => $step['instructions'],
+        //         ]);
+        //         $submittedStepIds[] = $step['id'];
+        //     } else {
+        //         $newStep = $treatmentSession->treatmentSteps()->create([
+        //             'productID' => $step['productID'],
+        //             'dose' => $step['dose'],
+        //             'execution_date' => $step['execution_date'],
+        //             'instructions' => $step['instructions'],
+        //         ]);
+        //         $submittedStepIds[] = $newStep->id;
+        //     }
         // }
 
-        $existingFarm = Farm::where(function ($query) use ($request, $id) {
-            $query->where('farm_code', $request->farm_code);
-            // $query->where('farm_name', $request->farm_name)
-            //     ->orWhere('farm_code', $request->farm_code);
-        })->where('id', '!=', $id)->first();
+        // $stepsToDelete = array_diff($existingStepIds, $submittedStepIds);
+        // $treatmentSession->treatmentSteps()->whereIn('id', $stepsToDelete)->delete();
 
-        if ($existingFarm) {
-            // if ($existingFarm->farm_name === $request->farm_name) {
-            //     return redirect()->back()->with(['error' => 'Tên nông trường này đã tồn tại!']);
-            // }
-            if ($existingFarm->farm_code === $request->farm_code) {
-                return redirect()->back()->with(['error' => 'Mã nông trường này đã tồn tại!']);
-            }
-        }
-        $farms = Farm::find($id);
-        if (!$farms) {
-            return redirect()->back()->with('error', 'Nông trường không tồn tại');
-        }
-        $request->validate([
-            'farm_name' => 'nullable',
-            'farm_code' => 'nullable',
-            'unit_id' => 'nullable',
-        ]);
-        $farms->update([
-            'farm_code' => $request->farm_code,
-            'farm_name' => $request->farm_name,
-            'unit_id' => $request->unit_id,
-            'status' => $request->status,
-        ]);
         ActionHistory::create([
             'user_id' => Auth::id(),
             'action_type' => 'update',
-            'model_type' => 'Farm',
-            'details' => "Đã cập nhật nông trường: " . $farms->farm_name,
+            'model_type' => 'DiseasePlant',
+            'details' => "Đã cập nhật cây bệnh: " . $diseasePlant->name . " với mã: " . $diseasePlant->code,
         ]);
-        return redirect()->route('farms.index')->with('message', 'Cập nhật nông trường thành công');
+
+        return redirect()->route('diseaseplans.index')->with('message', 'Cập nhật cây bệnh thành công!');
     }
+
     public function destroy($id)
     {
-        $farms = Farm::find($id);
-        $farms->delete();
+        $diseaseplans = DiseasePlant::find($id);
+        $diseaseplans->delete();
         Session::put('message', 'Xóa thành công.');
         return redirect()->back();
     }
@@ -188,11 +272,11 @@ class DiseaseplanController extends Controller
             'ids.*' => 'integer',
         ]);
 
-        $farms = Farm::whereIn('id', $request->ids)->get();
+        $diseaseplans = DiseasePlant::whereIn('id', $request->ids)->get();
 
-        foreach ($farms as $farm) {
-            $farm->status = ($farm->status === 'Hoạt động') ? 'Không hoạt động' : 'Hoạt động';
-            $farm->save();
+        foreach ($diseaseplans as $DiseasePlant) {
+            $DiseasePlant->status = ($DiseasePlant->status === 'Hoạt động') ? 'Không hoạt động' : 'Hoạt động';
+            $DiseasePlant->save();
         }
         return response()->json(['message' => 'Thành Công']);
     }
@@ -202,30 +286,30 @@ class DiseaseplanController extends Controller
             'ids' => 'required|array',
             'ids.*' => 'integer',
         ]);
-        $farmsToDelete = Farm::whereIn('id', $request->ids)->get();
+        $diseaseplansToDelete = DiseasePlant::whereIn('id', $request->ids)->get();
 
-        Farm::whereIn('id', $request->ids)->delete();
+        DiseasePlant::whereIn('id', $request->ids)->delete();
 
-        foreach ($farmsToDelete as $farm) {
+        foreach ($diseaseplansToDelete as $DiseasePlant) {
             ActionHistory::create([
-                'user_id' => Auth::id(),  // ID của người thực hiện hành động
-                'action_type' => 'delete',  // Loại hành động "delete"
-                'model_type' => 'Farm',  // Model "Farm"
-                'details' => "Đã xóa nông trường: " . $farm->farm_name . " với mã: " . $farm->farm_code,
+                'user_id' => Auth::id(),
+                'action_type' => 'delete',
+                'model_type' => 'diseasePlant',
+                'details' => "Đã xóa cây bệnh: " . $DiseasePlant->name . " với mã: " . $DiseasePlant->code,
             ]);
         }
         return response()->json([
-            'message' => 'Xóa thành công các nông trường được chọn.',
+            'message' => 'Xóa thành công các cây bệnh được chọn.',
             'deleted_ids' => $request->ids
         ]);
     }
     public function toggleStatus(Request $request)
     {
-        $farm = Farm::find($request->id);
-        if ($farm) {
-            $farm->status = $farm->status == 'Hoạt động' ? 'Không hoạt động' : 'Hoạt động';
-            $farm->save();
-            return response()->json(['success' => true, 'status' => $farm->status]);
+        $DiseasePlant = DiseasePlant::find($request->id);
+        if ($DiseasePlant) {
+            $DiseasePlant->status = $DiseasePlant->status == 'Hoạt động' ? 'Không hoạt động' : 'Hoạt động';
+            $DiseasePlant->save();
+            return response()->json(['success' => true, 'status' => $DiseasePlant->status]);
         } else {
             return response()->json(['success' => false]);
         }

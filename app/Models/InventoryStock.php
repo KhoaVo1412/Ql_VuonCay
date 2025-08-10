@@ -10,6 +10,7 @@ class InventoryStock extends Model
 
     protected $fillable = [
         'productID',
+        'unitID',
         'warehouseID',
         'quantity',
         'status',
@@ -23,5 +24,9 @@ class InventoryStock extends Model
     public function warehouse()
     {
         return $this->belongsTo(WareHouse::class, 'warehouseID');
+    }
+    public function unit()
+    {
+        return $this->belongsTo(UnitOfMeasure::class, 'unitID');
     }
 }

@@ -10,7 +10,9 @@ class Invoice extends Model
     use HasFactory;
 
     protected $fillable = [
+        'code',
         'name',
+        'desc',
         'supplier',
         'status',
         'date',
@@ -18,7 +20,7 @@ class Invoice extends Model
 
     public function invoiceProducts()
     {
-        return $this->hasMany(InvoiceProduct::class);
+        return $this->hasMany(InvoiceProduct::class, 'invoiceID');
     }
     public function pickings()
     {

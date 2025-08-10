@@ -44,7 +44,7 @@
                             Xóa
                         </button>
                         <button id="add-selected-btn" class="btn btn-success" style="border-radius: 7px;">
-                            <a href="{{route('treatmentslips.add')}}" class="text-white"><i class="fa fa-plus"></i>Tạo
+                            <a href="{{ route('treatmentslips.add') }}" class="text-white"><i class="fa fa-plus"></i>Tạo
                                 Phiếu Trị Bệnh</a>
                         </button>
                     </div>
@@ -58,60 +58,16 @@
                             {{-- <th scope="col">STT</th> --}}
                             <th scope="col">Mã</th>
                             <th scope="col">Tên Phiếu Trị Bệnh</th>
-                            <th scope="col">Loại Phiếu Trị Bệnh</th>
+                            {{-- <th scope="col">Loại Phiếu Trị Bệnh</th> --}}
                             <th scope="col">Ngày Làm</th>
-                            <th scope="col">Thực Hiện</th>
-                            <th scope="col">Trạng Thái</th>
+                            <th scope="col">Ngày Kết Thúc</th>
+                            <th scope="col">Phụ Trách</th>
+                            {{-- <th scope="col">Trạng Thái</th> --}}
                             <th scope="col">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
                         <!-- DataTables will populate this section -->
-                        <tr data-id="1">
-                            <td class="dt-type-numeric"></td>
-
-                            <td class="dtr-control dtr-hidden" tabindex="0" style="display: none;"></td>
-                            <td class="sorting_1"><input class="form-check-input" type="checkbox" id="check-1"
-                                    data-id="1"></td>
-                            <td>#324V</td>
-                            <td>Phiếu Trị Bệnh S</td>
-                            <td>Trị Bệnh</td>
-                            <td class="dt-type-date">2025-07-20</td>
-                            <td class="">Nguyễn Văn Duy</td>
-                            <td><button class="badge bg-danger toggle-status" data-id="1">Không hoạt động</button></td>
-                            <td>
-                                <div class="d-flex gap-1">
-                                    <a href="/works/edit/1" class="btn btn-sm btn-primary">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                        data-bs-target="#deleteModal1">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </a>
-                                </div>
-                                <div class="modal fade" id="deleteModal1" tabindex="-1"
-                                    aria-labelledby="deleteModalLabel1" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="deleteModalLabel1">Xác Nhận Xóa</h5>
-                                                <button type="button" class="btn btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                            </div>
-                                            <div class="modal-body">
-                                                Bạn có chắc chắn có muốn xóa thông tin <span
-                                                    style="color: red;">N/A</span>?
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary"
-                                                    data-bs-dismiss="modal">Hủy</button>
-                                                <a href="/works/delete/1" class="btn btn-primary">Xóa</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
                     </tbody>
                     <tfoot>
                         <tr>
@@ -120,10 +76,11 @@
                             {{-- <th scope="col">STT</th> --}}
                             <th scope="col">Mã</th>
                             <th scope="col">Tên Phiếu Trị Bệnh</th>
-                            <th scope="col">Loại Phiếu Trị Bệnh</th>
+                            {{-- <th scope="col">Loại Phiếu Trị Bệnh</th> --}}
                             <th scope="col">Ngày Làm</th>
-                            <th scope="col">Thực Hiện</th>
-                            <th scope="col">Trạng Thái</th>
+                            <th scope="col">Ngày Kết Thúc</th>
+                            <th scope="col">Phụ Trách</th>
+                            {{-- <th scope="col">Trạng Thái</th> --}}
                             <th scope="col">Thao tác</th>
                         </tr>
                     </tfoot>
@@ -224,22 +181,33 @@
                         searchable: false
                     },
                     {
-                        data: 'farm_code',
-                        name: 'farm_code'
+                        data: 'code',
+                        name: 'code'
                     },
                     {
-                        data: 'farm_name',
-                        name: 'farm_name'
+                        data: 'name',
+                        name: 'name'
                     },
                     {
-                        data: 'unit_name',
-                        name: 'unit_name'
+                        data: 'sessionStart',
+                        name: 'sessionStart'
                     },
                     {
-                        data: 'status',
-                        name: 'status'
+                        data: 'sessionEnd',
+                        name: 'sessionEnd'
                     },
-                    // { data: 'action', name: 'action', orderable: false, searchable: false }
+                    {
+                        data: 'assigned_to',
+                        name: 'assigned_to'
+                    },
+                    // {
+                    //     data: 'status',
+                    //     name: 'status'
+                    // },
+                    { 
+                        data: 'action', 
+                        name: 'action'
+                    }
                 ],
                 rowCallback: function(row, data) {
                     $(row).attr('data-id', data.id);

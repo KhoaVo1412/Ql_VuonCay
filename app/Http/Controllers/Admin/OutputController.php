@@ -3,170 +3,212 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActionHistory;
+use App\Models\InventoryStock;
+use App\Models\Invoice;
+use App\Models\InvoiceProduct;
+use App\Models\Product;
+use App\Models\UnitOfMeasure;
+use App\Models\WareHouse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
+use Yajra\DataTables\DataTables;
 
 class OutputController extends Controller
 {
     public function index(Request $request)
     {
-        // $units = Units::all();
-
-        // $all_farms = Farm::with('unitRelation')->orderBy('id', 'desc')->get();
-        // dd($all_farms);
-        // if ($request->ajax()) {
-        // return DataTables::of($all_farms)
-        //         ->addColumn('check', function ($row) {
-        //             return '<input class="form-check-input" type="checkbox" id="check-' . $row->id . '" data-id="' . $row->id . '">';
-        //         })
-        //         ->addColumn('stt', function ($row) {
-        //             static $stt = 0;
-        //             $stt++;
-        //             return $stt;
-        //         })
-        //         ->editColumn('farm_code', function ($row) {
-        //             return $row->farm_code;
-        //         })
-        //         ->editColumn('farm_name', function ($row) {
-        //             return '<a href="/farms/edit/' . $row->id . '">' . $row->farm_name . '</a>';
-        //         })
-        //         ->addColumn('unit_name', function ($row) {
-        //             return $row->unitRelation ? $row->unitRelation->unit_name : 'N/A';
-        //         })
-        //         ->editColumn('status', function ($row) {
-        //             $statusClass = $row->status == 'Hoạt động' ? 'success' : 'danger';
-        //             $statusText = $row->status == 'Hoạt động' ? 'Hoạt động' : 'Không hoạt động';
-        //             return '<button class="badge bg-' . $statusClass . ' toggle-status" data-id="' . $row->id . '">' . $statusText . '</button>';
-        //         })
-        //         ->addColumn('action', function ($row) {
-        //             $action = '
-        //                 <div class="d-flex gap-1">
-        //                     <a href="/farms/edit/' . $row->id . '" class="btn btn-sm btn-primary">
-        //                         <i class="fas fa-edit"></i>
-        //                     </a>
-        //                     <a class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal' . $row->id . '">
-        //                         <i class="fas fa-trash-alt"></i>
-        //                     </a>
-        //                 </div>
-        //                 <div class="modal fade" id="deleteModal' . $row->id . '" tabindex="-1" aria-labelledby="deleteModalLabel' . $row->id . '" aria-hidden="true">
-        //                     <div class="modal-dialog">
-        //                         <div class="modal-content">
-        //                             <div class="modal-header">
-        //                                 <h5 class="modal-title" id="deleteModalLabel' . $row->id . '">Xác Nhận Xóa</h5>
-        //                                 <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        //                             </div>
-        //                             <div class="modal-body">
-        //                                 Bạn có chắc chắn có muốn xóa thông tin <span style="color: red;">' . ($row->farm_name ?? 'N/A') . '</span>?
-        //                             </div>
-        //                             <div class="modal-footer">
-        //                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-        //                                 <a href="/farms/delete/' . $row->id . '" class="btn btn-primary">Xóa</a>
-        //                             </div>
-        //                         </div>
-        //                     </div>
-        //                 </div>
-        //             ';
-        //             return $action;
-        //         })
-        //         ->rawColumns(['check', 'stt', 'farm_code', 'farm_name', 'unit_name', 'status', 'action'])
-        //         ->make(true);
-        // }
-        // return view('farms.all_farms', compact('units'));
+        $all_outputs = Invoice::orderBy('id', 'desc')->get();
+        // dd($all_outputs);
+        if ($request->ajax()) {
+            return DataTables::of($all_outputs)
+                ->addColumn('check', function ($row) {
+                    return '<input class="form-check-input" type="checkbox" id="check-' . $row->id . '" data-id="' . $row->id . '">';
+                })
+                ->addColumn('stt', function ($row) {
+                    static $stt = 0;
+                    $stt++;
+                    return $stt;
+                })
+                ->editColumn('code', function ($row) {
+                    return $row->code;
+                })
+                ->editColumn('name', function ($row) {
+                    return  $row->name;
+                })
+                ->addColumn('date', function ($row) {
+                    return $row->date;
+                })
+                ->editColumn('status', function ($row) {
+                    $statusClass = $row->status == 'Duyệt' ? 'success' : 'danger';
+                    $statusText = $row->status == 'Duyệt' ? 'Duyệt' : 'Chờ duyệt';
+                    return '<button class="badge bg-' . $statusClass . ' toggle-status" data-id="' . $row->id . '">' . $statusText . '</button>';
+                })
+                ->addColumn('action', function ($row) {
+                    $action = '
+                        <div class="d-flex gap-1">
+                            <a href="/edit-outputs/' . $row->id . '" class="btn btn-sm btn-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal' . $row->id . '">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </div>
+                        <div class="modal fade" id="deleteModal' . $row->id . '" tabindex="-1" aria-labelledby="deleteModalLabel' . $row->id . '" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteModalLabel' . $row->id . '">Xác Nhận Xóa</h5>
+                                        <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Bạn có chắc chắn có muốn xóa thông tin <span style="color: red;">' . ($row->name ?? 'N/A') . '</span>?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                        <a href="/outputs/delete/' . $row->id . '" class="btn btn-primary">Xóa</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ';
+                    return $action;
+                })
+                ->rawColumns(['check', 'stt', 'code', 'name', 'date', 'status', 'action'])
+                ->make(true);
+        }
         return view('outputs.all_outputs');
+    }
+    public function add()
+    {
+        $warehouses = WareHouse::where('id', 2)->get();
+        $warehouseIds = $warehouses->pluck('id');
+        $units = UnitOfMeasure::all();
+        $products = Product::all();
+        return view('outputs.add_outputs', compact('units', 'products', 'warehouses'));
     }
     public function save(Request $request)
     {
-        // dd($request->all());
         $request->validate([
-            'farm_code' => 'required',
-            'farm_name' => 'required',
-            'unit_id' => 'required|exists:units,id',
-            'status' => 'nullable',
+            'code' => 'nullable',
+            'name' => 'required',
+            'supplier' => 'nullable|string',
+            'created_by' => 'nullable|string',
+            'date' => 'required|date',
+            'type' => 'nullabale|string',
+            'invoice_products' => 'required|array',
+            'invoice_products.*.productID' => 'nullable',
+            'invoice_products.*.quantity' => 'required|numeric|min:0',
+            'invoice_products.*.warehousesID' => 'nullable',
+            'invoice_products.*.unitID' => 'nullable',
+            'invoice_products.*.quality' => 'nullable|string',
+            'invoice_products.*.slice' => 'nullable|integer|min:0',
+            'invoice_products.*.price' => 'nullable|numeric|min:0',
         ]);
-        // $existingFarm = Farm::where('farm_name', $request->farm_name)->first();
-        $existingCode = Farm::where('farm_code', $request->farm_code)->first();
+
+        $existingName = Invoice::where('name', $request->name)->first();
+        $existingCode = Invoice::where('code', $request->code)->first();
 
         if ($existingCode) {
-            return redirect()->back()->with(['error' => 'Mã nông trường này đã tồn tại!']);
+            return redirect()->back()->with(['error' => 'Mã phiếu này đã tồn tại!']);
         }
-        // if ($existingFarm) {
-        //     return redirect()->back()->with(['error' => 'Tên nông trường này đã tồn tại!']);
-        // }
+        if ($existingName) {
+            return redirect()->back()->with(['error' => 'Tên phiếu này đã tồn tại!']);
+        }
 
-        // $farmNameSlug = Str::slug($request->farm_name, '_');
-        // $prefix = '#' . $farmNameSlug . '_';
-        // do {
-        //     $randomCode = $prefix . rand(100, 999);
-        // } while (Farm::where('farm_code', $randomCode)->exists());
-        Farm::create([
-            'farm_code' => $request->farm_code,
-            'farm_name' => $request->farm_name,
-            'unit_id' => $request->unit_id,
-            'status' => $request->status ?? 'Hoạt động',
+        $PnameSlug = Str::slug($request->name, '_');
+        $prefix = '#' . $PnameSlug . '_';
+        do {
+            $randomCode = $prefix . rand(100, 999);
+        } while (Invoice::where('code', $randomCode)->exists());
+        $invoice = Invoice::create([
+            'code' => $randomCode,
+            'name' => $request->name,
+            'supplier' => $request->supplier,
+            'created_by' => $request->created_by,
+            'date' => $request->date,
+            'desc' => $request->desc,
+            'type' => 'Thu mua',
+            'status' => 'Chờ duyệt',
         ]);
+        foreach ($request->invoice_products as $productData) {
+            InvoiceProduct::create([
+                'invoiceID' => $invoice->id,
+                'warehouseID' => $productData['warehouseID'],
+                'productID' => $productData['productID'],
+                'quantity' => $productData['quantity'],
+                'unitID' => $productData['unitID'],
+                'quality' => $productData['quality'] ?? null,
+                'slice' => $productData['slice'] ?? 0,
+                'price' => $productData['price'] ?? 0,
+                'status' => 'Chờ duyệt',
+            ]);
+        }
         ActionHistory::create([
             'user_id' => Auth::id(),
             'action_type' => 'create',
-            'model_type' => 'Farm',
-            'details' => "Đã tạo nông trường: " . $request->farm_name . " với mã: " . $request->farm_code,
+            'model_type' => 'Invoice',
+            'details' => "Đã tạo phiếu: " . $request->name . " với mã: " . $request->code,
         ]);
-        session()->flash('message', 'Tạo nông trường thành công.');
-        return redirect()->back();
+        return redirect()->route('outputs.index')->with('message', 'Tạo phiếu thành công.');
     }
     public function edit($id)
     {
-        $farms = Farm::find($id);
-        $units = Units::all();
-        return view('outputs.all_outputs', compact('farms', 'units'));
+        $warehouses = WareHouse::where('id', 2)->get();
+        $warehouseIds = $warehouses->pluck('id');
+        $units = UnitOfMeasure::all();
+        $products = Product::all();
+        $outputs = Invoice::with('invoiceProducts')->findOrFail($id);
+        return view('outputs.edit_outputs', compact('outputs', 'units', 'products', 'warehouses'));
     }
     public function update(Request $request, $id)
     {
-        $existingFarm = Farm::where('farm_name', $request->farm_name)->where('id', '!=', $id)->first();
-
-        // if ($existingFarm) {
-        //     return redirect()->back()->with(['error' => 'Tên nông trường này đã tồn tại!']);
-        // }
-
-        $existingFarm = Farm::where(function ($query) use ($request, $id) {
-            $query->where('farm_code', $request->farm_code);
-            // $query->where('farm_name', $request->farm_name)
-            //     ->orWhere('farm_code', $request->farm_code);
-        })->where('id', '!=', $id)->first();
-
-        if ($existingFarm) {
-            // if ($existingFarm->farm_name === $request->farm_name) {
-            //     return redirect()->back()->with(['error' => 'Tên nông trường này đã tồn tại!']);
-            // }
-            if ($existingFarm->farm_code === $request->farm_code) {
-                return redirect()->back()->with(['error' => 'Mã nông trường này đã tồn tại!']);
-            }
-        }
-        $farms = Farm::find($id);
-        if (!$farms) {
-            return redirect()->back()->with('error', 'Nông trường không tồn tại');
-        }
+        // Validate dữ liệu nếu cần
         $request->validate([
-            'farm_name' => 'nullable',
-            'farm_code' => 'nullable',
-            'unit_id' => 'nullable',
+            'code' => 'nullable|string',
+            'name' => 'required|string',
+            'desc' => 'nullable|string',
+            'supplier' => 'nullable|string',
+            'status' => 'nullable|string',
+            'date' => 'required|date',
+            'invoiceProducts' => 'required|array',
+            'invoiceProducts.*.warehouseID' => 'required|integer|exists:ware_houses,id',
+            'invoiceProducts.*.productID' => 'required|integer|exists:products,id',
+            'invoiceProducts.*.quantity' => 'required|numeric',
+            'invoiceProducts.*.unitID' => 'nullable|integer|exists:unit_of_measures,id',
+            'invoiceProducts.*.quality' => 'nullable|string',
+            'invoiceProducts.*.slice' => 'nullable|integer',
+            'invoiceProducts.*.price' => 'nullable|numeric',
         ]);
-        $farms->update([
-            'farm_code' => $request->farm_code,
-            'farm_name' => $request->farm_name,
-            'unit_id' => $request->unit_id,
-            'status' => $request->status,
-        ]);
-        ActionHistory::create([
-            'user_id' => Auth::id(),
-            'action_type' => 'update',
-            'model_type' => 'Farm',
-            'details' => "Đã cập nhật nông trường: " . $farms->farm_name,
-        ]);
-        return redirect()->route('farms.index')->with('message', 'Cập nhật nông trường thành công');
+
+        $invoice = Invoice::with('invoiceProducts')->findOrFail($id);
+
+        $invoice->update($request->only(['code', 'name', 'desc', 'supplier', 'status', 'date']));
+        $invoice->invoiceProducts()->delete();
+
+        foreach ($request->invoiceProducts as $productData) {
+            $invoice->invoiceProducts()->create([
+                'warehouseID' => $productData['warehouseID'],
+                'productID' => $productData['productID'],
+                'quantity' => $productData['quantity'],
+                'unitID' => $productData['unitID'] ?? null,
+                'quality' => $productData['quality'] ?? null,
+                'slice' => $productData['slice'] ?? null,
+                'price' => $productData['price'] ?? null,
+                'status' => 'Chờ duyệt',
+            ]);
+        }
+
+        return redirect()->route('outputs.index')->with('message', 'Cập nhật phiếu thành công!');
     }
+
     public function destroy($id)
     {
-        $farms = Farm::find($id);
-        $farms->delete();
+        $outputs = Invoice::find($id);
+        $outputs->delete();
         Session::put('message', 'Xóa thành công.');
         return redirect()->back();
     }
@@ -177,11 +219,11 @@ class OutputController extends Controller
             'ids.*' => 'integer',
         ]);
 
-        $farms = Farm::whereIn('id', $request->ids)->get();
+        $outputs = Invoice::whereIn('id', $request->ids)->get();
 
-        foreach ($farms as $farm) {
-            $farm->status = ($farm->status === 'Hoạt động') ? 'Không hoạt động' : 'Hoạt động';
-            $farm->save();
+        foreach ($outputs as $o) {
+            $o->status = ($o->status === 'Duyệt') ? 'Chờ duyệt' : 'Duyệt';
+            $o->save();
         }
         return response()->json(['message' => 'Thành Công']);
     }
@@ -191,32 +233,90 @@ class OutputController extends Controller
             'ids' => 'required|array',
             'ids.*' => 'integer',
         ]);
-        $farmsToDelete = Farm::whereIn('id', $request->ids)->get();
+        $outputsToDelete = Invoice::whereIn('id', $request->ids)->get();
 
-        Farm::whereIn('id', $request->ids)->delete();
+        Invoice::whereIn('id', $request->ids)->delete();
 
-        foreach ($farmsToDelete as $farm) {
+        foreach ($outputsToDelete as $output) {
             ActionHistory::create([
-                'user_id' => Auth::id(),  // ID của người thực hiện hành động
-                'action_type' => 'delete',  // Loại hành động "delete"
-                'model_type' => 'Farm',  // Model "Farm"
-                'details' => "Đã xóa nông trường: " . $farm->farm_name . " với mã: " . $farm->farm_code,
+                'user_id' => Auth::id(),
+                'action_type' => 'delete',
+                'model_type' => 'Invoice',
+                'details' => "Đã xóa phiếu: " . $output->name . " với mã: " . $output->code,
             ]);
         }
         return response()->json([
-            'message' => 'Xóa thành công các nông trường được chọn.',
+            'message' => 'Xóa thành công các phiếu được chọn.',
             'deleted_ids' => $request->ids
         ]);
     }
+    // public function toggleStatus(Request $request)
+    // {
+    //     $outputs = Invoice::find($request->id);
+    //     if ($outputs) {
+    //         $outputs->status = $outputs->status == 'Duyệt' ? 'Chờ duyệt' : 'Duyệt';
+    //         $outputs->save();
+    //         return response()->json(['success' => true, 'status' => $outputs->status]);
+    //     } else {
+    //         return response()->json(['success' => false]);
+    //     }
+    // }
     public function toggleStatus(Request $request)
     {
-        $farm = Farm::find($request->id);
-        if ($farm) {
-            $farm->status = $farm->status == 'Hoạt động' ? 'Không hoạt động' : 'Hoạt động';
-            $farm->save();
-            return response()->json(['success' => true, 'status' => $farm->status]);
-        } else {
-            return response()->json(['success' => false]);
+        $invoice = Invoice::with('invoiceProducts')->find($request->id);
+
+        if (!$invoice) {
+            return response()->json(['success' => false, 'message' => 'Không tìm thấy phiếu.']);
+        }
+
+        if ($invoice->type !== 'Thu mua') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Chỉ phiếu Thu mua mới được cập nhật tồn kho tại đây.'
+            ]);
+        }
+        if ($invoice->status === 'Duyệt') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Phiếu đã được duyệt trước đó. Không thể duyệt lại hoặc cập nhật tồn kho.'
+            ]);
+        }
+        try {
+            DB::transaction(function () use ($invoice) {
+                $from = $invoice->status; // 'Chờ duyệt' hoặc 'Duyệt'
+                $to   = $from === 'Duyệt' ? 'Chờ duyệt' : 'Duyệt';
+
+                foreach ($invoice->invoiceProducts as $item) {
+                    $stock = InventoryStock::firstOrCreate(
+                        [
+                            'productID'   => $item->productID,
+                            'warehouseID' => $item->warehouseID,
+                            'unitID'      => $item->unitID,
+                        ],
+                        ['quantity' => 0, 'status' => 'Hoạt động']
+                    );
+
+                    if ($to === 'Duyệt') {
+                        $stock->quantity += $item->quantity;
+                    } else {
+                        if ($stock->quantity < $item->quantity) {
+                            throw new \RuntimeException(
+                                "Không đủ tồn để hoàn tác cho sản phẩm {$item->productID}."
+                            );
+                        }
+                        $stock->quantity -= $item->quantity;
+                    }
+
+                    $stock->save();
+                }
+
+                $invoice->status = $to;
+                $invoice->save();
+            });
+
+            return response()->json(['success' => true, 'status' => $invoice->status]);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()]);
         }
     }
 }

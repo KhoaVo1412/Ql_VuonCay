@@ -7,8 +7,8 @@
             <nav>
                 <ol class="breadcrumb mb-0 padding">
                     <li class="breadcrumb-item"><a href="javascript:void(0);">Trang Chủ</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('treatmentslips.index') }}">Danh Sách</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Thêm Phiếu Trị</li>
+                    <li class="breadcrumb-item"><a href="{{ route('diseaseplans.index') }}">Danh sách</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Thêm Phiếu Bệnh</li>
                 </ol>
             </nav>
         </div>
@@ -17,141 +17,209 @@
 
     <div class="row">
         <div class="col-xl-12">
-            <form id="form-treatmentslip" action="{{ route('treatmentslips.save') }}" method="POST"
+            <form id="form-account" action="{{ route('diseaseplans.update', $diseaseplants->id) }}" method="POST"
                 enctype="multipart/form-data">
                 {{ csrf_field() }}
                 <div class="card custom-card">
                     <div class="card-body">
                         <div class="row modal-body gy-4">
-                            <div class="treatment-plan">
-                                <h2 class="treatment-plan-title form-label">Kế Hoạch Điều Trị</h2>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="medicalRecordId" class="form-label required">Mã Phiếu Trị</label>
+                                    <input type="text" name="code" class="form-input" placeholder="Nhập mã phiếu trị"
+                                        value="{{ old('code', $diseaseplants->code) }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="medicalRecordName" class="form-label required">Tên Phiếu Trị</label>
+                                    <input type="text" name="name" class="form-input" placeholder="Nhập tên phiếu trị"
+                                        value="{{ old('name', $diseaseplants->name) }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="Plant" class="form-label">Cây</label>
+                                    <select name="plantID" class="form-select" required>
+                                        <option value="">Chọn cây</option>
+                                        @foreach($plants as $p)
+                                        <option value="{{ $p->id }}" {{ old('plantID', $diseaseplants->plantID) ==
+                                            $p->id
+                                            ? 'selected' : '' }}>{{ $p->variety->varietyName }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="recordDate" class="form-label required">Ngày Ghi Nhận</label>
+                                    <input type="date" name="detectionDate" class="form-input"
+                                        value="{{ old('detectionDate', $diseaseplants->detectionDate) }}" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="diseaseName" class="form-label required">Tên Bệnh</label>
+                                    <select name="diseaseID" class="form-select" required>
+                                        <option value="">Chọn tên bệnh</option>
+                                        @foreach($diseases as $disease)
+                                        <option value="{{ $disease->id }}" {{ old('diseaseID', $diseaseplants->
+                                            diseaseID)
+                                            == $disease->id ? 'selected' : '' }}>{{ $disease->diseaseName }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="workerID" class="form-label required">Người Tạo</label>
+                                    <select name="workerID" class="form-select" required>
+                                        <option value="">Chọn người tạo</option>
+                                        @foreach($workers as $worker)
+                                        <option value="{{ $worker->id }}" {{ old('workerID', $diseaseplants->workerID)
+                                            ==
+                                            $worker->id ? 'selected' : '' }}>{{ $worker->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="symptoms" class="form-label required">Biểu Hiện Bệnh</label>
+                                    <textarea name="symptoms" class="form-textarea"
+                                        placeholder="Mô tả chi tiết biểu hiện bệnh...">{{ old('symptoms', $diseaseplants->symptoms) }}</textarea>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 1;">
+                                    <label for="cause" class="form-label required">Nguyên Nhân</label>
+                                    <textarea name="cause" class="form-textarea"
+                                        placeholder="Mô tả nguyên nhân gây bệnh...">{{ old('cause', $diseaseplants->cause) }}</textarea>
+                                </div>
+                            </div>
+
+                            {{-- <div class="treatment-plan">
+                                <h2 class="treatment-plan-title">Kế Hoạch Điều Trị</h2>
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label for="diseasePlantID" class="form-label required">Chọn Cây Bệnh</label>
-                                        <select name="diseasePlantID" id="diseasePlantID" class="form-select" required>
-                                            <option value="">-- Chọn cây bệnh --</option>
-                                            @foreach ($diseasePlants as $plant)
-                                            <option value="{{ $plant->id }}">
-                                                {{ $plant->code }} - {{ $plant->name }}
+                                        <label for="startDate" class="form-label">Ngày Bắt Đầu</label>
+                                        <input type="date" name="sessionStart" class="form-input"
+                                            value="{{ old('sessionStart', $treatmentSession->sessionStart) }}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="sessionEnd" class="form-label">Ngày Kết Thúc (Dự Kiến)</label>
+                                        <input type="date" name="sessionEnd" class="form-input"
+                                            value="{{ old('sessionEnd', $treatmentSession->sessionEnd) }}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="assignedTo" class="form-label">Người Phụ Trách</label>
+                                        <select name="assigned_to" class="form-select" required>
+                                            <option value="">Chọn người phụ trách</option>
+                                            @foreach($workers as $worker)
+                                            <option value="{{ $worker->id }}" {{ old('assigned_to', $treatmentSession->
+                                                assigned_to) == $worker->id ? 'selected' : '' }}>{{ $worker->name }}
                                             </option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="form-group">
-                                        <label for="startDate" class="form-label">Ngày Bắt Đầu</label>
-                                        <input type="date" name="sessionStart" id="startDate" class="form-input"
-                                            value="{{ old('startDate') }}">
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="sessionEnd" class="form-label">Ngày Kết Thúc (Dự Kiến)</label>
-                                        <input type="date" name="sessionEnd" id="endDate" class="form-input"
-                                            value="{{old('sessionEnd')}}">
-                                    </div>
-                                </div>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="assignedTo" class="form-label">Người Phụ Trách</label>
-                                        <select name="assigned_to" id="assigned_to" class="form-select" required>
-                                            <option value="">Chọn người phụ trách</option>
-                                            @foreach($workers as $worker)
-                                            <option value="{{ $worker->id }}" {{ old('assigned_to')==$worker->id ?
-                                                'selected' : '' }}>{{ $worker->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
                                         <label for="priority" class="form-label">Mức Độ Ưu Tiên</label>
-                                        <select name="priority" id="priority" class="form-select">
+                                        <select name="priority" class="form-select">
                                             <option value="">Chọn Mức Độ</option>
-                                            <option value="Thấp">Thấp</option>
-                                            <option value="Trung Bình">Trung Bình</option>
-                                            <option value="Cao">Cao</option>
-                                            <option value="Khẩn Cấp">Khẩn Cấp</option>
+                                            <option value="Thấp" {{ old('priority', $treatmentSession->priority) ==
+                                                'Thấp' ? 'selected' : '' }}>Thấp</option>
+                                            <option value="Trung Bình" {{ old('priority', $treatmentSession->priority)
+                                                == 'Trung Bình' ? 'selected' : '' }}>Trung Bình</option>
+                                            <option value="Cao" {{ old('priority', $treatmentSession->priority) == 'Cao'
+                                                ? 'selected' : '' }}>Cao</option>
+                                            <option value="Khẩn Cấp" {{ old('priority', $treatmentSession->priority) ==
+                                                'Khẩn Cấp' ? 'selected' : '' }}>Khẩn Cấp</option>
                                         </select>
                                     </div>
                                 </div>
 
+                                <!-- Các bước điều trị -->
                                 <div class="treatment-steps">
-                                    <div class="treatment-step">
-                                        <div class="step-number">1</div>
+                                    @foreach($treatmentSession->treatmentSteps as $index => $step)
+                                    <div class="treatment-step" id="step-{{ $index }}">
+                                        <div class="step-number">{{ $loop->iteration }}</div>
                                         <div class="step-content">
                                             <div class="form-row">
                                                 <div class="form-group">
                                                     <label class="form-label">Tên Thuốc/Vật Tư</label>
-                                                    <select name="steps[0][productID]" class="form-select" required>
+                                                    <select name="steps[{{ $index }}][productID]" class="form-select"
+                                                        required>
                                                         @foreach($products as $product)
-                                                        <option value="{{ $product->id }}">{{ $product->name }}</option>
+                                                        <option value="{{ $product->id }}" {{ old('steps.' . $index
+                                                            . '.productID' , $step->productID) == $product->id ?
+                                                            'selected'
+                                                            : '' }}>{{ $product->name }}</option>
                                                         @endforeach
                                                     </select>
                                                 </div>
                                                 <div class="form-group">
                                                     <label class="form-label">Liều Lượng</label>
-                                                    <input type="number" min="0" name="steps[0][dose]"
-                                                        class="form-input" placeholder="Nhập liều lượng">
+                                                    <input type="text" name="steps[{{ $index }}][dose]"
+                                                        class="form-input" placeholder="Nhập liều lượng"
+                                                        value="{{ old('steps.' . $index . '.dose', $step->dose) }}">
                                                 </div>
                                                 <div class="form-group">
                                                     <label class="form-label">Ngày Thực Hiện</label>
-                                                    <input type="date" name="steps[0][execution_date]"
-                                                        class="form-input">
+                                                    <input type="date" name="steps[{{ $index }}][execution_date]"
+                                                        class="form-input"
+                                                        value="{{ old('steps.' . $index . '.execution_date', $step->execution_date) }}">
                                                 </div>
                                             </div>
-                                            <div class="form-row" style="margin-bottom: 0;">
-                                                <div class="form-group" style="flex: 1;">
+                                            <div class="form-row">
+                                                <div class="form-group">
                                                     <label class="form-label">Hướng Dẫn</label>
-                                                    <textarea name="steps[0][instructions]" class="form-textarea"
-                                                        placeholder="Nhập hướng dẫn chi tiết..."></textarea>
-
+                                                    <textarea name="steps[{{ $index }}][instructions]"
+                                                        class="form-textarea"
+                                                        placeholder="Nhập hướng dẫn chi tiết...">{{ old('steps.' . $index . '.instructions', $step->instructions) }}</textarea>
                                                 </div>
                                             </div>
                                         </div>
                                         <div class="step-actions">
-                                            <button type="button" class="btn btn-outline" style="color: #ef4444;">
+                                            <button type="button" class="btn btn-outline"
+                                                onclick="removeTreatmentStep(this)" style="color: #ef4444;">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
                                     </div>
+                                    @endforeach
                                 </div>
                                 <div class="add-step-btn" onclick="addStep()">
                                     <i class="fas fa-plus" style="margin-right: 0.5rem;"></i>
                                     Thêm bước điều trị
                                 </div>
                             </div>
+
                             <div class="form-row" style="margin-top: 1.5rem;">
                                 <div class="form-group" style="flex: 1;">
                                     <label for="results" class="form-label">Kết Quả Điều Trị</label>
                                     <textarea id="results" class="form-textarea"
-                                        placeholder="Ghi chú kết quả sau khi điều trị..."></textarea>
+                                        placeholder="Ghi chú kết quả sau khi điều trị...">{{ old('results') }}</textarea>
                                 </div>
-                            </div>
+                            </div> --}}
                         </div>
+
                         <div class="prism-toggle d-grid gap-2 d-md-flex">
-                            <button type="submit" class="btn btn-success" id="submit-btn-treatmentslip">Lưu Thông
-                                Tin</button>
+                            <button type="submit" class="btn btn-success">Cập Nhật Thông Tin</button>
                         </div>
                     </div>
                 </div>
             </form>
+
         </div>
     </div>
 </section>
 <script>
-    function autoResize(textarea) {
-        textarea.style.height = 'auto'; 
-        textarea.style.height = textarea.scrollHeight + 'px';
-    }
-</script>
+    let stepCount = document.querySelectorAll('.treatment-step').length; 
 
-<script>
-    let stepCount = 1;
     function addStep() {
-        stepCount++;
         const container = document.querySelector('.treatment-steps');
+
         const newStepId = `step-${stepCount}`;
 
         const newStepHTML = `
             <div class="treatment-steps">
                 <div class="treatment-step" id="${newStepId}">
-                    <div class="step-number">${stepCount}</div>
+                <div class="step-number">${stepCount + 1}</div>
                     <div class="step-content">
                         <div class="form-row">
                             <div class="form-group">
@@ -191,12 +259,19 @@
             </div>
         `;
         container.insertAdjacentHTML('beforeend', newStepHTML);
+        stepCount++;
 
     }
-   function removeTreatmentStep(button) {
+     function removeTreatmentStep(button) {
         button.closest('.treatment-step').remove();
     }
 
+</script>
+<script>
+    function autoResize(textarea) {
+        textarea.style.height = 'auto'; 
+        textarea.style.height = textarea.scrollHeight + 'px';
+    }
 </script>
 <style>
     .form-label {

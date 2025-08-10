@@ -114,9 +114,11 @@
                                 <input class="form-check-input check-all" type="checkbox" id="select-all-stocks"
                                     value="" aria-label="...">
                             </th>
-                            <th scope="col"> Kho</th>
+                            <th scope="col">Kho</th>
+                            <th scope="col">Danh Mục</th>
                             <th scope="col">Tên Sản Phẩm</th>
                             <th scope="col">Số Lượng </th>
+                            <th scope="col">Đơn Vị </th>
                             <th scope="col">Trạng Thái</th>
                             <th scope="col">Thao Tác</th>
                         </tr>
@@ -128,9 +130,11 @@
                         <tr>
                             <th></th>
                             <th></th>
-                            <th scope="col"> Kho</th>
+                            <th scope="col">Kho</th>
+                            <th scope="col">Danh Mục</th>
                             <th scope="col">Tên Sản Phẩm</th>
                             <th scope="col">Số Lượng </th>
+                            <th scope="col">Đơn Vị </th>
                             <th scope="col">Trạng Thái</th>
                             <th scope="col">Thao Tác</th>
                         </tr>
@@ -238,12 +242,21 @@
                         name: 'warehouseID'
                     },
                     {
+                        data: 'category',
+                        name: 'category'
+                    },
+                    {
                         data: 'productID',
                         name: 'productID'
                     },
+                  
                     {
                         data: 'quantity',
                         name: 'quantity'
+                    },
+                      {
+                        data: 'unit',
+                        name: 'unit'
                     },
                     {
                         data: 'status',

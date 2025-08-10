@@ -18,6 +18,7 @@ class WorkerController extends Controller
 {
     public function index(Request $request)
     {
+        // dd(route('aaa'));
         $duties = Duty::all();
         $teams = Team::all();
         $all_workers = Worker::with('team', 'duty')->orderBy('id', 'desc')->get();

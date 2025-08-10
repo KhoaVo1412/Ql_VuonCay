@@ -11,6 +11,8 @@ class InvoiceProduct extends Model
 
     protected $fillable = [
         'invoiceID',
+        'warehouseID',
+        'unitID',
         'productID',
         'quantity',
         'slice',
@@ -27,5 +29,14 @@ class InvoiceProduct extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+    public function warehouse()
+    {
+        return $this->belongsTo(WareHouse::class, 'warehouseID');
+    }
+
+    public function unit()
+    {
+        return $this->belongsTo(UnitOfMeasure::class, 'unitID');
     }
 }

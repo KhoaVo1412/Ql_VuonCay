@@ -30,6 +30,21 @@
         <span class="close-btn material-symbols-rounded"></span>
         <div class="form-box login">
             <div class="form-details">
+                <div class="sidebar-header position-relative">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="logo text-center" style="display: flex; justify-content: center; align-items: center;
+                            padding: 15px; background-color: #ffffff00; border-radius: 50%; box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+                            transition: all 0.3s ease-in-out;
+                            width: 115px; height: 115px; margin: 0 auto;">
+                            {{-- <a href="/"><img src="/imgs/HRC-removebg-preview.png" alt="Logo" srcset=""
+                                    style="width:100px; height: auto"></a> --}}
+                            <a href="/"><img src="/imgs/logo_vc.jpg" alt="Logo" srcset=""
+                                    style="width:145px; height: auto;"></a>
+                            {{-- <p class="">HOA BINH</p>
+                            <p>TRACEBILITY</p> --}}
+                        </div>
+                    </div>
+                </div>
                 <h2>Xin Chào,</h2>
                 <p>Vui lòng đăng nhập để truy cập vào hệ thống.</p>
             </div>
@@ -75,6 +90,21 @@
         </div>
         <div class="form-box signup">
             <div class="form-details">
+                <div class="sidebar-header position-relative">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="logo text-center" style="display: flex; justify-content: center; align-items: center;
+                            padding: 15px; background-color: #ffffff00; border-radius: 50%; box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+                            transition: all 0.3s ease-in-out;
+                            width: 115px; height: 115px; margin: 0 auto;">
+                            {{-- <a href="/"><img src="/imgs/HRC-removebg-preview.png" alt="Logo" srcset=""
+                                    style="width:100px; height: auto"></a> --}}
+                            <a href="/"><img src="/imgs/logo_vc.jpg" alt="Logo" srcset=""
+                                    style="width:145px; height: auto;"></a>
+                            {{-- <p class="">HOA BINH</p>
+                            <p>TRACEBILITY</p> --}}
+                        </div>
+                    </div>
+                </div>
                 <h2>Quên Mật Khẩu</h2>
                 <p> Vui lòng nhập tài khoản của bạn.</p>
             </div>

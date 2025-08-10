@@ -105,6 +105,12 @@ class PWareHouseController extends Controller
                 'message' => 'Chỉ phiếu đang Hoạt động mới được phép thay đổi trạng thái.',
             ]);
         }
+        if ($picking->active === 'Hoàn thành') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Phiếu đã được duyệt trước đó. Không thể cập nhật tồn kho.'
+            ]);
+        }
 
         $isActivating = $picking->active == 'Chưa hoàn thành';
         $picking->active = $isActivating ? 'Hoàn thành' : 'Chưa hoàn thành';
@@ -114,17 +120,18 @@ class PWareHouseController extends Controller
                 $productID = $item->productID;
                 $warehouseID = $picking->warehouseID;
                 $quantity = $item->quantity;
+                $product = Product::find($productID);
 
                 $stock = InventoryStock::firstOrCreate(
-                    ['productID' => $productID, 'warehouseID' => $warehouseID],
-                    ['quantity' => 0]
+                    ['productID' => $productID, 'warehouseID' => $warehouseID, 'unitID' => $product->unitID],
+                    ['status' => 'Hoạt động', 'quantity' => 0]
                 );
-
+                $stock->status = 'Hoạt động';
                 if ($picking->type === 'Nhập') {
                     $stock->quantity += $quantity;
                 } elseif ($picking->type === 'Xuất') {
                     if ($stock->quantity < $quantity) {
-                        $picking->active = 0;
+                        $picking->active = 'Chưa hoàn thành';
                         return response()->json([
                             'success' => false,
                             'message' => "Không đủ tồn kho để xuất sản phẩm: $productID.",
@@ -141,7 +148,7 @@ class PWareHouseController extends Controller
 
         return response()->json([
             'success' => true,
-            'status' => $picking->active == 1 ? 'Hoàn thành' : 'Chưa hoàn thành',
+            'status' => $picking->active == 'Hoàn thành' ? 'Hoàn thành' : 'Chưa hoàn thành',
             'message' => 'Cập nhật phiếu thành công.',
         ]);
     }
@@ -259,8 +266,8 @@ class PWareHouseController extends Controller
                 return redirect()->back()->with(['error' => 'Mã phiếu kho này đã tồn tại!']);
             }
         }
-        $farms = Picking::find($id);
-        if (!$farms) {
+        $pic = Picking::find($id);
+        if (!$pic) {
             return redirect()->back()->with('error', 'Phiếu kho không tồn tại');
         }
         $data = $request->validate([
@@ -343,8 +350,8 @@ class PWareHouseController extends Controller
     }
     public function destroy($id)
     {
-        $farms = Picking::find($id);
-        $farms->delete();
+        $pic = Picking::find($id);
+        $pic->delete();
         Session::put('message', 'Xóa thành công.');
         return redirect()->back();
     }
@@ -355,11 +362,11 @@ class PWareHouseController extends Controller
             'ids.*' => 'integer',
         ]);
 
-        $farms = Picking::whereIn('id', $request->ids)->get();
+        $pic = Picking::whereIn('id', $request->ids)->get();
 
-        foreach ($farms as $farm) {
-            $farm->status = ($farm->status === 'Hoạt động') ? 'Không hoạt động' : 'Hoạt động';
-            $farm->save();
+        foreach ($pic as $pic) {
+            $pic->status = ($pic->status === 'Hoạt động') ? 'Không hoạt động' : 'Hoạt động';
+            $pic->save();
         }
         return response()->json(['message' => 'Thành Công']);
     }
@@ -369,16 +376,16 @@ class PWareHouseController extends Controller
             'ids' => 'required|array',
             'ids.*' => 'integer',
         ]);
-        $farmsToDelete = Picking::whereIn('id', $request->ids)->get();
+        $picToDelete = Picking::whereIn('id', $request->ids)->get();
 
         Picking::whereIn('id', $request->ids)->delete();
 
-        foreach ($farmsToDelete as $farm) {
+        foreach ($picToDelete as $pic) {
             ActionHistory::create([
                 'user_id' => Auth::id(),  // ID của người thực hiện hành động
                 'action_type' => 'delete',  // Loại hành động "delete"
                 'model_type' => 'Picking',  // Model "Picking"
-                'details' => "Đã xóa phiếu kho: " . $farm->farm_name . " với mã: " . $farm->farm_code,
+                'details' => "Đã xóa phiếu kho: " . $pic->name . " với mã: " . $pic->code,
             ]);
         }
         return response()->json([
@@ -388,11 +395,11 @@ class PWareHouseController extends Controller
     }
     public function toggleStatus(Request $request)
     {
-        $farm = Picking::find($request->id);
-        if ($farm) {
-            $farm->status = $farm->status == 'Hoạt động' ? 'Không hoạt động' : 'Hoạt động';
-            $farm->save();
-            return response()->json(['success' => true, 'status' => $farm->status]);
+        $pic = Picking::find($request->id);
+        if ($pic) {
+            $pic->status = $pic->status == 'Hoạt động' ? 'Không hoạt động' : 'Hoạt động';
+            $pic->save();
+            return response()->json(['success' => true, 'status' => $pic->status]);
         } else {
             return response()->json(['success' => false]);
         }

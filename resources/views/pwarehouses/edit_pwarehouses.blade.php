@@ -107,7 +107,8 @@
                                                             @endforeach
                                                         </select>
                                                     </div> --}}
-                                                    <input type="hidden" name="productPickings[{{ $i }}][id]" value="{{ $material->id }}">
+                                                    <input type="hidden" name="productPickings[{{ $i }}][id]"
+                                                        value="{{ $material->id }}">
 
                                                     <div class="form-group">
                                                         <label class="form-label">Danh Mục</label>
@@ -116,8 +117,9 @@
                                                             onchange="onCategoryChange(this)">
                                                             <option value="">Chọn danh mục</option>
                                                             @foreach($categories as $category)
-                                                            <option value="{{ $category->id }}" 
-                                                                {{ $material->product->categoryID == $category->id ? 'selected' : ''}}>
+                                                            <option value="{{ $category->id }}" {{ $material->
+                                                                product->categoryID == $category->id ? 'selected' :
+                                                                ''}}>
                                                                 {{ $category->name }}
                                                             </option>
                                                             @endforeach
@@ -158,7 +160,7 @@
                                                 </div>
                                             </div>
                                             <button type="button" class="remove-btn btn-danger"
-                                                onclick="removeTreatmentStep(this)" style="align-self: flex-start;">
+                                                onclick="removeTreatmentStep(this)" style="align-self: center;">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
@@ -170,10 +172,9 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="d-grid gap-2 d-md-flex">
-                            <button type="submit" class="btn btn-success">Cập nhật thông tin</button>
+                            <div class="d-grid gap-2 d-md-flex">
+                                <button type="submit" class="btn btn-success">Cập nhật thông tin</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -240,7 +241,7 @@
                     </div>
                 </div>
             </div>
-            <button type="button" class="remove-btn btn-danger" onclick="removeTreatmentStep(this)" style="align-self: flex-start;">
+            <button type="button" class="remove-btn btn-danger" onclick="removeTreatmentStep(this)" style="align-self: center;">
                 <i class="fas fa-trash"></i>
             </button>
         `;
@@ -551,7 +552,7 @@
                 </div>
                
             </div>
-            <button type="button" class="remove-btn" onclick="removeTreatmentStep(this)" style="align-self: flex-start;">
+            <button type="button" class="remove-btn" onclick="removeTreatmentStep(this)" style="align-self: center;">
                 <i class="fas fa-trash"></i>
             </button>
         `;

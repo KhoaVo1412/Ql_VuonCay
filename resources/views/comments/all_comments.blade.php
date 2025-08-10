@@ -53,24 +53,26 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="deductionPoints" class="form-label required">Điểm Đánh Giá</label>
-                                <input type="number" name="deductionPoints" id="deductionPoints"
+                                <input type="number" class="form-input" name="deductionPoints" id="deductionPoints"
                                     value="{{ old('deductionPoints', 0) }}" min="0" class="form-inputr" required>
-
                             </div>
-                        </div>
-                        <div class="form-row">
                             <div class="form-group">
                                 <label for="rating" class="form-label required">Xếp Hạng</label>
-                                <input type="text" name="rating" id="rating" value="{{ old('rating') }}"
-                                    class="form-inputr" required>
-
-                                {{-- <select name="rating" id="rating" class="form-select" required>
-                                    <option value="">Chọn xếp hạng</option>
-                                    @for($i = 1; $i <= 5; $i++) <option value="{{ $i }}" {{ old('rating')==$i
-                                        ? 'selected' : '' }}>{{ $i }}</option>
-                                        @endfor
-                                </select> --}}
+                                <input type="text" name="rating" class="form-input" id="rating"
+                                    value="{{ old('rating') }}" class="form-inputr" required>
                             </div>
+                        </div>
+                        <div class="col-xl-6">
+                            <label for="" class="form-label">Số Lượng Công Việc Hiện</label>
+                            <input type="number" class="form-control" name="countWork" required>
+                        </div>
+                        <div class="col-xl-6">
+                            <label for="Hoàn Thành Đúng Hạn" class="form-label">Hoàn Thành Đúng Hạn</label>
+                            <input type="number" class="form-control" name="countCofirm" required>
+                        </div>
+                        <div class="col-xl-6">
+                            <label for="Hoàn Thành Không Đúng Hạn" class="form-label">Hoàn Thành Không Đúng Hạn</label>
+                            <input type="number" class="form-control" name="countUn" required>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
@@ -250,10 +252,10 @@
     $(document).ready(function() {
             var selectedRows = new Set();
             var dataTable = $('#comments-table').DataTable({
-                // "language": {
-                //     "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
-                //     "emptyTable": "Không có dữ liệu",
-                // },
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
+                    "emptyTable": "Không có dữ liệu",
+                },
                 processing: true,
                 serverSide: true,
                 // responsive: true,

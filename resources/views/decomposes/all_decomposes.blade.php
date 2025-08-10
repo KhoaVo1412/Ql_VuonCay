@@ -13,118 +13,12 @@
         </div>
     </div>
 </div>
-
-<form id="decomposes-form" action="{{ route('decomposes.save') }}" method="POST" enctype="multipart/form-data">
-    {{ csrf_field() }}
-    <div class="modal fade" id="create-decomposes" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h6 class="modal-title">Tạo Sản Lượng</h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body px-4">
-                    <div class="row gy-2">
-                        <div class="form-row">
-
-                            {{-- <div class="form-group">
-                                <label>Loại công việc</label>
-                                <select name="workID" class="form-select" required>
-                                    @foreach ($decomposes as $work)
-                                    <option value="{{ $work->id }}">{{ $work->workName }}</option>
-                                    @endforeach
-                                </select>
-                            </div> --}}
-
-                            <!-- Form chọn công việc -->
-                            <div class="form-group">
-                                <label>Tên Việc</label>
-
-                                <select name="workID" class="form-select" id="workID-select" required>
-                                    <option value="">Chọn công việc</option>
-                                    {{-- @foreach ($decomposes as $work)
-                                    <option value="{{ $work->id }}" data-type="{{ $work->workType }}">{{ $work->workName
-                                        }}
-                                    </option>
-                                    @endforeach --}}
-                                </select>
-                                <input type="text" id="work-type-display" class="form-control mt-2" readonly
-                                    placeholder="Loại công việc sẽ hiển thị ở đây">
-                            </div>
-                            <!-- Tự động hiển thị Loại -->
-
-                            <div class="form-group">
-                                <label>Người phụ trách</label>
-                                <select name="workerID" class="form-select">
-                                    {{-- @foreach ($workers as $worker)
-                                    <option value="{{ $worker->id }}">{{ $worker->name }}</option>
-                                    @endforeach --}}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-
-                            <div class="form-group">
-                                <label>Ngày bắt đầu</label>
-                                <input type="date" name="workDate" class="form-control" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Vườn & Lô</label>
-                                <select name="plotID" class="form-select">
-                                    {{-- @foreach ($plots as $plot)
-                                    <option value="{{ $plot->id }}">{{ $plot->plotName }}
-                                    </option>
-                                    @endforeach --}}
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-
-                            <div class="form-group">
-                                <label>Loại nhiệm vụ</label>
-                                <select name="type" class="form-select">
-                                    <option value="Thường">Thường</option>
-                                    <option value="Khẩn cấp">Khẩn cấp</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Mức độ ưu tiên</label>
-                                <select name="priority" class="form-select">
-                                    <option value="Thấp">Thấp</option>
-                                    <option value="Trung bình">Trung bình</option>
-                                    <option value="Cao">Cao</option>
-                                    <option value="Khẩn cấp">Khẩn cấp</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Mô tả công việc</label>
-                            <textarea name="description" class="form-control"></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-success" id="submit-btn-decomposes">Lưu</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</form>
-
 <!-- decomposes List -->
 <div class="row">
     <div class="col-xl-12">
         <div class="card custom-card">
             <div class="card-header d-flex justify-content-between align-items-center" style="grid-gap: 3px">
-                {{-- <h5>Quản Lý Sản Lượng</h5> --}}
-                {{-- <button class="btn btn-sm btn-success btn-wave waves-light" data-bs-toggle="modal"
-                    data-bs-target="#create-decomposes">
-                    <i class="fas fa-plus"></i>
-                    Thêm công việc
-                </button> --}}
+
             </div>
             <div class="row g-3">
                 <div class="col-md-12">
@@ -163,24 +57,26 @@
             <div class="card-content">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <!-- Task Filter Buttons -->
-                    <div class="task-filter-buttons" style="display: flex; gap: 0.5rem;">
 
-
-                    </div>
-                    <button class="btn btn-success">
+                    {{-- <button class="btn btn-success">
                         <a href="{{route('decomposes.add')}}" class="text-white"> <i class="fas fa-plus"></i>
                             Tạo Phiếu Phân Rã</a>
-                    </button>
+                    </button> --}}
                 </div>
 
                 <div class="card-body">
                     <table id="decomposes-table" class="table table-bordered text-nowrap w-100">
                         <div id="buttons-container" class="d-flex justify-content-end gap-2">
                             <button id="edit-selected-btn" class="btn btn-warning"
-                                style="border-radius: 30px; color: #FFFFFF">Không/Hoạt
+                                style="border-radius: 7px; color: #FFFFFF; display: none">Không/Hoạt
                                 Động</button>
-                            <button id="delete-selected-btn" class="btn btn-danger" style="border-radius: 30px;">
+                            <button id="delete-selected-btn" class="btn btn-danger"
+                                style="border-radius: 7px; display: none;">
                                 Xóa
+                            </button>
+                            <button id="add-selected-btn" class="btn btn-success" style="border-radius: 7px;">
+                                <a href="{{route('decomposes.add')}}" class="text-white"> <i class="fas fa-plus"></i>
+                                    Tạo Phiếu Phân Rã</a>
                             </button>
                         </div>
                         <thead>
@@ -195,53 +91,12 @@
                                 <th scope="col">Kho</th>
                                 <th scope="col">Tên Phiếu</th>
                                 <th scope="col">Ngày Tạo</th>
+                                <th scope="col">Trạng Thái Phiếu</th>
                                 <th scope="col">Thao Tác</th>
                             </tr>
                         </thead>
                         <tbody>
                             <!-- DataTables will populate this section -->
-                            <tr data-id="1">
-                                <td class="dt-type-numeric"></td>
-
-                                <td class="sorting_1"><input class="form-check-input" type="checkbox" id="check-1"
-                                        data-id="1"></td>
-                                <td>#DDP1234</td>
-                                <td>Kho Vật Tư</td>
-                                <td>Phiếu Nhập Kho</td>
-                                <td>01-07-2025</td>
-                                <td>
-                                    <div class="d-flex gap-1">
-                                        <a href="/decomposes/edit/1" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                            data-bs-target="#deleteModal1">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </a>
-                                    </div>
-                                    <div class="modal fade" id="deleteModal1" tabindex="-1"
-                                        aria-labelledby="deleteModalLabel1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="deleteModalLabel1">Xác Nhận Xóa</h5>
-                                                    <button type="button" class="btn btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    Bạn có chắc chắn có muốn xóa thông tin <span
-                                                        style="color: red;">N/A</span>?
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary"
-                                                        data-bs-dismiss="modal">Hủy</button>
-                                                    <a href="/decomposes/delete/1" class="btn btn-primary">Xóa</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
                         </tbody>
                         <tfoot>
                             <tr>
@@ -252,6 +107,7 @@
                                 <th scope="col">Kho</th>
                                 <th scope="col">Tên Phiếu</th>
                                 <th scope="col">Ngày Tạo</th>
+                                <th scope="col">Trạng Thái Phiếu</th>
                                 <th scope="col">Thao Tác</th>
                             </tr>
                         </tfoot>
@@ -286,7 +142,7 @@
                     <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    Bạn chắc chắn muốn xóa Sản Lượng đã chọn?
+                    Bạn chắc chắn muốn xóa phiếu đã chọn?
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -346,33 +202,33 @@
                         }
 
                     },
-                    // {
-                    //     data: 'check',
-                    //     name: 'check',
-                    //     orderable: false,
-                    //     searchable: false
-                    // },
-                    // {
-                    //     data: 'decomposes',
-                    //     name: 'decomposes'
-                    // },
-                    // {
-                    //     data: 'workName',
-                    //     name: 'workName'
-                    // },
-                    // {
-                    //     data: 'workType',
-                    //     name: 'workType'
-                    // },
-                    // {
-                    //     data: 'workDate',
-                    //     name: 'workDate'
-                    // },
-                    // {
-                    //     data: 'status',
-                    //     name: 'status'
-                    // },
-                    // { data: 'action', name: 'action', orderable: false, searchable: false }
+                    {
+                        data: 'check',
+                        name: 'check',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'code',
+                        name: 'code'
+                    },
+                    {
+                        data: 'warehouseName',
+                        name: 'warehouseName'
+                    },
+                    {
+                        data: 'name',
+                        name: 'name'
+                    },
+                    {
+                        data: 'date',
+                        name: 'date'
+                    },
+                    {
+                        data: 'active',
+                        name: 'active'
+                    },
+                    { data: 'action', name: 'action', orderable: false, searchable: false }
                 ],
                 rowCallback: function(row, data) {
                     $(row).attr('data-id', data.id);
@@ -431,8 +287,10 @@
                                 confirmButtonText: 'OK'
                             }).then(() => {
                                 selectedRows.clear();
-                                $('#confirmModal').modal('hide');
-                                $('#buttons-container').hide();
+                                $('#deleteModal').modal('hide');
+                                // $('#buttons-container').hide();
+                                $('#edit-selected-btn').hide();
+                                $('#delete-selected-btn').hide();
                                 location.reload();
                             });
                         },
@@ -468,7 +326,9 @@
                             }).then(() => {
                                 selectedRows.clear();
                                 $('#deleteModal').modal('hide');
-                                $('#buttons-container').hide();
+                                // $('#buttons-container').hide();
+                                $('#edit-selected-btn').hide();
+                                $('#delete-selected-btn').hide();
                                 location.reload();
                             });
                         },
@@ -494,14 +354,16 @@
             });
 
             function toggleButtons() {
-                var selected = $('#decomposes-table tbody .form-check-input:checked').length;
+                var selected = $('#diseaseplan-table tbody .form-check-input:checked').length;
                 if (selected > 0) {
-                    $('#buttons-container').css('visibility', 'visible');
+                    $('#edit-selected-btn').show();
+                    $('#delete-selected-btn').show();
                 } else {
-                    $('#buttons-container').css('visibility', 'hidden');
+                    $('#edit-selected-btn').hide();
+                    $('#delete-selected-btn').hide();
                 }
+                $('#add-selected-btn').show();
             }
-
         });
 </script>
 
@@ -511,25 +373,25 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.3.5/dist/sweetalert2.min.js"></script>
 
 <script>
-    $(document).on('click', '.toggle-status', function(e) {
+    $(document).on('click', '.toggle-active', function(e) {
             e.preventDefault();
 
             let button = $(this);
             let id = button.data('id');
 
             Swal.fire({
-                title: "Xác nhận thay đổi",
-                text: "Bạn có chắc chắn muốn thay đổi trạng thái của Sản Lượng này?",
+                title: "Xác nhận phiếu",
+                text: "Bạn có chắc chắn muốn duyệt phiếu này?",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#3085d6",
                 cancelButtonColor: "#d33",
-                confirmButtonText: "Thay đổi",
+                confirmButtonText: "Duyệt",
                 cancelButtonText: "Hủy"
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '{{ route('farm.status') }}',
+                        url: '{{ route('decomposes.status') }}',
                         type: 'POST',
                         data: {
                             _token: '{{ csrf_token() }}',
@@ -537,16 +399,16 @@
                         },
                         success: function(response) {
                             if (response.success) {
-                                if (response.status === 'Hoạt động') {
+                                if (response.status === 'Duyệt') {
                                     button.removeClass('bg-danger').addClass('bg-success').text(
-                                        'Hoạt động');
+                                        'Duyệt');
                                 } else {
                                     button.removeClass('bg-success').addClass('bg-danger').text(
-                                        'Không hoạt động');
+                                        'Chưa duyệt');
                                 }
 
                                 Swal.fire({
-                                    text: 'Trạng thái của Sản Lượng đã được cập nhật.',
+                                    text: 'Trạng thái của phiếu đã được cập nhật.',
                                     icon: 'success',
                                     confirmButtonText: 'OK',
                                     timer: 3000
@@ -554,7 +416,7 @@
                             } else {
                                 Swal.fire({
                                     text: response.message ||
-                                        'Không thể thay đổi trạng thái của Sản Lượng.',
+                                        'Không thể thay đổi trạng thái của phiếu.',
                                     icon: 'error',
                                     confirmButtonText: 'OK',
                                     timer: 3000
@@ -574,105 +436,4 @@
             });
         });
 </script>
-<script>
-    // JS: Gán loại công việc tương ứng
-    document.getElementById('workID-select').addEventListener('change', function () {
-        const selected = this.options[this.selectedIndex];
-        const type = selected.getAttribute('data-type');
-        document.getElementById('work-type-display').value = type || '';
-    });
-
-    function updateTaskCounts() {
-            const total = tasks.length;
-            const completed = tasks.filter(task => task.completed).length;
-            const pending = total - completed;
-
-            const allCountEl = document.getElementById('allTasksCount');
-            const completedCountEl = document.getElementById('completedTasksCount');
-            const pendingCountEl = document.getElementById('pendingTasksCount');
-            
-            if (allCountEl) allCountEl.textContent = total;
-            if (completedCountEl) completedCountEl.textContent = completed;
-            if (pendingCountEl) pendingCountEl.textContent = pending;
-        }
-        function filterTasks() {
-            const keywordEl = document.getElementById('taskKeyword');
-            const typeEl = document.getElementById('taskType');
-            const gardenEl = document.getElementById('taskGarden');
-            const lotEl = document.getElementById('taskLot');
-            const priorityEl = document.getElementById('taskPriority');
-            const startDateEl = document.getElementById('taskStartDate');
-            const endDateEl = document.getElementById('taskEndDate');
-            
-            const keyword = keywordEl ? keywordEl.value.toLowerCase() : '';
-            const type = typeEl ? typeEl.value : '';
-            const garden = gardenEl ? gardenEl.value : '';
-            const lot = lotEl ? lotEl.value : '';
-            const priority = priorityEl ? priorityEl.value : '';
-            const startDate = startDateEl ? startDateEl.value : '';
-            const endDate = endDateEl ? endDateEl.value : '';
-
-            // First apply search filters
-            let searchFiltered = tasks.filter(task => {
-                if (keyword && !task.name.toLowerCase().includes(keyword)) return false;
-                if (type && task.type !== type) return false;
-                if (garden && task.garden !== garden) return false;
-                if (lot && task.lot !== lot) return false;
-                if (priority && task.priority !== priority) return false;
-                if (startDate && task.startDate < startDate) return false;
-                if (endDate && task.startDate > endDate) return false;
-                return true;
-            });
-
-            // Then apply status filter
-            switch(currentTaskFilter) {
-                case 'pending':
-                    filteredTasks = searchFiltered.filter(task => !task.completed);
-                    break;
-                case 'completed':
-                    filteredTasks = searchFiltered.filter(task => task.completed);
-                    break;
-                case 'all':
-                default:
-                    filteredTasks = searchFiltered;
-                    break;
-            }
-
-            renderTasks();
-        }
-
-        function setTaskFilter(filter) {
-            currentTaskFilter = filter;
-            
-            // Update button states
-            document.querySelectorAll('.task-filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
-            
-            // Apply filter
-            applyTaskFilter();
-        }
-        function applyTaskFilter() {
-            switch(currentTaskFilter) {
-                case 'pending':
-                    filteredTasks = tasks.filter(task => !task.completed);
-                    break;
-                case 'completed':
-                    filteredTasks = tasks.filter(task => task.completed);
-                    break;
-                case 'all':
-                default:
-                    filteredTasks = [...tasks];
-                    break;
-            }
-            
-            renderTasks();
-        }
-</script>
-<style>
-    #buttons-container {
-        visibility: hidden;
-    }
-</style>
 @endsection

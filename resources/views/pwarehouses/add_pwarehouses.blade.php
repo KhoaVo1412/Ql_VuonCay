@@ -133,7 +133,7 @@
 
                                             </div>
                                             <button type="button" class="remove-btn btn-danger"
-                                                onclick="removeTreatmentStep(this)" style="align-self: flex-start;">
+                                                onclick="removeTreatmentStep(this)" style="align-self: center;">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
@@ -144,11 +144,12 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="prism-toggle d-grid gap-2 d-md-flex">
+                                <button type="submit" class="btn btn-success" id="submit-btn-treatmentslip">Lưu Thông
+                                    Tin</button>
+                            </div>
                         </div>
-                        <div class="prism-toggle d-grid gap-2 d-md-flex">
-                            <button type="submit" class="btn btn-success" id="submit-btn-treatmentslip">Lưu Thông
-                                Tin</button>
-                        </div>
+
                     </div>
                 </div>
             </form>

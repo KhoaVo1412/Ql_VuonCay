@@ -57,8 +57,7 @@
                 </div>
             </div>
             <div class="card-content">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <!-- Task Filter Buttons -->
+                {{-- <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div class="task-filter-buttons" style="display: flex; gap: 0.5rem;">
 
                     </div>
@@ -66,16 +65,21 @@
                         <a href="{{route('pwarehouses.add')}}" class="text-white"><i class="fas fa-plus"></i>
                             Tạo Phiếu Kho</a>
                     </button>
-                </div>
+                </div> --}}
 
                 <div class="card-body">
                     <table id="pwarehouses-table" class="table table-bordered text-nowrap w-100">
                         <div id="buttons-container" class="d-flex justify-content-end gap-2">
                             <button id="edit-selected-btn" class="btn btn-warning"
-                                style="border-radius: 30px; color: #FFFFFF">Không/Hoạt
+                                style="border-radius: 7px; color: #FFFFFF; display: none">Không/Hoạt
                                 Động</button>
-                            <button id="delete-selected-btn" class="btn btn-danger" style="border-radius: 30px;">
+                            <button id="delete-selected-btn" class="btn btn-danger"
+                                style="border-radius: 7px; display: none;">
                                 Xóa
+                            </button>
+                            <button id="add-selected-btn" class="btn btn-success" style="border-radius: 7px;">
+                                <a href="{{route('pwarehouses.add')}}" class="text-white"><i class="fas fa-plus"></i>
+                                    Tạo Phiếu Kho</a>
                             </button>
                         </div>
                         <thead>
@@ -292,8 +296,10 @@
                                 confirmButtonText: 'OK'
                             }).then(() => {
                                 selectedRows.clear();
-                                $('#confirmModal').modal('hide');
-                                $('#buttons-container').hide();
+                                $('#deleteModal').modal('hide');
+                                // $('#buttons-container').hide();
+                                $('#edit-selected-btn').hide();
+                                $('#delete-selected-btn').hide();
                                 location.reload();
                             });
                         },
@@ -329,7 +335,9 @@
                             }).then(() => {
                                 selectedRows.clear();
                                 $('#deleteModal').modal('hide');
-                                $('#buttons-container').hide();
+                                // $('#buttons-container').hide();
+                                $('#edit-selected-btn').hide();
+                                $('#delete-selected-btn').hide();
                                 location.reload();
                             });
                         },
@@ -355,14 +363,16 @@
             });
 
             function toggleButtons() {
-                var selected = $('#pwarehouses-table tbody .form-check-input:checked').length;
+                var selected = $('#diseaseplan-table tbody .form-check-input:checked').length;
                 if (selected > 0) {
-                    $('#buttons-container').css('visibility', 'visible');
+                    $('#edit-selected-btn').show();
+                    $('#delete-selected-btn').show();
                 } else {
-                    $('#buttons-container').css('visibility', 'hidden');
+                    $('#edit-selected-btn').hide();
+                    $('#delete-selected-btn').hide();
                 }
+                $('#add-selected-btn').show();
             }
-
         });
 </script>
 
@@ -586,9 +596,4 @@
             renderTasks();
         }
 </script>
-<style>
-    #buttons-container {
-        visibility: hidden;
-    }
-</style>
 @endsection

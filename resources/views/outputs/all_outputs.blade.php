@@ -26,71 +26,10 @@
                 </div>
                 <div class="modal-body px-4">
                     <div class="row gy-2">
-                        <input type="hidden" id="editTaskId">
                         <div class="form-row">
                             <div class="form-group">
-                                <label class="form-label required">Tên công việc</label>
-                                <input type="text" class="form-input" id="taskName" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label required">Loại công việc</label>
-                                <select class="form-select" id="taskTypeForm" required>
-                                    <option value="">Chọn loại</option>
-                                    <option value="Tưới nước">Tưới nước</option>
-                                    <option value="Bón phân">Bón phân</option>
-                                    <option value="Cắt tỉa">Cắt tỉa</option>
-                                    <option value="Phun thuốc">Phun thuốc</option>
-                                    <option value="Thu hoạch">Thu hoạch</option>
-                                    <option value="Làm cỏ">Làm cỏ</option>
-                                    <option value="Kiểm tra">Kiểm tra</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label required">Vườn</label>
-                                <select class="form-select" id="taskGardenForm" required>
-                                    <option value="">Chọn vườn</option>
-                                    <option value="Khu A">Khu A</option>
-                                    <option value="Khu B">Khu B</option>
-                                    <option value="Khu C">Khu C</option>
-                                    <option value="Khu D">Khu D</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Lô</label>
-                                <select class="form-select" id="taskLotForm">
-                                    <option value="">Chọn lô</option>
-                                    <option value="Lô 1">Lô 1</option>
-                                    <option value="Lô 2">Lô 2</option>
-                                    <option value="Lô 3">Lô 3</option>
-                                    <option value="Lô 4">Lô 4</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label required">Ngày bắt đầu</label>
+                                <label class="form-label required">Ngày Nhận</label>
                                 <input type="date" class="form-input" id="taskStartDateForm" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Ngày kết thúc</label>
-                                <input type="date" class="form-input" id="taskEndDateForm">
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label required">Mức độ ưu tiên</label>
-                                <select class="form-select" id="taskPriorityForm" required>
-                                    <option value="">Chọn mức độ</option>
-                                    <option value="Thấp">Thấp</option>
-                                    <option value="Trung bình">Trung bình</option>
-                                    <option value="Cao">Cao</option>
-                                    <option value="Khẩn cấp">Khẩn cấp</option>
-                                </select>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Người phụ trách</label>
@@ -99,19 +38,11 @@
                             </div>
                         </div>
 
-                        <div class="form-row">
-                            <div class="form-group" style="flex: 1;">
-                                <label class="form-label">Mô tả công việc</label>
-                                <textarea class="form-input" id="taskDescription"
-                                    placeholder="Mô tả chi tiết công việc..."
-                                    style="min-height: 80px; resize: vertical;"></textarea>
-                            </div>
-                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-success" id="submit-btn-outputs">Lưu</button>
+                    <button type="submit" class="btn btn-success" id="submit-btn-outputs">Lọc</button>
                 </div>
             </div>
         </div>
@@ -135,37 +66,13 @@
                 <div class="card-content">
                     <div class="form-section">
                         <!-- First Filter Row -->
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Mã Công Nhân</label>
-                                <select class="form-select" id="code">
-                                    <option value="">Tất cả</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Tên Công Nhân</label>
-                                <select class="form-select" id="name">
-                                    <option value="">Tất cả</option>
 
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Tên Tổ</label>
-                                <select class="form-select" id="taskLot">
-                                    <option value="">Tất cả</option>
-                                    <option value="Tổ 1">Tổ 1</option>
-                                    <option value="Tổ 2">Tổ 2</option>
-                                    <option value="Tổ 3">Tổ 3</option>
-                                    <option value="Tổ 4">Tổ 4</option>
-                                </select>
-                            </div>
-                        </div>
 
                         <!-- Second Filter Row -->
                         <div class="form-row">
 
                             <div class="form-group">
-                                <label class="form-label">Ngày Khai Thác</label>
+                                <label class="form-label">Ngày Mua</label>
                                 <input type="date" class="form-input" id="taskStartDate">
                             </div>
                             <div class="form-group">
@@ -175,7 +82,7 @@
                             <div class="form-group" style="display: flex; align-items: end;">
                                 <button class="btn btn-success btn-w" onclick="filterTasks()">
                                     <i class="fa-light fa-filter-list"></i>
-                                    Lưu
+                                    Lọc
                                 </button>
                             </div>
                         </div>
@@ -185,21 +92,21 @@
             </div>
             <div class="card-content">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <!-- Task Filter Buttons -->
-                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#create-outputs">
-                        <i class="fas fa-plus"></i>
-                        Thêm Sản Lượng
-                    </button>
                 </div>
 
                 <div class="card-body">
                     <table id="outputs-table" class="table table-bordered text-nowrap w-100">
                         <div id="buttons-container" class="d-flex justify-content-end gap-2">
                             <button id="edit-selected-btn" class="btn btn-warning"
-                                style="border-radius: 30px; color: #FFFFFF">Không/Hoạt
+                                style="border-radius: 7px; color: #FFFFFF; display: none">Không/Hoạt
                                 Động</button>
-                            <button id="delete-selected-btn" class="btn btn-danger" style="border-radius: 30px;">
+                            <button id="delete-selected-btn" class="btn btn-danger"
+                                style="border-radius: 7px; display: none;">
                                 Xóa
+                            </button>
+                            <button id="add-selected-btn" class="btn btn-success" style="border-radius: 7px;">
+                                <a href="{{route('outputs.add')}}" class="text-white"><i class="fas fa-plus"></i>
+                                    Tạo Phiếu Mua Sản Lượng</a>
                             </button>
                         </div>
                         <thead>
@@ -210,74 +117,28 @@
                                         value="" aria-label="...">
                                 </th>
                                 {{-- <th scope="col">STT</th> --}}
-                                <th scope="col">Mã Công Nhân</th>
-                                <th scope="col">Tên Công Nhân</th>
-                                <th scope="col">Ngày Khai Thác</th>
-                                <th scope="col">Số Lượng</th>
-                                <th scope="col">Ghi Chú</th>
+                                <th scope="col">Mã Phiếu</th>
+                                <th scope="col">Tên Phiếu</th>
+                                <th scope="col">Ngày Ngày Mua</th>
+                                {{-- <th scope="col">Số Lượng</th>
+                                <th scope="col">Ghi Chú</th> --}}
                                 <th scope="col">Trạng Thái</th>
                                 <th scope="col">Thao Tác</th>
                             </tr>
                         </thead>
                         <tbody>
                             <!-- DataTables will populate this section -->
-                            <tr data-id="1">
-                                <td class="dt-type-numeric"></td>
-
-                                <td class="dtr-control dtr-hidden" tabindex="0" style="display: none;"></td>
-                                <td class="sorting_1"><input class="form-check-input" type="checkbox" id="check-1"
-                                        data-id="1"></td>
-                                <td>CN-13</td>
-                                <td>Nguyễn Văn Duy</td>
-                                <td>28-07-2025</td>
-                                <td>300 Kg </td>
-                                <td>Chất lượng tạm </td>
-                                <td><button class="badge bg-success toggle-status" data-id="1">Hoạt
-                                        động</button></td>
-                                <td>
-                                    <div class="d-flex gap-1">
-                                        <a href="/works/edit/1" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a class="btn btn-danger btn-sm" data-bs-toggle="modal"
-                                            data-bs-target="#deleteModal1">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </a>
-                                    </div>
-                                    <div class="modal fade" id="deleteModal1" tabindex="-1"
-                                        aria-labelledby="deleteModalLabel1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="deleteModalLabel1">Xác Nhận Xóa</h5>
-                                                    <button type="button" class="btn btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    Bạn có chắc chắn có muốn xóa thông tin <span
-                                                        style="color: red;">N/A</span>?
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary"
-                                                        data-bs-dismiss="modal">Hủy</button>
-                                                    <a href="/works/delete/1" class="btn btn-primary">Xóa</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
                         </tbody>
                         <tfoot>
                             <tr>
                                 <th></th>
                                 <th></th>
                                 {{-- <th scope="col">STT</th> --}}
-                                <th scope="col">Mã Công Nhân</th>
-                                <th scope="col">Tên Công Nhân</th>
-                                <th scope="col">Ngày Khai Thác</th>
-                                <th scope="col">Số Lượng</th>
-                                <th scope="col">Ghi Chú</th>
+                                <th scope="col">Mã Phiếu</th>
+                                <th scope="col">Tên Phiếu</th>
+                                <th scope="col">Ngày Ngày Mua</th>
+                                {{-- <th scope="col">Số Lượng</th>
+                                <th scope="col">Ghi Chú</th> --}}
                                 <th scope="col">Trạng Thái</th>
                                 <th scope="col">Thao Tác</th>
                             </tr>
@@ -380,27 +241,27 @@
                         searchable: false
                     },
                     {
-                        data: 'farm_code',
-                        name: 'farm_code'
+                        data: 'code',
+                        name: 'code'
                     },
                     {
-                        data: 'farm_name',
-                        name: 'farm_name'
+                        data: 'name',
+                        name: 'name'
                     },
                     {
-                        data: 'unit_name',
-                        name: 'unit_name'
+                        data: 'date',
+                        name: 'date'
                     },
-                    {
-                        data: 'unit_name',
-                        name: 'unit_name'
-                    },
+                    // {
+                    //     data: 'unit_name',
+                    //     name: 'unit_name'
+                    // },
                     
                     {
                         data: 'status',
                         name: 'status'
                     },
-                    // { data: 'action', name: 'action', orderable: false, searchable: false }
+                    { data: 'action', name: 'action', orderable: false, searchable: false }
                 ],
                 rowCallback: function(row, data) {
                     $(row).attr('data-id', data.id);
@@ -459,8 +320,10 @@
                                 confirmButtonText: 'OK'
                             }).then(() => {
                                 selectedRows.clear();
-                                $('#confirmModal').modal('hide');
-                                $('#buttons-container').hide();
+                                $('#deleteModal').modal('hide');
+                                // $('#buttons-container').hide();
+                                $('#edit-selected-btn').hide();
+                                $('#delete-selected-btn').hide();
                                 location.reload();
                             });
                         },
@@ -496,7 +359,9 @@
                             }).then(() => {
                                 selectedRows.clear();
                                 $('#deleteModal').modal('hide');
-                                $('#buttons-container').hide();
+                                // $('#buttons-container').hide();
+                                $('#edit-selected-btn').hide();
+                                $('#delete-selected-btn').hide();
                                 location.reload();
                             });
                         },
@@ -522,12 +387,15 @@
             });
 
             function toggleButtons() {
-                var selected = $('#outputs-table tbody .form-check-input:checked').length;
+                var selected = $('#diseaseplan-table tbody .form-check-input:checked').length;
                 if (selected > 0) {
-                    $('#buttons-container').css('visibility', 'visible');
+                    $('#edit-selected-btn').show();
+                    $('#delete-selected-btn').show();
                 } else {
-                    $('#buttons-container').css('visibility', 'hidden');
+                    $('#edit-selected-btn').hide();
+                    $('#delete-selected-btn').hide();
                 }
+                $('#add-selected-btn').show();
             }
 
         });
@@ -557,7 +425,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '{{ route('farm.status') }}',
+                        url: '{{ route('outputs.status') }}',
                         type: 'POST',
                         data: {
                             _token: '{{ csrf_token() }}',
@@ -565,24 +433,23 @@
                         },
                         success: function(response) {
                             if (response.success) {
-                                if (response.status === 'Hoạt động') {
+                                if (response.status === 'Duyệt') {
                                     button.removeClass('bg-danger').addClass('bg-success').text(
-                                        'Hoạt động');
+                                        'Duyệt');
                                 } else {
                                     button.removeClass('bg-success').addClass('bg-danger').text(
-                                        'Không hoạt động');
+                                        'Chờ duyệt');
                                 }
 
                                 Swal.fire({
-                                    text: 'Trạng thái của Sản Lượng đã được cập nhật.',
+                                    text: 'Trạng thái & tồn kho đã được cập nhật.',
                                     icon: 'success',
                                     confirmButtonText: 'OK',
                                     timer: 3000
                                 });
                             } else {
                                 Swal.fire({
-                                    text: response.message ||
-                                        'Không thể thay đổi trạng thái của Sản Lượng.',
+                                    text: response.message || 'Không thể thay đổi trạng thái.',
                                     icon: 'error',
                                     confirmButtonText: 'OK',
                                     timer: 3000
@@ -691,9 +558,4 @@
             renderTasks();
         }
 </script>
-<style>
-    #buttons-container {
-        visibility: hidden;
-    }
-</style>
 @endsection

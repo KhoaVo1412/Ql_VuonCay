@@ -2,7 +2,7 @@
 @section('content')
 <section>
     <div class="d-md-flex d-block align-items-center justify-content-between my-2 page-header-breadcrumb">
-        <h5 class="page-title fw-semibold fs-18 mb-0">Tạo Phiếu Phân Rã</h5>
+        <h5 class="page-title fw-semibold fs-18 mb-0">Chỉnh sửa Phiếu Phân Rã</h5>
         <div class="ms-md-1 ms-0">
             <nav>
                 <ol class="breadcrumb mb-0 padding">
@@ -17,58 +17,58 @@
 
     <div class="row">
         <div class="col-xl-12">
-            <form id="form-decompose" action="{{ route('decomposes.save') }}" method="POST"
+            <form id="form-decompose" action="{{ route('decomposes.update', $decomposes->id) }}" method="POST"
                 enctype="multipart/form-data">
                 {{ csrf_field() }}
                 <div class="card custom-card">
                     <div class="card-body">
                         <div class="row modal-body gy-4">
                             <div class="form-section">
-                                <!-- Second Row -->
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="medicalRecordId" class="form-label required">Mã Phiếu</label>
                                         <input type="text" id="medicalRecordId" class="form-input" name="code"
-                                            placeholder="Nhập mã phiếu" required>
+                                            value="{{ $decomposes->code }}" placeholder="Nhập mã phiếu" required>
                                     </div>
                                     <div class="form-group wide">
                                         <label for="medicalRecordName" class="form-label required">Tên Phiếu</label>
                                         <input type="text" id="medicalRecordName" class="form-input" name="name"
-                                            placeholder="Nhập tên phiếu" required>
+                                            value="{{ $decomposes->name }}" placeholder="Nhập tên phiếu" required>
                                     </div>
                                 </div>
 
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label for="" class="form-label required">Kho</label>
+                                        <label class="form-label required">Kho</label>
                                         <select id="warehouseID" name="warehouseID" class="form-input" required>
                                             <option value="">Chọn kho</option>
                                             @foreach($warehouses as $wh)
-                                            <option value="{{ $wh->id }}">{{ $wh->name }}</option>
+                                            <option value="{{ $wh->id }}" {{ $decomposes->warehouseID == $wh->id ?
+                                                'selected' : '' }}>{{ $wh->name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="form-group wide">
                                         <label for="diseaseName" class="form-label required">Người Tạo</label>
-                                        <input type="text" class="form-input" value="{{ Auth::user()->name }}"
+                                        <input type="text" class="form-input" value="{{ $decomposes->user->name }}"
                                             placeholder="" required>
                                     </div>
-                                    <input type="hidden" name="userID" value="{{ Auth::id() }}">
+                                    <input type="hidden" name="userID" value="{{ $decomposes->userID }}">
                                     <div class="form-group">
                                         <label for="date" class="form-label">Ngày Tạo</label>
-                                        <input type="date" id="date" name="date" class="form-input" placeholder="">
+                                        <input type="date" id="date" name="date" class="form-input"
+                                            value="{{ $decomposes->date }}">
                                     </div>
                                 </div>
 
-                                <!-- Fourth Row -->
                                 <div class="form-row">
                                     <div class="form-group" style="flex: 1;">
                                         <label class="form-label">Ghi Chú</label>
                                         <textarea class="form-input" name="desc" id="desc" placeholder="Ghi chú..."
-                                            style="min-height: 80px; resize: vertical;" required></textarea>
+                                            style="min-height: 80px; resize: vertical;"
+                                            required>{{ $decomposes->desc }}</textarea>
                                     </div>
                                 </div>
-
                                 <div class="material-section">
                                     <div class="section-title">
                                         <div style="display: flex; align-items: center; gap: 10px;">
@@ -83,144 +83,88 @@
                                     </div>
 
                                     <div id="materialContainers">
-                                        <!-- Initial Material Container -->
-                                        <div class="material-replacement-container" data-container-id="1">
-                                            <div class="container-number">1</div>
+                                        @foreach($decomposes->items as $index => $material)
+                                        <div class="material-replacement-container"
+                                            data-container-id="{{ $index + 1 }}">
+                                            <div class="container-number">{{ $index + 1 }}</div>
                                             <button type="button" class="btn-remove-container"
-                                                onclick="removeMaterialContainer(1)" style="display: none;">
+                                                onclick="removeMaterialContainer({{ $index + 1 }})">
                                                 <i class="fas fa-times"></i>
                                             </button>
-
-                                            <!-- Original Materials to Replace -->
                                             <div class="replacement-section">
-                                                <div class="replacement-title">
-                                                    {{-- <i class="fas fa-arrow-up"></i> --}}
-                                                    Nguyên Liệu Cần Đổi
-                                                </div>
-
+                                                <div class="replacement-title">Nguyên Liệu Cần Đổi</div>
                                                 <div class="material-row">
-                                                    {{-- <div class="form-group">
-                                                        <label class="form-label">Mã vật tư</label>
-                                                        <select class="material-select">
-                                                            <option value="">Chọn mã vật tư</option>
-                                                            <option value="VT001">VT001 - Thuốc trừ sâu Regent</option>
-                                                            <option value="VT002">VT002 - Phân bón NPK</option>
-                                                            <option value="VT003">VT003 - Dụng cụ cắt tỉa</option>
-                                                            <option value="VT004">VT004 - Bình xịt thuốc</option>
-                                                            <option value="VT005">VT005 - Ống tưới nước</option>
-                                                            <option value="VT006">VT006 - Thuốc diệt nấm</option>
-                                                            <option value="VT007">VT007 - Phân hữu cơ</option>
-                                                        </select>
-                                                    </div> --}}
                                                     <div class="form-group">
                                                         <label class="form-label">Tên vật tư</label>
-                                                        <select class="material-select" name="materials[0][productID]"
-                                                            required>
+                                                        <select class="material-select"
+                                                            name="materials[{{ $index }}][productID]" required>
                                                             <option value="">Chọn tên vật tư</option>
                                                             @foreach($products as $product)
-                                                            <option value="{{ $product->id }}">
-                                                                {{ $product->name }}
-                                                            </option>
+                                                            <option value="{{ $product->id }}" {{ $material->productID
+                                                                == $product->id ? 'selected' : '' }}>{{ $product->name
+                                                                }}</option>
                                                             @endforeach
                                                         </select>
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Số lượng</label>
-                                                        <input type="number" class="material-input" placeholder="0"
-                                                            min="0" name="materials[0][quantityProduct]" required>
+                                                        <input type="number" class="material-input"
+                                                            name="materials[{{ $index }}][quantityProduct]" min="0"
+                                                            value="{{ $material->quantityProduct }}" required>
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Đơn vị</label>
                                                         <select class="material-select"
-                                                            name="materials[0][productUnitID]" required>
+                                                            name="materials[{{ $index }}][productUnitID]" required>
                                                             <option value="">Chọn đơn vị</option>
                                                             @foreach($units as $unit)
-                                                            <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                                                            <option value="{{ $unit->id }}" {{ $material->productUnitID
+                                                                == $unit->id ? 'selected' : '' }}>{{ $unit->name }}
+                                                            </option>
                                                             @endforeach
                                                         </select>
                                                     </div>
-                                                    <div class="form-group">
-                                                        <button type="button" class="btn-add-material"
-                                                            onclick="addNewMaterialContainer()" title="Thêm bảng mới">
-                                                            <i class="fas fa-plus"></i>
-                                                        </button>
-                                                    </div>
                                                 </div>
                                             </div>
-
-                                            <!-- Section Divider -->
                                             <div class="section-divider"></div>
-
-                                            <!-- New Materials (Replacement) -->
                                             <div class="replacement-section">
-                                                <div class="replacement-title">
-                                                    {{-- <i class="fas fa-arrow-down"></i> --}}
-                                                    Vật Tư Mới (Thay Thế)
-                                                </div>
-
+                                                <div class="replacement-title">Vật Tư Mới (Thay Thế)</div>
                                                 <div class="material-row">
-                                                    {{-- <div class="form-group">
-                                                        <label class="form-label">Mã vật tư</label>
-                                                        <select class="material-select">
-                                                            <option value="">Chọn mã vật tư</option>
-                                                            <option value="VT001">VT001 - Thuốc trừ sâu Regent</option>
-                                                            <option value="VT002">VT002 - Phân bón NPK</option>
-                                                            <option value="VT003">VT003 - Dụng cụ cắt tỉa</option>
-                                                            <option value="VT004">VT004 - Bình xịt thuốc</option>
-                                                            <option value="VT005">VT005 - Ống tưới nước</option>
-                                                            <option value="VT006">VT006 - Thuốc diệt nấm</option>
-                                                            <option value="VT007">VT007 - Phân hữu cơ</option>
-                                                            <option value="VT008">VT008 - Thuốc trừ sâu sinh học
-                                                            </option>
-                                                            <option value="VT009">VT009 - Phân bón hữu cơ</option>
-                                                            <option value="VT010">VT010 - Dụng cụ cắt tỉa cao cấp
-                                                            </option>
-                                                        </select>
-                                                    </div> --}}
                                                     <div class="form-group">
                                                         <label class="form-label">Tên vật tư</label>
                                                         <select class="material-select"
-                                                            name="materials[0][productDecomposeID]" required>
+                                                            name="materials[{{ $index }}][productDecomposeID]" required>
                                                             <option value="">Chọn tên vật tư</option>
                                                             @foreach($products as $product)
-                                                            <option value="{{ $product->id }}">
-                                                                {{ $product->name }}
-                                                            </option>
+                                                            <option value="{{ $product->id }}" {{ $material->
+                                                                productDecomposeID == $product->id ? 'selected' : ''
+                                                                }}>{{ $product->name }}</option>
                                                             @endforeach
                                                         </select>
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Số lượng</label>
-                                                        <input type="number" class="material-input" placeholder="0"
-                                                            min="0" name="materials[0][quantityDecompose]" required>
+                                                        <input type="number" class="material-input"
+                                                            name="materials[{{ $index }}][quantityDecompose]" min="0"
+                                                            value="{{ $material->quantityDecompose }}" required>
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Đơn vị</label>
                                                         <select class="material-select"
-                                                            name="materials[0][unitDecomposeID]" required>
+                                                            name="materials[{{ $index }}][unitDecomposeID]" required>
                                                             <option value="">Chọn đơn vị</option>
                                                             @foreach($units as $unit)
-                                                            <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                                                            <option value="{{ $unit->id }}" {{ $material->
+                                                                unitDecomposeID == $unit->id ? 'selected' : '' }}>{{
+                                                                $unit->name }}
+                                                            </option>
                                                             @endforeach
                                                         </select>
                                                     </div>
-                                                    <div class="form-group">
-                                                        <button type="button" class="btn-add-material"
-                                                            onclick="addNewMaterialContainer()" title="Thêm bảng mới">
-                                                            <i class="fas fa-plus"></i>
-                                                        </button>
-                                                    </div>
                                                 </div>
-                                            </div>
-
-                                            <!-- Reset Button -->
-                                            <div style="text-align: center; margin-top: 15px;">
-                                                <button type="button" class="btn-reset-materials"
-                                                    onclick="resetMaterialContainer(1)" title="Làm mới bảng này">
-                                                    <i class="fas fa-redo"></i>
-                                                </button>
                                             </div>
                                         </div>
+                                        @endforeach
                                     </div>
                                 </div>
 
@@ -233,7 +177,6 @@
                     </div>
                 </div>
             </form>
-
         </div>
     </div>
 </section>
@@ -243,34 +186,21 @@
         textarea.style.height = textarea.scrollHeight + 'px';
     }
 </script>
-<script>
-    const products = @json($products);
-    const units = @json($units);
-
-    function renderProductOptions() {
-        return products.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-    }
-
-    function renderUnitOptions() {
-        return units.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
-    }
-</script>
 
 <script>
-    let containerCounter = 2;
+    let containerCounter = {{ count($decomposes->items) }}; // Lấy số dòng hiện có từ DB
 
     function addNewMaterialContainer() {
+        containerCounter++;
+
         const containersDiv = document.getElementById('materialContainers');
         const newContainer = document.createElement('div');
         newContainer.className = 'material-replacement-container';
         newContainer.setAttribute('data-container-id', containerCounter);
 
-        const index = containerCounter; // mỗi container là 1 cặp nguyên liệu – vật tư mới
-
-        // Tạo HTML
         newContainer.innerHTML = `
-            <div class="container-number">${index}</div>
-            <button type="button" class="btn-remove-container" onclick="removeMaterialContainer(${index})">
+            <div class="container-number">${containerCounter}</div>
+            <button type="button" class="btn-remove-container" onclick="removeMaterialContainer(${containerCounter})">
                 <i class="fas fa-times"></i>
             </button>
 
@@ -280,25 +210,30 @@
                 <div class="material-row">
                     <div class="form-group">
                         <label class="form-label">Tên vật tư</label>
-                        <select class="material-select" name="materials[${index}][productID]" required>
+                        <select class="material-select" name="materials[${containerCounter}][productID]" required>
                             <option value="">Chọn tên vật tư</option>
-                            ${renderProductOptions()}
+                            @foreach($products as $product)
+                            <option value="{{ $product->id }}">{{ $product->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Số lượng</label>
-                        <input type="number" class="material-input" name="materials[${index}][quantityProduct]" placeholder="0" min="0" required>
+                        <input type="number" class="material-input" name="materials[${containerCounter}][quantityProduct]" placeholder="0" min="0" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Đơn vị</label>
-                        <select class="material-select" name="materials[${index}][productUnitID]" required>
+                        <select class="material-select" name="materials[${containerCounter}][productUnitID]" required>
                             <option value="">Chọn đơn vị</option>
-                            ${renderUnitOptions()}
+                            @foreach($units as $unit)
+                            <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>
             </div>
 
+            <!-- Divider -->
             <div class="section-divider"></div>
 
             <!-- Vật Tư Mới -->
@@ -307,27 +242,32 @@
                 <div class="material-row">
                     <div class="form-group">
                         <label class="form-label">Tên vật tư</label>
-                        <select class="material-select" name="materials[${index}][productDecomposeID]" required>
+                        <select class="material-select" name="materials[${containerCounter}][productDecomposeID]" required>
                             <option value="">Chọn tên vật tư</option>
-                            ${renderProductOptions()}
+                            @foreach($products as $product)
+                            <option value="{{ $product->id }}">{{ $product->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Số lượng</label>
-                        <input type="number" class="material-input" name="materials[${index}][quantityDecompose]" placeholder="0" min="0" required>
+                        <input type="number" class="material-input" name="materials[${containerCounter}][quantityDecompose]" placeholder="0" min="0" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Đơn vị</label>
-                        <select class="material-select" name="materials[${index}][unitDecomposeID]" required>
+                        <select class="material-select" name="materials[${containerCounter}][unitDecomposeID]" required>
                             <option value="">Chọn đơn vị</option>
-                            ${renderUnitOptions()}
+                            @foreach($units as $unit)
+                            <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>
             </div>
 
+            <!-- Nút reset -->
             <div style="text-align: center; margin-top: 15px;">
-                <button type="button" class="btn-reset-materials" onclick="resetMaterialContainer(${index})" title="Làm mới bảng này">
+                <button type="button" class="btn-reset-materials" onclick="resetMaterialContainer(${containerCounter})" title="Làm mới bảng này">
                     <i class="fas fa-redo"></i>
                 </button>
             </div>
@@ -335,10 +275,12 @@
 
         containersDiv.appendChild(newContainer);
         updateRemoveButtons();
-        containerCounter++;
+        const firstInput = newContainer.querySelector('.material-select');
+        if (firstInput) firstInput.focus();
+
+        showMessage('success', `Đã thêm bảng vật tư mới #${containerCounter}`);
     }
 
-        // Remove material container
         function removeMaterialContainer(containerId) {
             const containers = document.querySelectorAll('.material-replacement-container');
             
@@ -358,6 +300,7 @@
             }
         }
 
+        // Reset specific material container
         function resetMaterialContainer(containerId) {
             if (confirm('Bạn có chắc muốn làm mới bảng vật tư này?')) {
                 const container = document.querySelector(`[data-container-id="${containerId}"]`);
@@ -374,6 +317,7 @@
             }
         }
 
+        // Update container numbers after removal
         function updateContainerNumbers() {
             const containers = document.querySelectorAll('.material-replacement-container');
             containers.forEach((container, index) => {

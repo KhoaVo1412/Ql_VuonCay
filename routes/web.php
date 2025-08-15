@@ -283,12 +283,12 @@ Route::middleware(['login'])->group(function () {
     Route::get('/materialproposals', [MaterialProposalController::class, 'index'])->name('materialproposals.index');
     Route::get('/add-materialproposals', [MaterialProposalController::class, 'add'])->name('materialproposals.add');
     Route::post('/save-materialproposals', [MaterialProposalController::class, 'save'])->name('materialproposals.save');
-    Route::get('/materialproposals/edit/{id}', [MaterialProposalController::class, 'edit'])->name('materialproposals.edit');
+    Route::get('/edit-materialproposals/{id}', [MaterialProposalController::class, 'edit'])->name('materialproposals.edit');
     Route::post('/materialproposals/update/{id}', [MaterialProposalController::class, 'update'])->name('materialproposals.update');
     Route::get('materialproposals/delete/{id}', [MaterialProposalController::class, 'destroy'])->name('materialproposals.delete');
     Route::post('/materialproposals/edit-multiple', [MaterialProposalController::class, 'editMultiple'])->name('materialproposals.editMultiple');
     Route::post('/materialproposals/delete-multiple', [MaterialProposalController::class, 'deleteMultiple'])->name('materialproposals.deleteMultiple');
-    Route::post('/toggle-materialproposal-status', [MaterialProposalController::class, 'toggleStatus'])->name('materialproposal.status');
+    Route::post('/toggle-materialproposals-status', [MaterialProposalController::class, 'toggleStatus'])->name('materialproposals.status');
 
     Route::get('/treatmentslips', [TreatmentSlipController::class, 'index'])->name('treatmentslips.index');
     Route::get('/add-treatmentslips', [TreatmentSlipController::class, 'add'])->name('treatmentslips.add');
@@ -601,10 +601,10 @@ Route::group(['middleware' => ['isAdmin']], function () {
     Route::middleware(['permission:Sửa Đề Xuất'])->post('/update-workps/{id}', [WorkProposalsController::class, 'update'])->name('workps.update');
     Route::middleware(['permission:Xóa Đề Xuất'])->post('/workps/delete-multiple', [WorkProposalsController::class, 'deleteMultiple'])->name('workps.deleteMultiple');
 
-    Route::middleware(['permission:Xem Đánh Giá'])->get('/comments', [WorkProposalsController::class, 'index'])->name('comments.index');
-    Route::middleware(['permission:Thêm Đánh Giá'])->get('/add-comments', [WorkProposalsController::class, 'add'])->name('comments.add');
-    Route::middleware(['permission:Sửa Đánh Giá'])->post('/update-comments/{id}', [WorkProposalsController::class, 'update'])->name('comments.update');
-    Route::middleware(['permission:Xóa Đánh Giá'])->post('/comments/delete-multiple', [WorkProposalsController::class, 'deleteMultiple'])->name('comments.deleteMultiple');
+    Route::middleware(['permission:Xem Đánh Giá'])->get('/comments', [CommentController::class, 'index'])->name('comments.index');
+    Route::middleware(['permission:Thêm Đánh Giá'])->post('/save-comments', [CommentController::class, 'save'])->name('comments.save');
+    Route::middleware(['permission:Sửa Đánh Giá'])->post('/update-comments/{id}', [CommentController::class, 'update'])->name('comments.update');
+    Route::middleware(['permission:Xóa Đánh Giá'])->post('/comments/delete-multiple', [CommentController::class, 'deleteMultiple'])->name('comments.deleteMultiple');
 
     // MDF qlcl
     Route::middleware(['permission:Xem Quản Lý Chất Lượng'])->get('/untested', [TestingResultController::class, 'indexUntested'])->name('untested');

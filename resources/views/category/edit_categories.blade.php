@@ -55,15 +55,16 @@
                             <!-- Kho -->
                             <div class="col-md-4">
                                 <label for="warehouse_id" class="form-label">Kho</label>
-                                <select name="warehouse_id" class="form-control" required>
+                                <select name="warehouseID" class="form-control" required>
                                     <option value="">-- Chọn kho --</option>
                                     @foreach($warehouses as $warehouse)
-                                    <option value="{{ $warehouse->id }}" {{ $categories->warehouseID == $warehouse->id
-                                        ? 'selected' : '' }}>
+                                    <option value="{{ $warehouse->id }}" {{ $categories->warehouseID == $warehouse->id ?
+                                        'selected' : '' }}>
                                         {{ $warehouse->name }}
                                     </option>
                                     @endforeach
                                 </select>
+
                             </div>
 
                             <!-- Danh mục cha -->

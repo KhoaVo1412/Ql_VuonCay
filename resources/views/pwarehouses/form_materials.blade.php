@@ -1,25 +1,9 @@
-@extends('layouts.app')
-@section('content')
 <section>
-    <div class="d-md-flex d-block align-items-center justify-content-between my-2 page-header-breadcrumb">
-        <h5 class="page-title fw-semibold fs-18 mb-0">Tạo Phiếu Kho</h5>
-        <div class="ms-md-1 ms-0">
-            <nav>
-                <ol class="breadcrumb mb-0 padding">
-                    <li class="breadcrumb-item"><a href="javascript:void(0);">Trang Chủ</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('pwarehouses.index') }}">Danh sách</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Tạo Phiếu Kho</li>
-                </ol>
-            </nav>
-        </div>
-    </div>
-    @include('layouts.alert')
-
     <div class="row">
         <div class="col-xl-12">
-            <form id="form-treatmentslip" action="{{ route('pwarehouses.save') }}" method="POST"
+            {{-- <form id="form-treatmentslip" action="{{ route('pwarehouses.save') }}" method="POST"
                 enctype="multipart/form-data">
-                {{ csrf_field() }}
+                {{ csrf_field() }} --}}
                 <div class="card custom-card">
                     <div class="card-body">
                         <div class="row modal-body gy-4">
@@ -39,9 +23,7 @@
                                     <div class="form-group">
                                         <label for="name" class="form-label required">Loại Phiếu</label>
                                         <select name="type" id="type" class="form-select" required>
-                                            <option value="">Chọn loại</option>
-                                            <option value="Nhập">Nhập</option>
-                                            <option value="Xuất">Xuất</option>
+                                            <option value="Khai thác">Khai thác</option>
                                         </select>
                                     </div>
                                 </div>
@@ -50,7 +32,6 @@
                                     <div class="form-group">
                                         <label for="warehouseID" class="form-label required">Kho</label>
                                         <select name="warehouseID" class="form-select" required>
-                                            <option value="">Chọn kho</option>
                                             @foreach($warehouses as $warehouse)
                                             <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
                                             @endforeach
@@ -144,15 +125,16 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="prism-toggle d-grid gap-2 d-md-flex">
+                            {{-- <div class="prism-toggle d-grid gap-2 d-md-flex">
                                 <button type="submit" class="btn btn-success" id="submit-btn-treatmentslip">Lưu Thông
                                     Tin</button>
-                            </div>
+                            </div> --}}
                         </div>
 
                     </div>
                 </div>
-            </form>
+                {{--
+            </form> --}}
         </div>
     </div>
 </section>
@@ -494,58 +476,3 @@
         }
     }
 </style>
-{{-- <script>
-    let treatmentStepCounter = 1;
-
-    function addTreatmentStep() {
-        treatmentStepCounter++;
-        const container = document.getElementById('treatmentSteps');
-        const newStep = document.createElement('div');
-        newStep.className = 'treatment-step';
-        newStep.style.cssText = 'display: flex; gap: 1rem; margin-bottom: 1rem; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; background-color: #D4F7D1;';
-        
-        newStep.innerHTML = `
-            <div style="display: flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; background-color: #3b82f6; color: white; border-radius: 50%; font-weight: bold;">${treatmentStepCounter}</div>
-            <div style="flex: 1;">
-                <div class="form-row" style="margin-bottom: 0.5rem;">
-                    <div class="form-group">
-                        <label class="form-label">Mã Vật Tư</label>
-                        <select class="form-select" name="medicine">
-                            <option value="">Chọn mã vật tư</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Tên Vật Tư</label>
-                        <input type="text" class="form-input" name="dosage" placeholder="">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Số Lượng</label>
-                        <input type="number" class="form-input" name="treatmentDate">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Đơn Vị</label>
-                        <input type="text" class="form-input" name="treatmentDate">
-                    </div>
-                </div>
-               
-            </div>
-            <button type="button" class="remove-btn" onclick="removeTreatmentStep(this)" style="align-self: flex-start;">
-                <i class="fas fa-trash"></i>
-            </button>
-        `;
-        container.appendChild(newStep);
-    }
-    function removeTreatmentStep(button) {
-        button.closest('.treatment-step').remove();
-        updateTreatmentStepNumbers();
-    }
-    function updateTreatmentStepNumbers() {
-        const steps = document.querySelectorAll('.treatment-step');
-        steps.forEach((step, index) => {
-            const numberElement = step.querySelector('div:first-child');
-            numberElement.textContent = index + 1;
-        });
-        treatmentStepCounter = steps.length;
-    }
-</script> --}}
-@endsection

@@ -4,10 +4,17 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ActionHistory;
+use App\Models\Category;
 use App\Models\Garden;
 use App\Models\GenTask;
+use App\Models\Picking;
 use App\Models\Plant;
 use App\Models\Plot;
+use App\Models\Product;
+use App\Models\ProductPicking;
+use App\Models\UnitOfMeasure;
+use App\Models\User;
+use App\Models\WareHouse;
 use App\Models\Work;
 use App\Models\Worker;
 use Illuminate\Http\Request;
@@ -103,64 +110,110 @@ class WorkController extends Controller
 
     public function add(Request $request)
     {
+        $categories = Category::all();
+        $products = Product::all();
+        $units = UnitOfMeasure::all();
+        $users = User::all();
+        $warehouses = WareHouse::where('id', 2)->get();
         $works = Work::all();
         $gardens = Garden::with('plots')->get();
         $workers = Worker::all();
         $plots = Plot::with('garden')->get();
-        return view('works.add_works', compact('gardens', 'workers', 'works', 'plots'));
+        return view('works.add_works', compact('categories', 'products', 'units', 'users', 'warehouses', 'gardens', 'workers', 'works', 'plots'));
     }
     public function save(Request $request)
     {
         // dd($request->all());
-        $request->validate([
-            'workID' => 'required',
-            'workerID' => 'required',
-            'workName' => 'required',
-            'workDate' => 'required',
-            'dateEnd' => 'required',
-            'plotID' => 'required',
-            'type' => 'required',
-            'priority' => 'required',
-            'description' => 'nullable',
-            'plantIDs' => 'required|array',
-        ]);
-        $invalidPlants = Plant::whereIn('id', $request->plantIDs)
-            ->where('plotID', '!=', $request->plotID)
-            ->count();
+        try {
+            $request->validate([
+                'workID' => 'required',
+                'workerID' => 'required',
+                'workName' => 'required',
+                'workDate' => 'required',
+                'dateEnd' => 'required',
+                'plotID' => 'required',
+                'type' => 'required',
+                'priority' => 'required',
+                'description' => 'nullable',
+                'plantIDs' => 'required|array',
 
-        if ($invalidPlants > 0) {
-            return redirect()->back()->withErrors(['plantIDs' => 'Một hoặc nhiều cây không thuộc lô đã chọn']);
+                'code' => 'required|unique:pickings,code',
+                'name' => 'required',
+                // 'type' => 'required',
+                'warehouseID' => 'required|exists:ware_houses,id',
+                'createName' => 'required',
+                'createDate' => 'required|date',
+                'desc' => 'nullable|string',
+                'materials' => 'required|array|min:1',
+                'materials.*.productID' => 'required|exists:products,id',
+                'materials.*.quantity' => 'required|numeric|min:1',
+            ]);
+            $invalidPlants = Plant::whereIn('id', $request->plantIDs)
+                ->where('plotID', '!=', $request->plotID)
+                ->count();
+
+            if ($invalidPlants > 0) {
+                return redirect()->back()->withErrors(['plantIDs' => 'Một hoặc nhiều cây không thuộc lô đã chọn']);
+            }
+            $taskSlug = Str::slug($request->workID, '_');
+            $taskSlug1 = Str::slug($request->workerID);
+            $prefix = '#' . $taskSlug . '_' . $taskSlug1;
+            do {
+                $randomCode = $prefix . rand(100, 999);
+            } while (GenTask::where('code', $randomCode)->exists());
+
+            $task = GenTask::create([
+                'code' => $randomCode,
+                'workID' => $request->workID,
+                'workName' => $request->workName,
+                'workerID' => $request->workerID,
+                'workDate' => $request->workDate,
+                'dateEnd' => $request->dateEnd,
+                'plotID' => $request->plotID,
+                'type' => $request->typeG,
+                'priority' => $request->priority,
+                'description' => $request->description,
+                'workStatus' => 'Đang chờ',
+            ]);
+            // dd($task);
+            $task->plants()->sync($request->plantIDs);
+
+            if ($request->type === 'Khai thác') {
+                // $pickingCode = 'PKT_' . strtoupper(Str::random(6));
+                $picking = Picking::create([
+                    // 'code' => $pickingCode,
+                    'code' => $request->code,
+                    'name' => $request->name,
+                    'type' => 'Khai thác',
+                    'warehouseID' => $request->warehouseID,
+                    'createName' => Auth::user()->name,
+                    'createDate' => $request->createDate,
+                    'desc' => $request->desc,
+                    'active' => $request->active ?? 'Chưa hoàn thành',
+                    'status' => 'Hoạt động',
+                ]);
+
+                if ($request->has('materials')) {
+                    foreach ($request->materials as $material) {
+                        ProductPicking::create([
+                            'pickingID' => $picking->id,
+                            'productID' => $material['productID'],
+                            'quantity' => $material['quantity'],
+                        ]);
+                    }
+                }
+            }
+            ActionHistory::create([
+                'user_id' => Auth::id(),
+                'action_type' => 'create',
+                'model_type' => 'GenTask',
+                'details' => "Đã tạo công việc: " . $request->workName . 'với mã là: ' . $randomCode,
+            ]);
+            session()->flash('message', 'Tạo công việc thành công.');
+            return redirect()->route('works.index');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            dd($e->errors());
         }
-        $taskSlug = Str::slug($request->workID, '_');
-        $taskSlug1 = Str::slug($request->workerID);
-        $prefix = '#' . $taskSlug . '_' . $taskSlug1;
-        do {
-            $randomCode = $prefix . rand(100, 999);
-        } while (GenTask::where('code', $randomCode)->exists());
-
-        $task = GenTask::create([
-            'code' => $randomCode,
-            'workID' => $request->workID,
-            'workName' => $request->workName,
-            'workerID' => $request->workerID,
-            'workDate' => $request->workDate,
-            'dateEnd' => $request->dateEnd,
-            'plotID' => $request->plotID,
-            'type' => $request->type,
-            'priority' => $request->priority,
-            'description' => $request->description,
-            'workStatus' => 'Đang chờ',
-        ]);
-        // dd($task);
-        $task->plants()->sync($request->plantIDs);
-        ActionHistory::create([
-            'user_id' => Auth::id(),
-            'action_type' => 'create',
-            'model_type' => 'GenTask',
-            'details' => "Đã tạo công việc: " . $request->workName . 'với mã là: ' . $randomCode,
-        ]);
-        session()->flash('message', 'Tạo công việc thành công.');
-        return redirect()->route('works.index');
     }
     public function edit($id)
     {

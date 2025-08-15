@@ -3,174 +3,246 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActionHistory;
+use App\Models\DiseasePlant;
+use App\Models\GenTask;
+use App\Models\InventoryStock;
+use App\Models\MaterialProposal;
+use App\Models\Product;
+use App\Models\TaskProductProposal;
+use App\Models\MaterialProposalItem;
+use App\Models\UnitOfMeasure;
+use App\Models\WareHouse;
+use App\Models\Work;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
+use Yajra\DataTables\DataTables;
 
 class MaterialProposalController extends Controller
 {
     public function index(Request $request)
     {
-        // $units = Units::all();
-
-        // $all_farms = Farm::with('unitRelation')->orderBy('id', 'desc')->get();
-        // dd($all_farms);
-        // if ($request->ajax()) {
-        //     return DataTables::of($all_farms)
-        //         ->addColumn('check', function ($row) {
-        //             return '<input class="form-check-input" type="checkbox" id="check-' . $row->id . '" data-id="' . $row->id . '">';
-        //         })
-        //         ->addColumn('stt', function ($row) {
-        //             static $stt = 0;
-        //             $stt++;
-        //             return $stt;
-        //         })
-        //         ->editColumn('farm_code', function ($row) {
-        //             return $row->farm_code;
-        //         })
-        //         ->editColumn('farm_name', function ($row) {
-        //             return '<a href="/farms/edit/' . $row->id . '">' . $row->farm_name . '</a>';
-        //         })
-        //         ->addColumn('unit_name', function ($row) {
-        //             return $row->unitRelation ? $row->unitRelation->unit_name : 'N/A';
-        //         })
-        //         ->editColumn('status', function ($row) {
-        //             $statusClass = $row->status == 'Hoạt động' ? 'success' : 'danger';
-        //             $statusText = $row->status == 'Hoạt động' ? 'Hoạt động' : 'Không hoạt động';
-        //             return '<button class="badge bg-' . $statusClass . ' toggle-status" data-id="' . $row->id . '">' . $statusText . '</button>';
-        //         })
-        //         ->addColumn('action', function ($row) {
-        //             $action = '
-        //                 <div class="d-flex gap-1">
-        //                     <a href="/farms/edit/' . $row->id . '" class="btn btn-sm btn-primary">
-        //                         <i class="fas fa-edit"></i>
-        //                     </a>
-        //                     <a class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal' . $row->id . '">
-        //                         <i class="fas fa-trash-alt"></i>
-        //                     </a>
-        //                 </div>
-        //                 <div class="modal fade" id="deleteModal' . $row->id . '" tabindex="-1" aria-labelledby="deleteModalLabel' . $row->id . '" aria-hidden="true">
-        //                     <div class="modal-dialog">
-        //                         <div class="modal-content">
-        //                             <div class="modal-header">
-        //                                 <h5 class="modal-title" id="deleteModalLabel' . $row->id . '">Xác Nhận Xóa</h5>
-        //                                 <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        //                             </div>
-        //                             <div class="modal-body">
-        //                                 Bạn có chắc chắn có muốn xóa thông tin <span style="color: red;">' . ($row->farm_name ?? 'N/A') . '</span>?
-        //                             </div>
-        //                             <div class="modal-footer">
-        //                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-        //                                 <a href="/farms/delete/' . $row->id . '" class="btn btn-primary">Xóa</a>
-        //                             </div>
-        //                         </div>
-        //                     </div>
-        //                 </div>
-        //             ';
-        //             return $action;
-        //         })
-        //         ->rawColumns(['check', 'stt', 'farm_code', 'farm_name', 'unit_name', 'status', 'action'])
-        //         ->make(true);
-        // }
-        // return view('farms.all_farms', compact('units'));
-        return view('materialproposal.all_materialproposal');
+        $all_materialproposals = MaterialProposal::with('creator')->orderBy('id', 'desc')->get();
+        if ($request->ajax()) {
+            return DataTables::of($all_materialproposals)
+                ->addColumn('check', function ($row) {
+                    return '<input class="form-check-input" type="checkbox" id="check-' . $row->id . '" data-id="' . $row->id . '">';
+                })
+                ->addColumn('stt', function ($row) {
+                    static $stt = 0;
+                    $stt++;
+                    return $stt;
+                })
+                ->editColumn('proposaName', function ($row) {
+                    return $row->proposaName;
+                })
+                ->editColumn('proposalDate', function ($row) {
+                    return $row->proposalDate->format('d/m/Y');
+                })
+                ->addColumn('approvalDate', function ($row) {
+                    return $row->approvalDate->format('d/m/Y');
+                })
+                ->addColumn('created_by', function ($row) {
+                    return $row->creator ? $row->creator->name : 'N/A';
+                })
+                ->editColumn('status', function ($row) {
+                    $statusClass = $row->status == 'Duyệt' ? 'success' : 'danger';
+                    $statusText = $row->status == 'Duyệt' ? 'Duyệt' : 'Chưa duyệt';
+                    return '<button class="badge bg-' . $statusClass . ' toggle-status" data-id="' . $row->id . '">' . $statusText . '</button>';
+                })
+                ->addColumn('action', function ($row) {
+                    $action = '
+                        <div class="d-flex gap-1">
+                            <a href="/edit-materialproposals/' . $row->id . '" class="btn btn-sm btn-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal' . $row->id . '">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </div>
+                        <div class="modal fade" id="deleteModal' . $row->id . '" tabindex="-1" aria-labelledby="deleteModalLabel' . $row->id . '" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteModalLabel' . $row->id . '">Xác Nhận Xóa</h5>
+                                        <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Bạn có chắc chắn có muốn xóa thông tin <span style="color: red;">' . ($row->proposalName ?? 'N/A') . '</span>?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                        <a href="/materialproposals/delete/' . $row->id . '" class="btn btn-primary">Xóa</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ';
+                    return $action;
+                })
+                ->rawColumns(['check', 'stt', 'proposaName', 'proposalDate', 'approvalDate', 'created_by', 'status', 'action'])
+                ->make(true);
+        }
+        return view('Dxcb.all_Cb');
     }
-    public function add()
+    public function add(Request $request)
     {
-        return view('materialproposal.add_materialproposal');
+        $warehouses = WareHouse::where('id', 1)->get();
+        $units = UnitOfMeasure::all();
+        $products = Product::all();
+        $works = Work::all();
+        $diseaseplant = DiseasePlant::all();
+        return view('Dxcb.add_Cb', compact('warehouses', 'units', 'products', 'works', 'diseaseplant'));
     }
     public function save(Request $request)
     {
-        // dd($request->all());
         $request->validate([
-            'farm_code' => 'required',
-            'farm_name' => 'required',
-            'unit_id' => 'required|exists:units,id',
-            'status' => 'nullable',
-        ]);
-        // $existingFarm = Farm::where('farm_name', $request->farm_name)->first();
-        $existingCode = Farm::where('farm_code', $request->farm_code)->first();
+            'proposaName'  => 'required|string|max:255',
+            'proposalDate' => 'nullable',
+            'approvalDate' => 'nullable',
+            'diseaseplantID'  => 'nullable|integer',
+            'status'       => 'nullable|string',
+            'reason'       => 'nullable|string',
 
-        if ($existingCode) {
-            return redirect()->back()->with(['error' => 'Mã nông trường này đã tồn tại!']);
+            'items'               => 'required|array|min:1',
+            'items.*.id'          => 'nullable|integer',
+            'items.*.productID'   => 'required|integer|exists:products,id',
+            'items.*.warehouseID' => 'required|integer|exists:ware_houses,id',
+            'items.*.unitID'      => 'required',
+            'items.*.quantity'    => 'required|numeric|min:0.000001',
+            'items.*.note'        => 'nullable|string',
+        ]);
+        $proposal = MaterialProposal::create([
+            'proposaName' => $request->proposaName,
+            'proposalDate' => $request->proposalDate,
+            'approvalDate' => $request->approvalDate,
+            'diseaseplantID' => $request->diseaseplantID,
+            'status' => $request->status ?? 'Chờ duyệt',
+            'created_by' => Auth::id(),
+            'reason' => $request->reason,
+        ]);
+        foreach ($request->items as $item) {
+            MaterialProposalItem::create([
+                'material_proposal_id' => $proposal->id,
+                'warehouseID' => $item['warehouseID'],
+                'productID' => $item['productID'],
+                'materialQuantity' => $item['quantity'],
+                'unitID' => $item['unit'],
+                'note' => $item['note'],
+                'status' => 'Chờ duyệt',
+            ]);
         }
-        // if ($existingFarm) {
-        //     return redirect()->back()->with(['error' => 'Tên nông trường này đã tồn tại!']);
-        // }
-
-        // $farmNameSlug = Str::slug($request->farm_name, '_');
-        // $prefix = '#' . $farmNameSlug . '_';
-        // do {
-        //     $randomCode = $prefix . rand(100, 999);
-        // } while (Farm::where('farm_code', $randomCode)->exists());
-        Farm::create([
-            'farm_code' => $request->farm_code,
-            'farm_name' => $request->farm_name,
-            'unit_id' => $request->unit_id,
-            'status' => $request->status ?? 'Hoạt động',
-        ]);
         ActionHistory::create([
             'user_id' => Auth::id(),
             'action_type' => 'create',
-            'model_type' => 'Farm',
-            'details' => "Đã tạo nông trường: " . $request->farm_name . " với mã: " . $request->farm_code,
+            'model_type' => 'MaterialProposal',
+            'details' => "Đã tạo đề xuất: " . $request->proposaName,
         ]);
-        session()->flash('message', 'Tạo nông trường thành công.');
-        return redirect()->back();
+        return redirect()->route('materialproposals.index')->with('message', 'Tạo đề xuất thành công');
     }
     public function edit($id)
     {
-        $farms = Farm::find($id);
-        $units = Units::all();
-        return view('farms.edit_farms', compact('farms', 'units'));
+        $warehouses = WareHouse::where('id', 1)->get();
+        $units = UnitOfMeasure::all();
+        $diseaseplants = DiseasePlant::all();
+        $proposal = MaterialProposal::with('creator', 'items')->findOrFail($id);
+        $products = Product::all();
+        $works = Work::all();
+        // dd($proposal);
+        return view('Dxcb.edit_Cb', compact('warehouses', 'units', 'proposal', 'products', 'works', 'diseaseplants'));
     }
     public function update(Request $request, $id)
     {
-        $existingFarm = Farm::where('farm_name', $request->farm_name)->where('id', '!=', $id)->first();
-
-        // if ($existingFarm) {
-        //     return redirect()->back()->with(['error' => 'Tên nông trường này đã tồn tại!']);
-        // }
-
-        $existingFarm = Farm::where(function ($query) use ($request, $id) {
-            $query->where('farm_code', $request->farm_code);
-            // $query->where('farm_name', $request->farm_name)
-            //     ->orWhere('farm_code', $request->farm_code);
-        })->where('id', '!=', $id)->first();
-
-        if ($existingFarm) {
-            // if ($existingFarm->farm_name === $request->farm_name) {
-            //     return redirect()->back()->with(['error' => 'Tên nông trường này đã tồn tại!']);
-            // }
-            if ($existingFarm->farm_code === $request->farm_code) {
-                return redirect()->back()->with(['error' => 'Mã nông trường này đã tồn tại!']);
-            }
-        }
-        $farms = Farm::find($id);
-        if (!$farms) {
-            return redirect()->back()->with('error', 'Nông trường không tồn tại');
-        }
+        // validate
         $request->validate([
-            'farm_name' => 'nullable',
-            'farm_code' => 'nullable',
-            'unit_id' => 'nullable',
+            'proposaName'  => 'required|string|max:255',
+            'proposalDate' => 'nullable',
+            'approvalDate' => 'nullable',
+            'diseaseplantID'  => 'nullable|integer',
+            'status'       => 'nullable|string',
+            'reason'       => 'nullable|string',
+
+            'items'               => 'required|array|min:1',
+            'items.*.id'          => 'nullable|integer',
+            'items.*.productID'   => 'required|integer|exists:products,id',
+            'items.*.warehouseID' => 'required|integer|exists:ware_houses,id',
+            'items.*.unitID'      => 'required',
+            'items.*.quantity'    => 'required|numeric|min:0.000001',
+            'items.*.note'        => 'nullable|string',
         ]);
-        $farms->update([
-            'farm_code' => $request->farm_code,
-            'farm_name' => $request->farm_name,
-            'unit_id' => $request->unit_id,
-            'status' => $request->status,
-        ]);
-        ActionHistory::create([
-            'user_id' => Auth::id(),
-            'action_type' => 'update',
-            'model_type' => 'Farm',
-            'details' => "Đã cập nhật nông trường: " . $farms->farm_name,
-        ]);
-        return redirect()->route('farms.index')->with('message', 'Cập nhật nông trường thành công');
+
+        $exists = MaterialProposal::where('proposaName', $request->proposaName)
+            ->where('id', '!=', $id)
+            ->exists();
+        if ($exists) {
+            return back()->with(['error' => 'Đề xuất này đã tồn tại!'])->withInput();
+        }
+
+        return DB::transaction(function () use ($request, $id) {
+            $proposal = MaterialProposal::lockForUpdate()->find($id);
+            if (!$proposal) {
+                return back()->with('error', 'Đề xuất không tồn tại');
+            }
+
+            $proposal->update([
+                'proposaName'    => $request->proposaName,
+                'proposalDate'   => $request->proposalDate,
+                'approvalDate'   => $request->approvalDate,
+                'diseaseplantID'    => $request->diseaseplantID,
+                'status'         => $request->status ?? $proposal->status,
+                'reason'         => $request->reason,
+            ]);
+
+            $oldIDs = $proposal->items()->pluck('id')->toArray();
+            $newIDs = [];
+
+            foreach ($request->items as $item) {
+                $payload = [
+                    'material_proposal_id'   => $proposal->id,
+                    'productID'        => $item['productID'],
+                    'warehouseID'      => $item['warehouseID'],
+                    'unitID'           => $item['unitID'],
+                    'materialQuantity' => $item['quantity'],
+                    'note'             => $item['note'] ?? null,
+                ];
+                if (!empty($item['id'])) {
+                    $existingItem = MaterialProposalItem::where('id', $item['id'])
+                        ->where('material_proposal_id', $proposal->id)
+                        ->first();
+                    if ($existingItem) {
+                        $existingItem->update($payload);
+                        $newIDs[] = $existingItem->id;
+                    }
+                } else {
+                    $newItem = MaterialProposalItem::create($payload);
+                    $newIDs[] = $newItem->id;
+                }
+            }
+
+            // Xoá dòng không còn trong form
+            $toDelete = array_diff($oldIDs, $newIDs);
+            if (!empty($toDelete)) {
+                MaterialProposalItem::whereIn('id', $toDelete)->delete();
+            }
+
+            // Log
+            ActionHistory::create([
+                'user_id'     => Auth::id(),
+                'action_type' => 'update',
+                'model_type'  => 'Workp',
+                'details'     => "Đã cập nhật đề xuất: " . $proposal->proposaName,
+            ]);
+
+            return redirect()->route('materialproposals.index')->with('message', 'Cập nhật đề xuất thành công');
+        });
     }
+
     public function destroy($id)
     {
-        $farms = Farm::find($id);
-        $farms->delete();
+        $workps = TaskProductProposal::find($id);
+        $workps->delete();
         Session::put('message', 'Xóa thành công.');
         return redirect()->back();
     }
@@ -181,11 +253,11 @@ class MaterialProposalController extends Controller
             'ids.*' => 'integer',
         ]);
 
-        $farms = Farm::whereIn('id', $request->ids)->get();
+        $workps = TaskProductProposal::whereIn('id', $request->ids)->get();
 
-        foreach ($farms as $farm) {
-            $farm->status = ($farm->status === 'Hoạt động') ? 'Không hoạt động' : 'Hoạt động';
-            $farm->save();
+        foreach ($workps as $w) {
+            $w->status = ($w->status === 'Hoạt động') ? 'Không hoạt động' : 'Hoạt động';
+            $w->save();
         }
         return response()->json(['message' => 'Thành Công']);
     }
@@ -195,32 +267,126 @@ class MaterialProposalController extends Controller
             'ids' => 'required|array',
             'ids.*' => 'integer',
         ]);
-        $farmsToDelete = Farm::whereIn('id', $request->ids)->get();
+        $workpsToDelete = TaskProductProposal::whereIn('id', $request->ids)->get();
 
-        Farm::whereIn('id', $request->ids)->delete();
+        TaskProductProposal::whereIn('id', $request->ids)->delete();
 
-        foreach ($farmsToDelete as $farm) {
+        foreach ($workpsToDelete as $w) {
             ActionHistory::create([
                 'user_id' => Auth::id(),  // ID của người thực hiện hành động
                 'action_type' => 'delete',  // Loại hành động "delete"
-                'model_type' => 'Farm',  // Model "Farm"
-                'details' => "Đã xóa nông trường: " . $farm->farm_name . " với mã: " . $farm->farm_code,
+                'model_type' => 'MaterialProposal',  // Model "Workp"
+                'details' => "Đã xóa đề xuất: " . $w->proposaName . " với mã: " . $w->proposaName,
             ]);
         }
         return response()->json([
-            'message' => 'Xóa thành công các nông trường được chọn.',
+            'message' => 'Xóa thành công các đề xuất được chọn.',
             'deleted_ids' => $request->ids
         ]);
     }
+    // public function toggleStatus(Request $request)
+    // {
+    //     $w = TaskProductProposal::find($request->id);
+    //     if ($w) {
+    //         $w->status = $w->status == 'Hoạt động' ? 'Không hoạt động' : 'Hoạt động';
+    //         $w->save();
+    //         return response()->json(['success' => true, 'status' => $w->status]);
+    //     } else {
+    //         return response()->json(['success' => false]);
+    //     }
+    // }
     public function toggleStatus(Request $request)
     {
-        $farm = Farm::find($request->id);
-        if ($farm) {
-            $farm->status = $farm->status == 'Hoạt động' ? 'Không hoạt động' : 'Hoạt động';
-            $farm->save();
-            return response()->json(['success' => true, 'status' => $farm->status]);
-        } else {
-            return response()->json(['success' => false]);
+        $request->validate([
+            'id' => 'required|integer|exists:task_product_proposals,id',
+        ]);
+
+        try {
+            return DB::transaction(function () use ($request) {
+                /** @var \App\Models\TaskProductProposal $proposal */
+                $proposal = TaskProductProposal::lockForUpdate()->find($request->id);
+
+                if (!$proposal) {
+                    return response()->json(['success' => false, 'message' => 'Không tìm thấy đề xuất.'], 404);
+                }
+
+                $current = $proposal->status ?? 'Chờ duyệt';
+                $next = ($current === 'Duyệt') ? 'Chờ duyệt' : 'Duyệt';
+
+                $items = MaterialProposalItem::where('material_proposal_id', $proposal->id)->get();
+
+                if ($next === 'Duyệt') {
+                    $errors = [];
+
+                    foreach ($items as $it) {
+                        $stock = InventoryStock::where('warehouseID', $it->warehouseID)
+                            ->where('productID', $it->productID)
+                            ->where('unitID', $it->unitID)
+                            ->lockForUpdate()
+                            ->first();
+
+                        if (!$stock) {
+                            $errors[] = "Chưa có tồn kho (WH {$it->warehouseID}, SP {$it->productID}, ĐV {$it->unitID}).";
+                            continue;
+                        }
+                        if ($stock->quantity < $it->materialQuantity) {
+                            $errors[] = "Tồn không đủ cho SP {$it->productID} tại kho {$it->warehouseID} (cần {$it->materialQuantity}, còn {$stock->quantity}).";
+                            continue;
+                        }
+                    }
+
+                    if (!empty($errors)) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Không thể duyệt do tồn kho không đủ/không hợp lệ.',
+                            'errors' => $errors
+                        ]);
+                    }
+
+                    foreach ($items as $it) {
+                        $stock = InventoryStock::where('warehouseID', $it->warehouseID)
+                            ->where('productID', $it->productID)
+                            ->where('unitID', $it->unitID)
+                            ->lockForUpdate()
+                            ->first();
+
+                        $stock->quantity = $stock->quantity - $it->materialQuantity;
+                        $stock->save();
+
+                        $it->status = 'Duyệt';
+                        $it->save();
+                    }
+                } else {
+                    foreach ($items as $it) {
+                        $it->status = 'Chờ duyệt';
+                        $it->save();
+                    }
+                }
+
+                $proposal->status = $next;
+                $proposal->save();
+
+                ActionHistory::create([
+                    'user_id' => Auth::id(),
+                    'action_type' => 'update_status',
+                    'model_type' => 'MaterialProposal',
+                    'details' => "Đổi trạng thái đề xuất #{$proposal->id} sang {$next}",
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'status' => $proposal->status,
+                    'message' => $next === 'Duyệt'
+                        ? 'Đã duyệt và trừ tồn kho thành công.'
+                        : 'Đã chuyển về trạng thái Chờ duyệt.'
+                ]);
+            });
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'Có lỗi xảy ra. Vui lòng thử lại.',
+            ], 500);
         }
     }
 }

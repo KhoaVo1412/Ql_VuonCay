@@ -96,15 +96,73 @@ class PWareHouseController extends Controller
         // return view('decomposes.all_decomposes', compact('gardens', 'workers', 'decomposes', 'plots'));
         return view('pwarehouses.all_pwarehouses');
     }
+    // public function toggleActive(Request $request, $id)
+    // {
+    //     $picking = Picking::with('productPickings')->findOrFail($id);
+    //     if ($picking->status !== 'Hoạt động') {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Chỉ phiếu đang Hoạt động mới được phép thay đổi trạng thái.',
+    //         ]);
+    //     }
+    //     if ($picking->active === 'Hoàn thành') {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Phiếu đã được duyệt trước đó. Không thể cập nhật tồn kho.'
+    //         ]);
+    //     }
+
+    //     $isActivating = $picking->active == 'Chưa hoàn thành';
+    //     $picking->active = $isActivating ? 'Hoàn thành' : 'Chưa hoàn thành';
+
+    //     if ($isActivating) {
+    //         foreach ($picking->productPickings as $item) {
+    //             $productID = $item->productID;
+    //             $warehouseID = $picking->warehouseID;
+    //             $quantity = $item->quantity;
+    //             $product = Product::find($productID);
+
+    //             $stock = InventoryStock::firstOrCreate(
+    //                 ['productID' => $productID, 'warehouseID' => $warehouseID, 'unitID' => $product->unitID],
+    //                 ['status' => 'Hoạt động', 'quantity' => 0]
+    //             );
+    //             $stock->status = 'Hoạt động';
+    //             if ($picking->type === 'Nhập') {
+    //                 $stock->quantity += $quantity;
+    //             } elseif ($picking->type === 'Xuất') {
+    //                 if ($stock->quantity < $quantity) {
+    //                     $picking->active = 'Chưa hoàn thành';
+    //                     return response()->json([
+    //                         'success' => false,
+    //                         'message' => "Không đủ tồn kho để xuất sản phẩm: $productID.",
+    //                     ]);
+    //                 }
+    //                 $stock->quantity -= $quantity;
+    //             }
+
+    //             $stock->save();
+    //         }
+    //     }
+
+    //     $picking->save();
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'status' => $picking->active == 'Hoàn thành' ? 'Hoàn thành' : 'Chưa hoàn thành',
+    //         'message' => 'Cập nhật phiếu thành công.',
+    //     ]);
+    // }
     public function toggleActive(Request $request, $id)
     {
         $picking = Picking::with('productPickings')->findOrFail($id);
+
         if ($picking->status !== 'Hoạt động') {
             return response()->json([
                 'success' => false,
                 'message' => 'Chỉ phiếu đang Hoạt động mới được phép thay đổi trạng thái.',
             ]);
         }
+
         if ($picking->active === 'Hoàn thành') {
             return response()->json([
                 'success' => false,
@@ -116,6 +174,8 @@ class PWareHouseController extends Controller
         $picking->active = $isActivating ? 'Hoàn thành' : 'Chưa hoàn thành';
 
         if ($isActivating) {
+            $productionWarehouseId = 2;
+
             foreach ($picking->productPickings as $item) {
                 $productID = $item->productID;
                 $warehouseID = $picking->warehouseID;
@@ -127,6 +187,7 @@ class PWareHouseController extends Controller
                     ['status' => 'Hoạt động', 'quantity' => 0]
                 );
                 $stock->status = 'Hoạt động';
+
                 if ($picking->type === 'Nhập') {
                     $stock->quantity += $quantity;
                 } elseif ($picking->type === 'Xuất') {
@@ -138,6 +199,16 @@ class PWareHouseController extends Controller
                         ]);
                     }
                     $stock->quantity -= $quantity;
+                } elseif ($picking->type === 'Khai thác') {
+                    $stock->quantity += $quantity;
+
+                    $productionStock = InventoryStock::firstOrCreate(
+                        ['productID' => $productID, 'warehouseID' => $productionWarehouseId, 'unitID' => $product->unitID],
+                        ['status' => 'Hoạt động', 'quantity' => 0]
+                    );
+                    $productionStock->status = 'Hoạt động';
+                    $productionStock->quantity += $quantity;
+                    $productionStock->save();
                 }
 
                 $stock->save();
@@ -213,6 +284,7 @@ class PWareHouseController extends Controller
                 'createName' => $data['createName'],
                 'createDate' => $data['createDate'],
                 'desc' => $data['desc'] ?? null,
+                'active' => $request->active ?? 'Chưa hoàn thành',
                 'status' => $request->status ?? 'Hoạt động',
             ]);
 

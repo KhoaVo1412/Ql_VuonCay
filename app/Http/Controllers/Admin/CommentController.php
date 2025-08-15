@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ActionHistory;
 use App\Models\Evaluate;
+use App\Models\GenTask;
 use App\Models\Worker;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 use Yajra\DataTables\DataTables;
 
@@ -79,6 +82,63 @@ class CommentController extends Controller
                 ->make(true);
         }
         return view('comments.all_comments', compact('workers'));
+    }
+    public function store(\Illuminate\Http\Request $request)
+    {
+        $validated = $request->validate([
+            'name'            => 'required|string|max:255',
+            'workerID'        => 'required|exists:workers,id',
+            'deductionPoints' => 'required|integer|min:0',
+            'rating'          => 'required|string|max:255',
+            'note'            => 'nullable|string',
+        ]);
+
+        $start = now()->startOfMonth();
+        $end   = now()->endOfMonth();
+
+        $base = GenTask::where('workerID', $validated['workerID'])
+            ->whereBetween('workDate', [$start, $end]);
+
+        $completedCol = Schema::hasColumn('gen_tasks', 'completed_at') ? 'completed_at' : 'updated_at';
+
+        $validated['countWork']   = (clone $base)->count();
+        $validated['countCofirm'] = (clone $base)->where('workStatus', 'completed')
+            ->whereColumn($completedCol, '<=', 'dateEnd')->count();
+        $validated['countUn']     = (clone $base)->where('workStatus', 'completed')
+            ->whereColumn($completedCol, '>', 'dateEnd')->count();
+
+        Evaluate::create($validated);
+
+        return back()->with('success', 'Lưu đánh giá thành công (số liệu tự động).');
+    }
+    public function taskStats(Worker $worker)
+    {
+        $start = Carbon::now()->startOfMonth();
+        $end   = Carbon::now()->endOfMonth();
+
+        $base = GenTask::where('workerID', $worker->id)
+            ->whereBetween('workDate', [$start, $end]);
+
+        $countWork = (clone $base)->count();
+
+        // Nếu chưa có completed_at, tạm dùng updated_at (khuyến nghị thêm completed_at để chính xác)
+        $completedCol = Schema::hasColumn('gen_tasks', 'completed_at') ? 'completed_at' : 'updated_at';
+
+        $countCofirm = (clone $base)->where('workStatus', 'completed')
+            ->whereColumn($completedCol, '<=', 'dateEnd')
+            ->count();
+
+        $countUn     = (clone $base)->where('workStatus', 'completed')
+            ->whereColumn($completedCol, '>', 'dateEnd')
+            ->count();
+
+        return response()->json([
+            'countWork'   => $countWork,
+            'countCofirm' => $countCofirm,
+            'countUn'     => $countUn,
+            'range'       => [$start->toDateString(), $end->toDateString()],
+            'workerID'    => $worker->id,
+        ]);
     }
 
     public function save(Request $request)

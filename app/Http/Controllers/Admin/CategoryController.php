@@ -141,9 +141,9 @@ class CategoryController extends Controller
 
         $category->update([
             'name' => $request->name,
-            'code' => $request->code,
-            'warehouseID' => $request->warehouse_id,
-            'parentID' => $request->parentID,
+            // 'code' => $request->code,
+            'warehouseID' => $request->warehouseID,
+            // 'parentID' => $request->parentID,
             'status' => $request->status,
         ]);
 

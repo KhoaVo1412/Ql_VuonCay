@@ -136,8 +136,8 @@
                         {{-- <div class="search-box">
                             <input type="text" class="search-input" placeholder="Tìm kiếm...">
                         </div> --}}
-                        <li class="sidebar-item">
-                            <a href="/" class='sidebar-link' onclick="toggleActive(this)">
+                        <li class="sidebar-item one-sub {{request()->is('/*') ? 'active' : ''}}">
+                            <a href="{{ route('admin.dashboard') }}" class='sidebar-link' onclick="toggleActive(this)">
                                 <i class="fa-solid fa-house"></i>
                                 <span>Trang Chủ</span>
                             </a>
@@ -290,7 +290,7 @@
                         @endhasrole
                         {{-- Quản Lý cây bệnh --}}
                         <li class="sidebar-item has-sub {{ request()->is('diseaseplans*') || request()->is('add-diseaseplans*') ||  request()->is('edit-diseaseplans*') ||
-                            request()->is('treatmentslips*') || request()->is('add-treatmentslips') || request()->is('edit-treatmentslips') ||
+                            request()->is('treatmentslips*') || request()->is('add-treatmentslips*') || request()->is('edit-treatmentslips*') ||
                             request()->is('materialproposals*') || request()->is('add-materialproposals') || request()->is('edit-materialproposals') ||
                             request()->is('treatmentslip*') ? 'active' : '' }}">
                             <a href="#" class='sidebar-link {{ request()->is(' diseaseplans*') ||
@@ -315,7 +315,7 @@
                                     <a href="{{ route('treatmentslips.index') }}">Phiếu Trị</a>
                                 </li>
                                 <li
-                                    class="submenu-item d-flex align-items-center ms-3 {{ Route::is('materialproposals.index') || Route::is('materialproposals.add') ? 'active' : '' }}">
+                                    class="submenu-item d-flex align-items-center ms-3 {{ Route::is('materialproposals.index') || Route::is('materialproposals.add') || Route::is('materialproposals.edit') ? 'active' : '' }}">
                                     <i class="fas fa-clipboard-check text-green"></i>
                                     <a href="{{ route('materialproposals.index') }}">Đề Xuất Vật Tư</a>
                                 </li>
@@ -448,13 +448,27 @@
                         </li>
                         @endhasanyrole
                         @hasanyrole('Admin|Cấu Hình Trang Chủ|Cấu Hình Đăng Nhập|Cấu Hình Map')
-                        <li class="sidebar-item">
+                        <li class="sidebar-item one-sub {{ request()->is('setting*') 
+                            || request()->is('check-login*') || request()->is('check-action*') ? 'active' : '' }}">
                             <a href="{{ route('setting.index') }}" class='sidebar-link' onclick="toggleActive(this)">
                                 <i class="fa-solid fa-gear"></i>
                                 <span>Cài đặt</span>
                             </a>
                         </li>
                         @endhasanyrole
+                        <li class="sidebar-item" style="margin-left: 25%;margin-top: 25px;">
+                            <button class="btn btn-sm btn-dx"
+                                style="border-radius: 7px;background-color: rgb(206, 43, 43);">
+                                <a href="#" class="sidebar-link" style="color: #fff !important;padding: 0 0 0 0 !important;"
+                                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                    <i class="fa-solid fa-right-from-bracket" style="color: #fff"></i> <span
+                                        style="margin-left: 0.2rem !important;">Đăng Xuất</span>
+                                </a>
+                            </button>
+                            <form id="logout-form" action="/logout" method="POST" style="display: none;">
+                                @csrf
+                            </form>
+                        </li>
                     </ul>
                 </div>
 
@@ -1224,5 +1238,8 @@ Session::put('error', null);
     });
 });
 </script>
+<link rel="stylesheet" href="https://js.arcgis.com/4.32/esri/themes/light/main.css">
+
+<script src="https://js.arcgis.com/4.32/"></script>
 
 </html>

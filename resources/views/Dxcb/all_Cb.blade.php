@@ -14,7 +14,7 @@
     </div>
 </div>
 
-<!-- workps List -->
+<!-- materialproposals List -->
 <div class="row">
     <div class="col-xl-12">
         <div class="card custom-card">
@@ -79,7 +79,7 @@
             <div class="card-body">
                 {{-- <div style="position: relative;"> --}}
                     {{-- <div class="table-responsive"> --}}
-                        <table id="workps-table" class="table table-bordered text-nowrap w-100">
+                        <table id="materialproposals-table" class="table table-bordered text-nowrap w-100">
                             <div id="buttons-container" class="d-flex justify-content-end gap-3">
                                 <button id="edit-selected-btn" class="btn btn-warning"
                                     style="border-radius: 7px; color: #FFFFFF; display: none">Không/Hoạt
@@ -89,7 +89,8 @@
                                     Xóa
                                 </button>
                                 <button id="add-selected-btn" class="btn btn-success" style="border-radius: 7px;">
-                                    <a href="{{route('workps.add')}}" class="text-white"><i class="fa fa-plus"></i>Tạo
+                                    <a href="{{route('materialproposals.add')}}" class="text-white"><i
+                                            class="fa fa-plus"></i>Tạo
                                         Đề Xuất</a>
                                 </button>
                             </div>
@@ -97,8 +98,8 @@
                                 <tr>
                                     <th></th>
                                     <th>
-                                        <input class="form-check-input check-all" type="checkbox" id="select-all-workps"
-                                            value="" aria-label="...">
+                                        <input class="form-check-input check-all" type="checkbox"
+                                            id="select-all-materialproposals" value="" aria-label="...">
                                     </th>
                                     {{-- <th scope="col">STT</th> --}}
                                     <th scope="col">Tên Phiếu Vật Tư</th>
@@ -172,7 +173,7 @@
 <script>
     $(document).ready(function() {
             var selectedRows = new Set();
-            var dataTable = $('#workps-table').DataTable({
+            var dataTable = $('#materialproposals-table').DataTable({
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
                     "emptyTable": "Không có dữ liệu",
@@ -206,7 +207,7 @@
                     }
                 },
                 ajax: {
-                    url: '{{ route('workps.index') }}',
+                    url: '{{ route('materialproposals.index') }}',
                     type: 'GET'
                 },
                 columns: [
@@ -252,9 +253,9 @@
                     $(row).attr('data-id', data.id);
                 }
             });
-            $('#select-all-workps').on('change', function() {
+            $('#select-all-materialproposals').on('change', function() {
                 var checked = $(this).prop('checked');
-                $('#workps-table tbody .form-check-input').each(function() {
+                $('#materialproposals-table tbody .form-check-input').each(function() {
                     var farmId = $(this).data('id');
                     if (checked) {
                         selectedRows.add(farmId);
@@ -267,7 +268,7 @@
 
                 console.log([...selectedRows]);
             });
-            $('#workps-table tbody').on('change', '.form-check-input', function() {
+            $('#materialproposals-table tbody').on('change', '.form-check-input', function() {
                 var farmId = $(this).data('id');
                 toggleButtons();
 
@@ -279,8 +280,8 @@
                 console.log([...selectedRows]);
             });
 
-            $('#workps-table').on('draw.dt', function() {
-                $('#workps-table tbody .form-check-input').each(function() {
+            $('#materialproposals-table').on('draw.dt', function() {
+                $('#materialproposals-table tbody .form-check-input').each(function() {
                     var farmId = $(this).data('id');
                     if (selectedRows.has(farmId)) {
                         $(this).prop('checked', true);
@@ -291,7 +292,7 @@
                 $('#confirmModal').modal('show');
                 $('#confirmUpdateBtn').on('click', function() {
                     $.ajax({
-                        url: '/workps/edit-multiple',
+                        url: '/materialproposals/edit-multiple',
                         type: 'POST',
                         data: {
                             ids: [...selectedRows], 
@@ -330,7 +331,7 @@
                 $('#deleteModal').modal('show');
                 $('#confirmDeleteBtn').on('click', function() {
                     $.ajax({
-                        url: '/workps/delete-multiple',
+                        url: '/materialproposals/delete-multiple',
                         type: 'POST',
                         data: {
                             ids: [...selectedRows]
@@ -372,7 +373,7 @@
             });
 
             // function toggleButtons() {
-            //     var selectedRows = $('#workps-table tbody .form-check-input:checked');
+            //     var selectedRows = $('#materialproposals-table tbody .form-check-input:checked');
 
             //     if (selectedRows.length > 0) {
             //         $('#edit-selected-btn').show();
@@ -384,7 +385,7 @@
             // }
 
             function toggleButtons() {
-                var selected = $('#workps-table tbody .form-check-input:checked').length;
+                var selected = $('#materialproposals-table tbody .form-check-input:checked').length;
                 // if (selected > 0) {
                 //     $('#buttons-container').css('visibility', 'visible');
                 // } else {
@@ -427,7 +428,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '{{ route('workps.status') }}',
+                        url: '{{ route('materialproposals.status') }}',
                         type: 'POST',
                         data: {
                             _token: '{{ csrf_token() }}',

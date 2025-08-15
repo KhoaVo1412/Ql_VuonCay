@@ -47,17 +47,21 @@
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label class="form-label">Tên Công Việc</label>
-                                        <input type="text" name="workName" class="form-control" required>
+                                        <input type="text" name="workName" value="{{old('workName')}}"
+                                            class="form-control" required>
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Loại Công Việc</label>
-                                        <select name="workID" class="form-select" required>
+                                        <select name="workID" id="workTypeSelect" class="form-select" required>
                                             <option value="">Chọn loại công việc</option>
                                             @foreach($works as $work)
-                                            <option value="{{ $work->id }}">
-                                                {{ $work->workType }}</option>
+                                            <option value="{{ $work->id }}" data-type="{{ $work->workType }}" {{
+                                                old('workID')==$work->id ? 'selected' : '' }}>
+                                                {{ $work->workType }}
+                                            </option>
                                             @endforeach
                                         </select>
+
                                     </div>
                                     {{-- <div class="form-group">
                                         <label class="form-label">Tên Việc</label>
@@ -76,8 +80,12 @@
                                     <div class="form-group">
                                         <label class="form-label">Người phụ trách</label>
                                         <select name="workerID" class="form-select" required>
+                                            <option value="">Chọn người phụ trách</option>
                                             @foreach($workers as $worker)
-                                            <option value="{{ $worker->id }}">{{ $worker->name }}</option>
+                                            <option value="{{ $worker->id }}" {{ old('workerID')==$worker->id ?
+                                                'selected' : '' }}>
+                                                {{ $worker->name }}
+                                            </option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -86,11 +94,13 @@
 
                                     <div class="form-group">
                                         <label class="form-label">Ngày bắt đầu</label>
-                                        <input type="date" name="workDate" class="form-control" required>
+                                        <input type="date" name="workDate" value="{{ old('workDate') }}"
+                                            class="form-control" required>
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Ngày Kết Thúc</label>
-                                        <input type="date" name="dateEnd" class="form-control" required>
+                                        <input type="date" name="dateEnd" value="{{ old('dateEnd') }}"
+                                            class="form-control" required>
                                     </div>
                                 </div>
                                 <div class="form-row">
@@ -99,7 +109,10 @@
                                         <select name="plotID" id="plotID" class="form-select" required>
                                             <option value="">-- Chọn lô --</option>
                                             @foreach ($plots as $plot)
-                                            <option value="{{ $plot->id }}">{{ $plot->plotName }}</option>
+                                            <option value="{{ $plot->id }}" {{ old('plotID')==$plot->id ? 'selected' :
+                                                '' }}>
+                                                {{ $plot->plotName }}
+                                            </option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -112,18 +125,24 @@
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Đề Xuất Vật Tư</label>
-                                        <select name="type" class="form-select" required>
-                                            <option value="1">Đề Xuất Vật Tư</option>
-                                            <option value="0">Không Cần Vật Tư</option>
+                                        <select name="typeG" class="form-select" required>
+                                            <option value="1">Đề Xuất Vật Tư
+                                            </option>
+                                            <option value="0">Không Cần Vật Tư
+                                            </option>
                                         </select>
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label">Mức độ ưu tiên</label>
                                         <select name="priority" class="form-select" required>
-                                            <option value="Thấp">Thấp</option>
-                                            <option value="Trung bình">Trung bình</option>
-                                            <option value="Cao">Cao</option>
-                                            <option value="Khẩn cấp">Khẩn cấp</option>
+                                            <option value="Thấp" {{ old('priority')=='Thấp' ? 'selected' : '' }}>Thấp
+                                            </option>
+                                            <option value="Trung bình" {{ old('priority')=='Trung bình' ? 'selected'
+                                                : '' }}>Trung bình</option>
+                                            <option value="Cao" {{ old('priority')=='Cao' ? 'selected' : '' }}>Cao
+                                            </option>
+                                            <option value="Khẩn cấp" {{ old('priority')=='Khẩn cấp' ? 'selected' : ''
+                                                }}>Khẩn cấp</option>
                                         </select>
                                     </div>
                                 </div>
@@ -134,6 +153,36 @@
                                         placeholder="Ghi mô tả công việc"></textarea>
                                 </div>
                             </div>
+                            <div id="materialInputContainer" style="display:none;">
+                                @include('pwarehouses.form_materials')
+                            </div>
+
+                            <script>
+                                document.getElementById('workTypeSelect').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const workType = selectedOption.getAttribute('data-type');
+
+        if (workType === 'Khai thác') {
+            document.getElementById('materialInputContainer').style.display = 'block';
+        } else {
+            document.getElementById('materialInputContainer').style.display = 'none';
+        }
+    });
+
+    // Khi load trang, kiểm tra lần đầu
+    window.addEventListener('DOMContentLoaded', function() {
+        const select = document.getElementById('workTypeSelect');
+        const selectedOption = select.options[select.selectedIndex];
+        const workType = selectedOption ? selectedOption.getAttribute('data-type') : null;
+        const container = document.getElementById('materialInputContainer');
+        if (workType === 'Khai thác') {
+            container.style.display = 'block';
+        } else {
+            container.style.display = 'none';
+        }
+    });
+                            </script>
+
                             <div class="col-md-12 mt-3">
                                 <button type="submit" class="btn btn-success">Lưu Thông Tin</button>
                             </div>

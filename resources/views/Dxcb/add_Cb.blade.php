@@ -9,7 +9,7 @@
             <nav>
                 <ol class="breadcrumb mb-0 padding">
                     <li class="breadcrumb-item"><a href="javascript:void(0);">Trang Chủ</a></li>
-                    <li class="breadcrumb-item"><a href="{{route('workps.index')}}">Danh Sách</a></li>
+                    <li class="breadcrumb-item"><a href="{{route('materialproposals.index')}}">Danh Sách</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Thêm Đề Xuất</li>
                 </ol>
             </nav>
@@ -38,157 +38,161 @@
     @endif
     <div class="row">
         <div class="col-xl-12">
-            <form id="form-workers" action="{{route('workps.save')}}" method="POST" enctype="multipart/form-data">
+            <form id="form-workers" action="{{route('materialproposals.save')}}" method="POST"
+                enctype="multipart/form-data">
                 {{ csrf_field() }}
                 <div class="card custom-card">
                     <div class="card-body">
                         <div id="batch-container">
                             <div class="row gy-2">
-                                <div class="container">
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label class="form-label">Mã Công Việc</label>
-                                            <select type="text" class="form-input" name="taskID" id="taskID" required>
-                                                <option class="form-control">Chọn mã công việc</option>
-                                                @foreach($gentasks as $task)
-                                                <option value="{{ $task->id }}">{{ $task->code }} - {{ $task->name }}
-                                                </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label">Tên Phiếu</label>
-                                            <input type="text" class="form-input" name="proposaName"
-                                                placeholder="Tên phiếu" value="{{old('proposaName')}}" required>
-                                        </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Phiếu Cây Bệnh</label>
+                                        <select type="text" class="form-input" name="diseaseplantID" id="diseaseplantID"
+                                            required>
+                                            <option class="form-control">Chọn phiếu</option>
+                                            @foreach($diseaseplant as $d)
+                                            <option value="{{ $d->id }}">{{ $d->code }} - {{ $d->name }}
+                                            </option>
+                                            @endforeach
+                                        </select>
                                     </div>
-                                    <div class="form-row">
-                                        <div class="form-group">
-                                            <label class="form-label">Ngày Gửi</label>
-                                            <input type="date" class="form-input" id="sendDate" name="proposalDate"
-                                                value="{{old('proposalDate')}}" required>
-                                        </div>
-                                        <div class="form-group">
-                                            <label class="form-label">Ngày Nhận</label>
-                                            <input type="date" class="form-input" id="receiveDate" name="approvalDate"
-                                                value="{{old('approvalDate')}}" required>
+                                    <div class="form-group">
+                                        <label class="form-label">Tên Phiếu</label>
+                                        <input type="text" class="form-input" name="proposaName" placeholder="Tên phiếu"
+                                            value="{{old('proposaName')}}" required>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Ngày Gửi</label>
+                                        <input type="date" class="form-input" id="sendDate" name="proposalDate"
+                                            value="{{old('proposalDate')}}" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Ngày Nhận</label>
+                                        <input type="date" class="form-input" id="receiveDate" name="approvalDate"
+                                            value="{{old('approvalDate')}}" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Content Section -->
+                            <div class="content-section">
+                                <div class="material-section">
+                                    <div class="section-header">
+                                        <div class="section-title form-label"
+                                            style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">Đề
+                                            Xuất Vật Tư</div>
+                                        {{-- <button type="button" class="btn-add-row" onclick="addMaterialRow()"
+                                            title="Thêm dòng mới">
+                                            <i class="fas fa-plus"></i>
+                                        </button> --}}
+                                    </div>
+
+                                    <div class="material-table-container">
+                                        <table class="material-table" id="materialTable">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 20%;">Kho</th>
+                                                    <th style="width: 20%;">Tên vật tư</th>
+                                                    <th style="width: 10%;">Số lượng</th>
+                                                    <th style="width: 15%;">Đơn vị</th>
+                                                    {{-- <th style="width: 20%;">Người đề xuất</th> --}}
+                                                    <th style="width: 20%;">Ghi chú</th>
+                                                    <th style="width: 10%;">Thao Tác</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="materialTableBody">
+                                                <!-- Editable rows -->
+                                                <tr>
+                                                    <td class="editable-cell">
+                                                        <select name="items[0][warehouseID]" class="editable-select">
+                                                            <option value="">Chọn kho</option>
+                                                            @foreach($warehouses as $w)
+                                                            <option value="{{ $w->id }}">{{ $w->name
+                                                                }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </td>
+                                                    <td class="editable-cell">
+                                                        <select name="items[0][productID]" class="editable-select">
+                                                            <option value="">Chọn vật tư</option>
+                                                            @foreach($products as $product)
+                                                            <option value="{{ $product->id }}">{{ $product->name
+                                                                }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </td>
+                                                    <td class="editable-cell">
+                                                        <input type="text" name="items[0][quantity]"
+                                                            class="editable-input" placeholder="Số lượng">
+                                                    </td>
+                                                    <td class="editable-cell">
+                                                        <select name="items[0][unit]" class="editable-select">
+                                                            <option value="">Chọn đơn vị</option>
+                                                            @foreach($units as $unit)
+                                                            <option value="{{ $unit->id }}">{{ $unit->name
+                                                                }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </td>
+                                                    {{-- <td class="editable-cell">
+                                                        <input type="hidden" name="items[0][created_by]"
+                                                            value="{{ auth()->id() }}">
+
+                                                        <input type="text" name="items[0][proposer_name]"
+                                                            class="editable-input" value="{{ auth()->user()->name }}"
+                                                            readonly>
+                                                    </td> --}}
+                                                    <td class="editable-cell">
+                                                        <input type="text" name="items[0][note]" class="editable-input"
+                                                            placeholder="Ghi chú">
+                                                    </td>
+                                                    <td class="d-flex grap-2">
+                                                        <button type="button" class="btn btn-success btn-sm btn-add-row"
+                                                            onclick="addMaterialRow()" title="Thêm dòng mới">
+                                                            <i class="fas fa-plus"></i>
+                                                        </button>
+                                                        <button type="button"
+                                                            class="btn btn-danger btn-sm btn-remove-row"
+                                                            onclick="removeMaterialRow(this)">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+
+                                        <!-- Empty state (hidden by default) -->
+                                        <div class="empty-table" id="emptyState" style="display: none;">
+                                            <i class="fas fa-inbox" style="margin-right: 8px;"></i>
+                                            Chưa có vật tư nào được đề xuất
                                         </div>
                                     </div>
                                 </div>
-                                <!-- Content Section -->
-                                <div class="content-section">
-                                    <div class="material-section">
-                                        <div class="section-header">
-                                            <div class="section-title form-label"
-                                                style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">Đề
-                                                Xuất Vật Tư</div>
-                                            <button type="button" class="btn-add-row" onclick="addMaterialRow()"
-                                                title="Thêm dòng mới">
-                                                <i class="fas fa-plus"></i>
-                                            </button>
-                                        </div>
 
-                                        <div class="material-table-container">
-                                            <table class="material-table" id="materialTable">
-                                                <thead>
-                                                    <tr>
-                                                        <th style="width: 15%;">Kho</th>
-                                                        <th style="width: 15%;">Tên vật tư</th>
-                                                        <th style="width: 10%;">Số lượng</th>
-                                                        <th style="width: 15%;">Đơn vị</th>
-                                                        <th style="width: 20%;">Người đề xuất</th>
-                                                        <th style="width: 15%;">Ghi chú</th>
-                                                        <th style="width: 5%;"></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="materialTableBody">
-                                                    <!-- Editable rows -->
-                                                    <tr>
-                                                        <td class="editable-cell">
-                                                            <select name="items[0][warehouseID]"
-                                                                class="editable-select">
-                                                                <option value="">Chọn kho</option>
-                                                                @foreach($warehouses as $w)
-                                                                <option value="{{ $w->id }}">{{ $w->name
-                                                                    }}</option>
-                                                                @endforeach
-                                                            </select>
-                                                        </td>
-                                                        <td class="editable-cell">
-                                                            <select name="items[0][productID]" class="editable-select">
-                                                                <option value="">Chọn vật tư</option>
-                                                                @foreach($products as $product)
-                                                                <option value="{{ $product->id }}">{{ $product->name
-                                                                    }}</option>
-                                                                @endforeach
-                                                            </select>
-                                                        </td>
-                                                        <td class="editable-cell">
-                                                            <input type="text" name="items[0][quantity]"
-                                                                class="editable-input" placeholder="Số lượng">
-                                                        </td>
-                                                        <td class="editable-cell">
-                                                            <select name="items[0][unit]" class="editable-select">
-                                                                <option value="">Chọn đơn vị</option>
-                                                                @foreach($units as $unit)
-                                                                <option value="{{ $unit->id }}">{{ $unit->name
-                                                                    }}</option>
-                                                                @endforeach
-                                                            </select>
-                                                        </td>
-                                                        <td class="editable-cell">
-                                                            <input type="hidden" name="items[0][created_by]"
-                                                                value="{{ auth()->id() }}">
+                                <!-- Reason Section -->
+                                {{-- <div class="reason-section">
+                                    <div class="section-title">Lý do từ chối</div>
+                                    <textarea class="reason-textarea" name="reason"
+                                        placeholder="Nhập lý do từ chối đề xuất vật tư này..."></textarea>
+                                </div> --}}
 
-                                                            <input type="text" name="items[0][proposer_name]"
-                                                                class="editable-input"
-                                                                value="{{ auth()->user()->name }}" readonly>
-                                                        </td>
-                                                        <td class="editable-cell">
-                                                            <input type="text" name="items[0][note]"
-                                                                class="editable-input" placeholder="Ghi chú">
-                                                        </td>
-                                                        <td style="text-align: center;">
-                                                            <button type="button" class="btn-remove-row"
-                                                                onclick="removeMaterialRow(this)">
-                                                                <i class="fas fa-trash"></i>
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                            </table>
-
-                                            <!-- Empty state (hidden by default) -->
-                                            <div class="empty-table" id="emptyState" style="display: none;">
-                                                <i class="fas fa-inbox" style="margin-right: 8px;"></i>
-                                                Chưa có vật tư nào được đề xuất
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Reason Section -->
-                                    {{-- <div class="reason-section">
-                                        <div class="section-title">Lý do từ chối</div>
-                                        <textarea class="reason-textarea" name="reason"
-                                            placeholder="Nhập lý do từ chối đề xuất vật tư này..."></textarea>
-                                    </div> --}}
-
-                                    <!-- Action Buttons -->
-                                    <div class="action-buttons">
-                                        <button class="btnnn btn-approve" type="submit">
-                                            <i class="fas fa-check"></i>
-                                            Tạo Đề Xuất
-                                        </button>
-                                        {{-- <button class="btnnn btn-approve" onclick="approveRequest()"
-                                            id="approveBtn">
-                                            <i class="fas fa-check"></i>
-                                            Duyệt
-                                        </button> --}}
-                                        {{-- <button class="btnnn btn-reject" onclick="rejectRequest()" id="rejectBtn">
-                                            <i class="fas fa-times"></i>
-                                            Từ chối
-                                        </button> --}}
-                                    </div>
+                                <!-- Action Buttons -->
+                                <div class="action-buttons">
+                                    <button class="btnnn btn-approve" type="submit">
+                                        <i class="fas fa-check"></i>
+                                        Tạo Đề Xuất
+                                    </button>
+                                    {{-- <button class="btnnn btn-approve" onclick="approveRequest()" id="approveBtn">
+                                        <i class="fas fa-check"></i>
+                                        Duyệt
+                                    </button> --}}
+                                    {{-- <button class="btnnn btn-reject" onclick="rejectRequest()" id="rejectBtn">
+                                        <i class="fas fa-times"></i>
+                                        Từ chối
+                                    </button> --}}
                                 </div>
                             </div>
                         </div>
@@ -237,16 +241,16 @@
                                                     @endforeach
                                                 </select>
                                             </td>
-                                            <td class="editable-cell">
-                                                <input type="hidden" name="items[${rowIndex}][created_by]" value="{{ auth()->id() }}">
-                                                <input type="text" name="items[${rowIndex}][proposer_name]" class="editable-input"
-                                                    value="{{ auth()->user()->name }}" readonly>
-                                            </td>
+                                           
                                             <td class="editable-cell">
                                                 <input type="text" name="items[${rowIndex}][note]" class="editable-input" placeholder="Ghi chú">
                                             </td>
-                                            <td style="text-align: center;">
-                                                <button type="button" class="btn-remove-row" onclick="removeMaterialRow(this)">
+                                            <td class="d-flex grap-2">
+                                                        <button type="button" class="btn btn-success btn-sm btn-add-row"
+                                                            onclick="addMaterialRow()" title="Thêm dòng mới">
+                                                            <i class="fas fa-plus"></i>
+                                                        </button>
+                                                <button type="button" class="btn btn-danger btn-sm btn-remove-row" onclick="removeMaterialRow(this)">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </td>
@@ -748,7 +752,7 @@
     }
 
     /* Add Row Button */
-    .btn-add-row {
+    /* .btn-add-row {
         background: #10b981;
         color: white;
         border: none;
@@ -762,7 +766,7 @@
         justify-content: center;
         box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
         font-size: 0.9rem;
-    }
+    } */
 
     .btn-add-row:hover {
         background: #059669;
@@ -815,7 +819,7 @@
     }
 
     /* Remove row button */
-    .btn-remove-row {
+    /* .btn-remove-row {
         background: #ef4444;
         color: white;
         border: none;
@@ -824,7 +828,7 @@
         cursor: pointer;
         font-size: 0.75rem;
         transition: all 0.2s ease;
-    }
+    } */
 
     .btn-remove-row:hover {
         background: #dc2626;

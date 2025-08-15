@@ -14,8 +14,11 @@ class TaskProductProposalProduct extends Model
         'productID',
         'taskproposalID',
         'sessionID',
+        'warehouseID',
+        'unitID',
         'materialQuantity',
         'note',
+        'status',
     ];
 
     public function product()

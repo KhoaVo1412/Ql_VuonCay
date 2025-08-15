@@ -13,6 +13,369 @@
         </div>
     </div>
 </div>
+<style>
+    #map-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #map-modal .modal-content {
+        position: relative;
+        background: #fff;
+        padding: 10px;
+        border-radius: 8px;
+        max-width: 90%;
+        max-height: 90%;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 8px;
+        top: -15px;
+        right: 10px;
+        font-size: 40px;
+        color: #ff0000;
+        z-index: 10000;
+        font-weight: bold;
+    }
+
+    .close-btn:hover {
+        color: red;
+    }
+</style>
+
+<div id="map-modal" style="display:none;">
+    <div class="modal-content">
+        <span class="close-btn" onclick="hideMapModal()">&times;</span>
+        <div id="viewMap" style="width:100%; height:500px;"></div>
+    </div>
+</div>
+
+<div id="loading-message" style="display:none;">Loading...</div>
+<script>
+    function showMapModal() {
+        document.getElementById('map-modal').style.display = 'flex';
+    }
+
+    function hideMapModal() {
+        document.getElementById('map-modal').style.display = 'none';
+    }
+
+    document.getElementById('map-modal').addEventListener('click', function(e) {
+        if (e.target.id === 'map-modal') {
+            hideMapModal();
+        }
+    });
+    $(document).on('keydown', function (e) {
+        if (e.key === 'Escape') {
+          try { view && view.destroy(); } catch(e){}
+          $('#map-modal').fadeOut();
+        }
+    });
+</script>
+<script>
+    $(document).on('click', '.view-map', function () {
+    const id_plot = $(this).data('id_plot');
+    const allPlots = @json($all_plots);
+    const plot = allPlots.find(p => p.id === id_plot);
+    if (!plot) { alert("Không tìm thấy plot!"); return; }
+
+    $('#loading-message').fadeIn();
+    $('#map-modal').fadeIn();
+
+    // Xóa view cũ (nếu có) để tránh rò bộ nhớ khi mở nhiều lần
+    if (window.__arcgisView) { try { window.__arcgisView.destroy(); } catch(e){} }
+    const containerEl = document.getElementById('viewMap');
+    if (containerEl) containerEl.innerHTML = "";
+
+    require([
+      "esri/WebMap",
+      "esri/views/MapView",
+      "esri/config",
+      "esri/layers/GraphicsLayer",
+      "esri/Graphic",
+      "esri/geometry/Polygon",
+      "esri/symbols/TextSymbol",
+      "esri/geometry/Point",
+      "esri/geometry/geometryEngine",
+      "esri/geometry/support/webMercatorUtils",
+      "esri/geometry/projection"
+    ], function (
+      WebMap, MapView, esriConfig, GraphicsLayer, Graphic, Polygon, TextSymbol, Point,
+      geometryEngine, webMercatorUtils, projection
+    ) {
+
+        esriConfig.apiKey = 'AAPTxy8BH1VEsoebNVZXo8HurOadC8u-UIHoZRb-lXA-3rkDu_-XvNmTAkDyub3lRUmC8opcXCyL0s2ZXRCaabr-0W_mTQODDQjoxFA7bzeneym8cc7T6retjmqiAgVD52KNfFwO9aDBzBNwGpXLnZxmDumfBBo5NSsT3CPe8mcayFVA4-iaFGgByWubANLOFhj3AgrYBaWsfyCBJSz76VDY6OFtZElcdmA7m9bmHkvGfOo.AT1_x0a0pTBz';
+      const map = new WebMap({ portalItem: { id: "5ec8ed782e5146d1909f76e14e293059" } });
+      const view = new MapView({
+        container: "viewMap",
+        map,
+        zoom: 12,
+        center: [107.3877, 10.6695]
+      });
+      window.__arcgisView = view; // lưu để lần sau có thể destroy
+
+      // Layers
+      const otherPlotsLayer = new GraphicsLayer({ id: "otherPlotsLayer" });
+      const highlightLayer = new GraphicsLayer({ id: "highlightLayer" });
+      const treeLayer      = new GraphicsLayer({ id: "treeLayer" });
+      map.addMany([otherPlotsLayer, highlightLayer, treeLayer]);
+
+      // === Helpers: chuyển SR & tạo lưới điểm trong polygon ===
+      function projectToWebMercator(geom) {
+        if (geom.spatialReference && geom.spatialReference.isWGS84) {
+          return webMercatorUtils.geographicToWebMercator(geom);
+        }
+        if (geom.spatialReference && geom.spatialReference.isWebMercator) {
+          return geom;
+        }
+        return projection.project(geom, { wkid: 3857 });
+      }
+
+      function generateGridPointsInPolygon(polygonGeom, spacingMeters = 120, jitterRatio = 0.12) {
+        return projection.load().then(function () {
+          const polyWM = projectToWebMercator(polygonGeom);
+          const extent = polyWM.extent;
+          const step = spacingMeters; // mét trong WebMercator
+          const ptsWM = [];
+
+          for (let y = extent.ymin + step / 2; y <= extent.ymax; y += step) {
+            for (let x = extent.xmin + step / 2; x <= extent.xmax; x += step) {
+              const jx = jitterRatio ? (Math.random() - 0.5) * step * jitterRatio * 2 : 0;
+              const jy = jitterRatio ? (Math.random() - 0.5) * step * jitterRatio * 2 : 0;
+              const pt = new Point({ x: x + jx, y: y + jy, spatialReference: polyWM.spatialReference });
+              if (geometryEngine.contains(polyWM, pt)) ptsWM.push(pt);
+            }
+          }
+
+          // Trả về đúng SR ban đầu
+          if (polygonGeom.spatialReference && polygonGeom.spatialReference.isWGS84) {
+            return ptsWM.map(p => webMercatorUtils.webMercatorToGeographic(p));
+          }
+          if (polygonGeom.spatialReference && polygonGeom.spatialReference.isWebMercator) {
+            return ptsWM;
+          }
+          return ptsWM.map(p => projection.project(p, polygonGeom.spatialReference));
+        });
+      }
+      // === Hết helpers ===
+
+      view.when(async () => {
+        otherPlotsLayer.removeAll();
+        highlightLayer.removeAll();
+        treeLayer.removeAll();
+
+        // Parse GeoJSON lô đang chọn
+        let geojson;
+        try { geojson = JSON.parse(plot.mapJs); }
+        catch (err) { console.error("Lỗi parse GeoJSON:", err); $('#loading-message').fadeOut(); return; }
+
+        // Vẽ tất cả lô khác mờ hơn
+        for (const p of allPlots) {
+          if (!p.mapJs || p.id === plot.id) continue;
+          let data;
+          try { data = JSON.parse(p.mapJs); } catch { continue; }
+          if (data.type !== "FeatureCollection" || !data.features.length) continue;
+
+          const f = data.features[0];
+          let geom;
+          if (f.geometry.type === "Polygon") {
+            geom = new Polygon({ rings: f.geometry.coordinates });
+          } else if (f.geometry.type === "MultiPolygon") {
+            geom = new Polygon({ rings: f.geometry.coordinates.flat() });
+          } else continue;
+
+          otherPlotsLayer.add(new Graphic({
+            geometry: geom,
+            symbol: {
+              type: "simple-fill",
+              color: [255, 255, 255, 0.08],
+              outline: { color: [120, 120, 120, 0.8], width: 1 }
+            }
+          }));
+        }
+
+        // Vẽ lô đang chọn + đi tới
+        if (geojson.type === "FeatureCollection" && geojson.features.length > 0) {
+          const feature = geojson.features[0];
+          let polygonGeometry;
+          if (feature.geometry.type === "Polygon") {
+            polygonGeometry = new Polygon({ rings: feature.geometry.coordinates });
+          } else if (feature.geometry.type === "MultiPolygon") {
+            polygonGeometry = new Polygon({ rings: feature.geometry.coordinates.flat() });
+          } else {
+            alert("GeoJSON không phải Polygon/MultiPolygon"); $('#loading-message').fadeOut(); return;
+          }
+
+          // Nền đỏ mờ + viền trắng dày cho nổi bật
+          highlightLayer.add(new Graphic({
+            geometry: polygonGeometry,
+            symbol: {
+              type: "simple-fill",
+              color: [255, 0, 0, 0.3],
+              outline: { color: [255, 255, 255, 1], width: 3 }
+            }
+          }));
+
+          await view.goTo({ target: polygonGeometry, zoom: 16 }, { duration: 400 });
+
+          const TREE_SPACING_M = 60;  
+          const JITTER = 0.12;     
+          const points = await generateGridPointsInPolygon(polygonGeometry, TREE_SPACING_M, JITTER);
+
+          for (const pt of points) {
+            treeLayer.add(new Graphic({
+              geometry: pt,
+              symbol: {
+                type: "simple-marker",
+                style: "circle",
+                size: 6,
+                color: [0, 128, 0, 1],                  // xanh lá
+                outline: { color: [255, 255, 255, 1], width: 0.5 }
+              }
+              // Muốn icon PNG:
+              // symbol: { type: "picture-marker", url: "/images/tree-icon.png", width: "16px", height: "16px" }
+            }));
+          }
+
+          // Ẩn cây khi zoom quá xa để đỡ rối/nặng
+          view.watch("scale", s => { treeLayer.visible = s < 30000; });
+        } else {
+          alert("Plot chưa có dữ liệu GeoJSON hợp lệ!");
+        }
+
+        $('#loading-message').fadeOut();
+      });
+    });
+  });
+</script>
+
+{{-- <script>
+    $(document).on('click', '.view-map', function () {
+        const id_plot = $(this).data('id_plot');
+        console.log("Click id_plot:", id_plot);
+        const allPlots = @json($all_plots);
+        const plot = allPlots.find(p => p.id === id_plot);
+
+        if (!plot) {
+            alert("Không tìm thấy plot!");
+            return;
+        }
+
+        $('#loading-message').fadeIn();
+        $('#map-modal').fadeIn();
+        if (window.__arcgisView) { try { window.__arcgisView.destroy(); } catch(e){} }
+        const containerEl = document.getElementById('viewMap');
+        if (containerEl) containerEl.innerHTML = "";
+        require([
+            "esri/WebMap",
+            "esri/views/MapView",
+            "esri/config",
+            "esri/layers/GraphicsLayer",
+            "esri/Graphic",
+            "esri/geometry/Polygon",
+            "esri/symbols/TextSymbol",
+            "esri/geometry/Point",
+            "esri/geometry/projection" 
+        ], function(WebMap, MapView, esriConfig, GraphicsLayer, Graphic, Polygon, TextSymbol, Point) {
+            esriConfig.apiKey = 'AAPTxy8BH1VEsoebNVZXo8HurOadC8u-UIHoZRb-lXA-3rkDu_-XvNmTAkDyub3lRUmC8opcXCyL0s2ZXRCaabr-0W_mTQODDQjoxFA7bzeneym8cc7T6retjmqiAgVD52KNfFwO9aDBzBNwGpXLnZxmDumfBBo5NSsT3CPe8mcayFVA4-iaFGgByWubANLOFhj3AgrYBaWsfyCBJSz76VDY6OFtZElcdmA7m9bmHkvGfOo.AT1_x0a0pTBz';
+            const map = new WebMap({
+                portalItem: { id: '5ec8ed782e5146d1909f76e14e293059' }
+            });
+            const view = new MapView({
+                container: "viewMap",
+                map: map,
+                zoom: 12,
+                center: [107.3877, 10.6695]
+            });
+
+            const highlightLayer = new GraphicsLayer();
+            map.add(highlightLayer);
+
+            const otherPlotsLayer = new GraphicsLayer();
+            map.add(otherPlotsLayer);
+
+            view.when(() => {
+                highlightLayer.removeAll();
+                otherPlotsLayer.removeAll();
+                let geojson;
+                try {
+                    geojson = JSON.parse(plot.mapJs);
+                } catch(err) {
+                    console.error("Lỗi parse GeoJSON:", err);
+                    $('#loading-message').fadeOut();
+                    return;
+                }
+                allPlots.forEach(p => {
+                    if (!p.mapJs) return;
+
+                    let data;
+                    try {
+                        data = JSON.parse(p.mapJs);
+                    } catch { return; }
+
+                    if (data.type === "FeatureCollection" && data.features.length > 0) {
+                        const feature = data.features[0];
+                        let geom;
+
+                        if (feature.geometry.type === "Polygon") {
+                            geom = new Polygon({ rings: feature.geometry.coordinates });
+                        } else if (feature.geometry.type === "MultiPolygon") {
+                            geom = new Polygon({ rings: feature.geometry.coordinates.flat() });
+                        }
+                        // Nếu không phải lô đang view thì màu nhạt
+                        if (p.id !== plot.id) {
+                            otherPlotsLayer.add(new Graphic({
+                                geometry: geom,
+                                symbol: {
+                                    type: "simple-fill",
+                                    color: [255, 255, 255, 0.1],
+                                    outline: { color: [100, 100, 100], width: 1 }
+                                }
+                            }));
+                        }
+                    }
+                });
+                // Lô đang chọn màu đậm hơn
+                if (geojson.type === "FeatureCollection" && geojson.features.length > 0) {
+                    const feature = geojson.features[0];
+                    let polygonGeometry;
+                    if (feature.geometry.type === "Polygon") {
+                        polygonGeometry = new Polygon({
+                            rings: feature.geometry.coordinates
+                        });
+                    } else if (feature.geometry.type === "MultiPolygon") {
+                        polygonGeometry = new Polygon({
+                            rings: feature.geometry.coordinates.flat()
+                        });
+                    }
+                    const highlightGraphic = new Graphic({
+                        geometry: polygonGeometry,
+                        symbol: {
+                            type: "simple-fill",
+                            color: [255, 0, 0, 0.3], // đỏ mờ
+                            outline: { color: [255, 255, 255, 1], width: 3 } // viền
+                        }
+                    });
+                    highlightLayer.add(highlightGraphic);
+                    view.goTo({ target: polygonGeometry, zoom: 16 });
+                }
+                $('#loading-message').fadeOut();
+            });
+
+        });
+    });
+</script> --}}
 
 <!-- Add plots Modal -->
 <form id="plots-form" action="{{ route('plots.save') }}" method="POST" enctype="multipart/form-data">

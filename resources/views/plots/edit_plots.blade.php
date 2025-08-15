@@ -44,42 +44,27 @@
 
                     <div class="card-body">
                         <div class="row">
-                            <!-- plotCode -->
                             <div class="col-md-4">
-                                <label for="plotCode" class="form-label">Mã Lô</label>
-                                <input type="text" class="form-control" name="plotCode" placeholder="Mã lô"
-                                    value="{{ $plots->plotCode }}" required>
+                                <label for="fid" class="form-label">Fid</label>
+                                <input type="number" min="0" class="form-control" name="fid" placeholder="Fid"
+                                    value="{{ old('fid', $plots->fid ?? '') }}">
                             </div>
-                            <!-- plotName -->
                             <div class="col-md-4">
-                                <label for="plotName" class="form-label">Tên Lô</label>
-                                <input type="text" class="form-control" name="plotName" placeholder="Tên lô"
-                                    value="{{ $plots->plotName }}" required>
+                                <label for="idmap" class="form-label">ID Map</label>
+                                <input type="number" min="0" class="form-control" name="idmap" placeholder="ID Map"
+                                    value="{{ old('idmap', $plots->idmap ?? '') }}">
                             </div>
-
-                            <!-- plotArea -->
                             <div class="col-md-4">
-                                <label for="plotArea" class="form-label">Diện Tích</label>
-                                <input type="number" step="0.01" min="0" class="form-control" name="plotArea"
-                                    placeholder="Diện tích" value="{{ $plots->plotArea }}" required>
+                                <label for="plotCode" class="form-label">Mã Lô Cây Trồng</label>
+                                <input type="text" class="form-control" name="plotCode"
+                                    placeholder="Mã lô tự động tạo khi nhập: Năm trồng, Nông trường và Find"
+                                    value="{{ old('plotCode', $plots->plotCode ?? '') }}" readonly>
                             </div>
-
                             <!-- plantCount -->
                             <div class="col-md-4">
                                 <label for="plantCount" class="form-label">Số Lượng Cây</label>
                                 <input type="number" step="1" min="0" class="form-control" placeholder="Số lượng cây"
                                     value="{{ $totalPlants }}" readonly>
-                            </div>
-                            <div class="col-md-4">
-                                <label for="year" class="form-label">Năm</label>
-                                <input class="form-control" min="2000" name="year" placeholder="Năm"
-                                    value="{{$plots->year}}" required>
-                            </div>
-                            <!-- status -->
-                            <div class="col-md-4">
-                                <label for="status" class="form-label">Tình Trạng Cây</label>
-                                <input class="form-control" name="statusTree" placeholder="Tình trạng cây"
-                                    value="{{$plots->statusTree}}" required>
                             </div>
 
                             <div class="col-md-4">
@@ -93,10 +78,103 @@
                                         hoạt động</option>
                                 </select>
                             </div>
+                            <div class="col-md-4">
+                                <label for="find" class="form-label">Find <span style="color: red;">*</span></label>
+                                <input type="text" class="form-control" name="find" placeholder="Find"
+                                    value="{{ old('find', $plots->find ?? '') }}" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="year" class="form-label">Năm Trồng <span
+                                        style="color: red;">*</span></label>
+                                <input type="number" min="1900" class="form-control" name="year" placeholder="Năm Trồng"
+                                    value="{{ old('year', $plots->year ?? '') }}" readonly>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="chi_tieu" class="form-label">Chỉ Tiêu</label>
+                                <input type="text" class="form-control" name="chi_tieu" placeholder="Chỉ Tiêu"
+                                    value="{{ old('chi_tieu', $plots->chi_tieu ?? '') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="plotArea" class="form-label">Diện Tích</label>
+                                <input type="number" min="0" step="any" class="form-control" name="plotArea"
+                                    placeholder="Diện Tích" value="{{ old('plotArea', $plots->plotArea ?? '') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="tapping_y" class="form-label">Tapping Y</label>
+                                <input type="text" class="form-control" name="tapping_y" placeholder="Tapping Y"
+                                    value="{{ old('tapping_y', $plots->tapping_y ?? '') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="repl_time" class="form-label">Repl Time</label>
+                                <input type="text" class="form-control" name="repl_time" placeholder="Repl Time"
+                                    value="{{ old('repl_time', $plots->repl_time ?? '') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="webmap" class="form-label">Webmap</label>
+                                <input type="text" class="form-control" name="webmap" placeholder="Webmap"
+                                    value="{{ old('webmap', $plots->webmap ?? '') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="gwf" class="form-label">GWF</label>
+                                <input type="text" class="form-control" name="gwf" placeholder="GWF"
+                                    value="{{ old('gwf', $plots->gwf ?? '') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="xa" class="form-label">Xã</label>
+                                <input type="text" class="form-control" name="xa" placeholder="Xã"
+                                    value="{{ old('xa', $plots->xa ?? '') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="huyen" class="form-label">Huyện</label>
+                                <input type="text" class="form-control" name="huyen" placeholder="Huyện"
+                                    value="{{ old('huyen', $plots->huyen ?? '') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="nguon_goc_lo" class="form-label">Nguồn Gốc Lô</label>
+                                <input type="text" class="form-control" name="nguon_goc_lo" placeholder="Nguồn Gốc Lô"
+                                    value="{{ old('nguon_goc_lo', $plots->nguon_goc_lo ?? '') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="nguon_goc_dat" class="form-label">Nguồn Gốc Đất</label>
+                                <input type="text" class="form-control" name="nguon_goc_dat" placeholder="Nguồn Gốc Đất"
+                                    value="{{ old('nguon_goc_dat', $plots->nguon_goc_dat ?? '') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="hang_dat" class="form-label">Hạng Đất</label>
+                                <input type="text" class="form-control" name="hang_dat" placeholder="Hạng đất"
+                                    value="{{ old('hang_dat', $plots->hang_dat ?? '') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="hien_trang" class="form-label">Hiện Trạng</label>
+                                <input type="text" class="form-control" name="hien_trang" placeholder="Hiện trạng"
+                                    value="{{ old('hien_trang', $plots->hien_trang ?? '') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="layer" class="form-label">Layer</label>
+                                <input type="text" class="form-control" name="layer" placeholder="Layer"
+                                    value="{{ old('layer', $plots->layer ?? '') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="x" class="form-label">X</label>
+                                <input type="text" class="form-control" name="x" placeholder="X"
+                                    value="{{ old('x', $plots->x ?? '') }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="y" class="form-label">Y</label>
+                                <input type="text" class="form-control" name="y" placeholder="Y"
+                                    value="{{ old('y', $plots->x ?? '') }}">
+                            </div>
                             <div class="col-md-12">
-                                <label for="mapJs" class="form-label">Map</label>
-                                <textarea class="form-control" name="mapJs" required
-                                    placeholder="">{{$plots->mapJs }}</textarea>
+                                <label for="chu_thich" class="form-label">Chú Thích</label>
+                                <textarea class="form-control" id="chu_thich" name="chu_thich" rows="2"
+                                    oninput="autoResize(this)"
+                                    style="overflow: hidden; resize: none;">{{ old('chu_thich', $plots->chu_thich ?? '') }}</textarea>
+                            </div>
+                            <div class="col-md-12">
+                                <label for="mapJs" class="form-label">MapJs <span style="color: red;">*</span></label>
+                                <textarea class="form-control" id="mapJs" name="mapJs" placeholder="MapJs" rows="1"
+                                    oninput="autoResize(this)" style="overflow: hidden; resize: none;"
+                                    readonly>{{ old('mapJs', $plots->mapJs ?? '') }}</textarea>
                             </div>
                             <div class="p-t-10 col-sm-12" style="margin-top: 10px">
                                 <button type="submit" class="btn btn-success">Lưu Thay Đổi</button>
@@ -108,5 +186,22 @@
             </form>
         </div>
     </div>
+    <script>
+        function autoResize(textarea) {
+        textarea.style.height = 'auto'; // Đặt về auto để tính lại chiều cao
+        textarea.style.height = textarea.scrollHeight + 'px'; // Cập nhật chiều cao mới
+    }
+    document.addEventListener("DOMContentLoaded", function() {
+        const textarea = document.getElementById("mapJs");
+        const textareachuthich = document.getElementById("chu_thich");
+        if (textarea) {
+            autoResize(textarea);
+        }
+        if (textareachuthich) {
+            autoResize(textareachuthich)
+        }
+
+    });
+    </script>
 </section>
 @endsection

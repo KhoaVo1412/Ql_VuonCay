@@ -22,46 +22,125 @@
                 <div class="card custom-card">
                     <div class="card-body">
                         <div class="row modal-body gy-4">
-                            <!-- Mã Lô -->
-                            <div class="col-xl-6">
-                                <label for="plotCode" class="form-label">Mã Lô</label>
-                                <input type="text" class="form-control" name="plotCode" id="plotCode" required
-                                    placeholder="Mã lô" value="{{ old('plotCode') }}">
+                            <div class="col-md-4 p-t-2">
+                                <label for="fid" class="form-label">Fid</label>
+                                <input type="number" min="0" class="form-control" name="fid" placeholder="Fid"
+                                    value="{{ old('fid') }}">
                             </div>
-
+                            <div class="col-md-4 p-t-2">
+                                <label for="idmap" class="form-label">ID Map</label>
+                                <input type="number" min="0" class="form-control" name="idmap" placeholder="ID Map"
+                                    value="{{ old('idmap') }}">
+                            </div>
+                            <div class="col-md-4 p-t-2">
+                                <label for="plotCode" class="form-label">Mã Lô Cây Trồng</label>
+                                <input type="text" class="form-control" name="plotCode"
+                                    placeholder="Mã lô tự động tạo khi nhập: Năm trồng và Find" readonly
+                                    value="{{ old('plotCode') }}">
+                            </div>
                             <!-- Tên Lô -->
-                            <div class="col-xl-6">
+                            <div class="col-md-4 p-t-2">
                                 <label for="plotName" class="form-label">Tên Lô</label>
                                 <input type="text" class="form-control" name="plotName" id="plotName" required
                                     placeholder="Tên lô" value="{{ old('plotName') }}">
                             </div>
 
-                            <!-- Diện Tích -->
-                            <div class="col-xl-6">
+                            <div class="col-md-4 p-t-2">
+                                <label for="find" class="form-label">Find <span style="color: red;">*</span></label>
+                                <input type="text" class="form-control" name="find" placeholder="Find" required
+                                    value="{{ old('find') }}">
+                            </div>
+                            <div class="col-md-4 p-t-2">
+                                <label for="year" class="form-label">Năm Trồng
+                                    <span style="color: red;">*</span>
+                                </label>
+                                <input type="number" min="1900" class="form-control" name="year" placeholder="Năm Trồng"
+                                    required value="{{ old('year') }}">
+                            </div>
+                            <div class="col-md-4 p-t-2">
+                                <label for="chi_tieu" class="form-label">Chỉ Tiêu</label>
+                                <input type="text" class="form-control" name="chi_tieu" placeholder="Chỉ Tiêu"
+                                    value="{{ old('chi_tieu') }}">
+                            </div>
+                            <div class="col-md-4 p-t-2">
                                 <label for="plotArea" class="form-label">Diện Tích</label>
-                                <input type="number" min="0" step="0.01" class="form-control" name="plotArea"
-                                    id="plotArea" required placeholder="Diện tích" value="{{ old('plotArea') }}">
+                                <input type="number" min="0" step="any" class="form-control" name="plotArea"
+                                    placeholder="Diện Tích" value="{{ old('plotArea') }}">
                             </div>
-
-                            <!-- Năm Trồng -->
-                            <div class="col-xl-6">
-                                <label for="year" class="form-label">Năm Trồng</label>
-                                <input type="number" min="2000" class="form-control" name="year" id="year" required
-                                    placeholder="Năm" value="{{ old('year') }}">
+                            <div class="col-md-4 p-t-2">
+                                <label for="tapping_y" class="form-label">Tapping Y</label>
+                                <input type="text" class="form-control" name="tapping_y" placeholder="Tapping Y"
+                                    value="{{ old('tapping_y') }}">
                             </div>
-
-                            <!-- Tình Trạng Cây -->
-                            <div class="col-xl-6">
-                                <label for="statusTree" class="form-label">Tình Trạng Cây</label>
-                                <input type="text" class="form-control" name="statusTree" id="statusTree" required
-                                    placeholder="Tình trạng cây" value="{{ old('statusTree') }}">
+                            <div class="col-md-4 p-t-2">
+                                <label for="repl_time" class="form-label">Repl Time</label>
+                                <input type="text" class="form-control" name="repl_time" placeholder="Repl Time"
+                                    value="{{ old('repl_time') }}">
                             </div>
-
+                            <div class="col-md-4 p-t-2">
+                                <label for="webmap" class="form-label">Webmap</label>
+                                <input type="text" class="form-control" name="webmap" placeholder="Webmap"
+                                    value="{{ old('webmap') }}">
+                            </div>
+                            <div class="col-md-4 p-t-2">
+                                <label for="gwf" class="form-label">GWF</label>
+                                <input type="text" class="form-control" name="gwf" placeholder="GWF"
+                                    value="{{ old('gwf') }}">
+                            </div>
+                            <div class="col-md-4 p-t-2">
+                                <label for="xa" class="form-label">Xã</label>
+                                <input type="text" class="form-control" name="xa" placeholder="Xã"
+                                    value="{{ old('xa') }}">
+                            </div>
+                            <div class="col-md-4 p-t-2">
+                                <label for="huyen" class="form-label">Huyện</label>
+                                <input type="text" class="form-control" name="huyen" placeholder="Huyện"
+                                    value="{{ old('huyen') }}">
+                            </div>
+                            <div class="col-md-4 p-t-2">
+                                <label for="nguon_goc_lo" class="form-label">Nguồn Gốc Lô</label>
+                                <input type="text" class="form-control" name="nguon_goc_lo" placeholder="Nguồn Gốc Lô"
+                                    value="{{ old('nguon_goc_lo') }}">
+                            </div>
+                            <div class="col-md-4 p-t-2">
+                                <label for="nguon_goc_dat" class="form-label">Nguồn Gốc Đất</label>
+                                <input type="text" class="form-control" name="nguon_goc_dat" placeholder="Nguồn Gốc Đất"
+                                    value="{{ old('nguon_goc_dat') }}">
+                            </div>
+                            <div class="col-md-4 p-t-2">
+                                <label for="hang_dat" class="form-label">Hạng Đất</label>
+                                <input type="text" class="form-control" name="hang_dat" placeholder="Hạng đất"
+                                    value="{{ old('hang_dat') }}">
+                            </div>
+                            <div class="col-md-4 p-t-2">
+                                <label for="hien_trang" class="form-label">Hiện Trạng</label>
+                                <input type="text" class="form-control" name="hien_trang" placeholder="Hiện trạng"
+                                    value="{{ old('hien_trang') }}">
+                            </div>
+                            <div class="col-md-4 p-t-2">
+                                <label for="layer" class="form-label">Layer</label>
+                                <input type="text" class="form-control" name="layer" placeholder="Layer"
+                                    value="{{ old('layer') }}">
+                            </div>
+                            <div class="col-md-4 p-t-2">
+                                <label for="x" class="form-label">X</label>
+                                <input type="text" class="form-control" name="x" placeholder="X" value="{{ old('x') }}">
+                            </div>
+                            <div class="col-md-4 p-t-2">
+                                <label for="y" class="form-label">Y</label>
+                                <input type="text" class="form-control" name="y" placeholder="Y" value="{{ old('y') }}">
+                            </div>
+                            <div class="col-md-12">
+                                <label for="chu_thich" class="form-label">Chú Thích</label>
+                                <textarea class="form-control" name="chu_thich" rows="2" oninput="autoResize(this)"
+                                    value="{{ old('chu_thich') }}" style="overflow: hidden; resize: none;"></textarea>
+                            </div>
                             <!-- Map -->
-                            <div class="col-xl-12">
-                                <label for="mapJs" class="form-label">Map</label>
-                                <textarea class="form-control" name="mapJs" id="mapJs" required
-                                    placeholder="">{{ old('mapJs') }}</textarea>
+                            <div class="col-md-12">
+                                <label for="mapJs" class="form-label">Map <span style="color: red;">*</span></label>
+                                <textarea class="form-control" name="mapJs" placeholder="Map" rows="1"
+                                    oninput="autoResize(this)" required value="{{ old('mapJs') }}"
+                                    style="overflow: hidden; resize: none;"></textarea>
                             </div>
 
                             <div class="prism-toggle d-grid gap-2 d-md-flex p-">

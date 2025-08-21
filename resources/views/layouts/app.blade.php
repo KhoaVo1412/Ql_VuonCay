@@ -246,13 +246,13 @@
                         <li class="sidebar-item has-sub {{ request()->is('works*') || request()->is('edit-works*') || request()->is('add-works*') ||
                                 request()->is('aworks*') || request()->is('edit-aworks*') ||
                                 request()->is('workps*') || request()->is('add-workps*') || request()->is('edit-workps*') ||
-                                request()->is('comments*') ? 'active' : '' }}">
+                                request()->is('comments*') || request()->is('edit-comments*') ? 'active' : '' }}">
                             <a href="#" class='sidebar-link {{ request()->is(' works*') || request()->is('edit-works*')
                                 || request()->is('add-works*') ||
                                 request()->is('workps*') || request()->is('add-workps*') ||
                                 request()->is('edit-workps*') ||
                                 request()->is('aworks*') || request()->is('edit-aworks*')||
-                                request()->is('comments*') ? 'active' : '' }}'
+                                request()->is('comments*') || request()->is('edit-comments*') ? 'active' : '' }}'
                                 onclick="toggleActive(this)">
                                 <img src="/imgs/spade.png" width="25px" height="25px">
                                 <span>Công Việc</span>
@@ -276,7 +276,7 @@
                                     <a href="{{ route('workps.index')}}">Đề Xuất Vật Tư</a>
                                 </li>
                                 <li
-                                    class="submenu-item d-flex align-items-center ms-3 {{ Route::is('comments.index') ? 'active' : '' }}">
+                                    class="submenu-item d-flex align-items-center ms-3 {{ Route::is('comments.index') || Route::is('comments.edit') ? 'active' : '' }}">
                                     <i class="fas fa-clipboard-check text-green"></i>
                                     <a href="{{ route('comments.index')}}">Đánh Giá</a>
                                 </li>
@@ -291,12 +291,12 @@
                         {{-- Quản Lý cây bệnh --}}
                         <li class="sidebar-item has-sub {{ request()->is('diseaseplans*') || request()->is('add-diseaseplans*') ||  request()->is('edit-diseaseplans*') ||
                             request()->is('treatmentslips*') || request()->is('add-treatmentslips*') || request()->is('edit-treatmentslips*') ||
-                            request()->is('materialproposals*') || request()->is('add-materialproposals') || request()->is('edit-materialproposals') ||
+                            request()->is('materialproposals*') || request()->is('add-materialproposals*') || request()->is('edit-materialproposals*') ||
                             request()->is('treatmentslip*') ? 'active' : '' }}">
                             <a href="#" class='sidebar-link {{ request()->is(' diseaseplans*') ||
                                 request()->is('add-diseaseplans*') || request()->is('edit-diseaseplans*') ||
-                                request()->is('materialproposals*') || request()->is('add-materialproposals') ||
-                                request()->is('edit-materialproposals') ||
+                                request()->is('materialproposals*') || request()->is('add-materialproposals*') ||
+                                request()->is('edit-materialproposals*') ||
                                 request()->is('treatmentslips*') || request()->is('add-treatmentslips') ||
                                 request()->is('edit-treatmentslips') ? 'active' : '' }}' onclick="toggleActive(this)">
                                 <img src="/imgs/caybenh.png" width="25px" height="25px">
@@ -459,7 +459,8 @@
                         <li class="sidebar-item" style="margin-left: 25%;margin-top: 25px;">
                             <button class="btn btn-sm btn-dx"
                                 style="border-radius: 7px;background-color: rgb(206, 43, 43);">
-                                <a href="#" class="sidebar-link" style="color: #fff !important;padding: 0 0 0 0 !important;"
+                                <a href="#" class="sidebar-link"
+                                    style="color: #fff !important;padding: 0 0 0 0 !important;"
                                     onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                                     <i class="fa-solid fa-right-from-bracket" style="color: #fff"></i> <span
                                         style="margin-left: 0.2rem !important;">Đăng Xuất</span>

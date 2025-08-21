@@ -53,10 +53,13 @@
                             <!-- workerID -->
                             <div class="col-md-6">
                                 <label for="workerID" class="form-label">Nhân Viên</label>
-                                <select name="workerID" class="form-control" required>
-                                    @foreach($workers as $worker)
-                                    <option value="{{ $worker->id }}" {{ $worker->id == $comments->workerID ? 'selected'
-                                        : '' }}>
+                                <select name="workerID" id="workerID" class="form-select">
+                                    @foreach ($workers as $worker)
+                                    <option value="{{ $worker->id }}" data-count-work="{{ $worker->countWork }}"
+                                        data-count-cofirm="{{ $worker->countCofirm }}"
+                                        data-count-un="{{ $worker->countUn }}" {{ $worker->id == $comments->workerID ?
+                                        'selected' : '' }}
+                                        >
                                         {{ $worker->name }}
                                     </option>
                                     @endforeach
@@ -75,6 +78,58 @@
                                 <label for="rating" class="form-label">Xếp Hạng</label>
                                 <input type="text" class="form-control" name="rating" value="{{ $comments->rating }}">
                             </div>
+                            <div class="col-xl-6">
+                                <label class="form-label mb-1">Số Lượng Công Việc Hiện</label>
+                                <input type="number" class="form-control" id="countWork_display" value="0" readonly>
+                                <input type="hidden" name="countWork" id="countWork" value="0" required>
+                            </div>
+                            <div class="col-xl-6">
+                                <label class="form-label mb-1">Hoàn Thành Đúng Hạn</label>
+                                <input type="number" class="form-control" id="countCofirm_display" value="0" readonly>
+                                <input type="hidden" name="countCofirm" id="countCofirm" value="0" required>
+                            </div>
+                            <div class="col-xl-6">
+                                <label class="form-label mb-1">Hoàn Thành Không Đúng Hạn</label>
+                                <input type="number" class="form-control" id="countUn_display" value="0" readonly>
+                                <input type="hidden" name="countUn" id="countUn" value="0" required>
+                            </div>
+                            <script>
+                                (function () {
+                                const sel = document.getElementById('workerID');
+
+                                function number(n, d = 0) {
+                                    return Number.isFinite(n) ? Number(n) : d;
+                                }
+                                function updateFromOption(opt) {
+                                    const work   = number(+opt.dataset.countWork, 0);
+                                    const ontime = number(+opt.dataset.countCofirm, 0);
+                                    const late   = number(+opt.dataset.countUn, 0);
+
+                                    // fill displays
+                                    document.getElementById('countWork_display').value   = work;
+                                    document.getElementById('countCofirm_display').value = ontime;
+                                    document.getElementById('countUn_display').value     = late;
+
+                                    // hidden for submit
+                                    document.getElementById('countWork').value   = work;
+                                    document.getElementById('countCofirm').value = ontime;
+                                    document.getElementById('countUn').value     = late;
+
+                                    // on-time rate
+                                    const rate = work > 0 ? Math.round((ontime / work) * 100) : 0;
+                                    document.getElementById('onTimeRate_display').value = rate + '%';
+                                }
+
+                                // init for selected
+                                if (sel && sel.selectedOptions.length) {
+                                    updateFromOption(sel.selectedOptions[0]);
+                                }
+                                // on change
+                                sel.addEventListener('change', function () {
+                                    if (this.selectedOptions.length) updateFromOption(this.selectedOptions[0]);
+                                });
+                            })();
+                            </script>
                             <div class="col-md-4">
                                 <label for="status" class="form-label">Trạng Thái</label>
                                 <select name="status" id="status" class="form-control" required>

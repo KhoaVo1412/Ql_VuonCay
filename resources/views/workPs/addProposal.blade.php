@@ -48,14 +48,10 @@
                                     <div class="form-row">
                                         <div class="form-group">
                                             <label class="form-label">Mã Công Việc</label>
-                                            <select type="text" class="form-input" name="taskID" id="taskID" required>
-                                                <option class="form-control">Chọn mã công việc</option>
-                                                @foreach($gentasks as $task)
-                                                <option value="{{ $task->id }}">{{ $task->code }} - {{ $task->workName
-                                                    }}
-                                                </option>
-                                                @endforeach
-                                            </select>
+                                            <input type="hidden" name="taskID"
+                                                value="{{ old('taskID', $gentask->id) }}">
+                                            <input type="text" value="{{ $gentask->code }} - {{ $gentask->workName }}"
+                                                class="form-control" readonly>
                                         </div>
                                         <div class="form-group">
                                             <label class="form-label">Tên Phiếu</label>
@@ -158,8 +154,6 @@
                                                     </tr>
                                                 </tbody>
                                             </table>
-
-                                            <!-- Empty state (hidden by default) -->
                                             <div class="empty-table" id="emptyState" style="display: none;">
                                                 <i class="fas fa-inbox" style="margin-right: 8px;"></i>
                                                 Chưa có vật tư nào được đề xuất
@@ -167,174 +161,160 @@
                                         </div>
                                     </div>
 
-                                    <!-- Reason Section -->
-                                    {{-- <div class="reason-section">
-                                        <div class="section-title">Lý do từ chối</div>
-                                        <textarea class="reason-textarea" name="reason"
-                                            placeholder="Nhập lý do từ chối đề xuất vật tư này..."></textarea>
-                                    </div> --}}
-
-                                    <!-- Action Buttons -->
                                     <div class="action-buttons">
                                         <button class="btnnn btn-approve" type="submit">
                                             <i class="fas fa-check"></i>
                                             Tạo Đề Xuất
                                         </button>
-                                        {{-- <button class="btnnn btn-approve" onclick="approveRequest()"
-                                            id="approveBtn">
-                                            <i class="fas fa-check"></i>
-                                            Duyệt
-                                        </button> --}}
-                                        {{-- <button class="btnnn btn-reject" onclick="rejectRequest()" id="rejectBtn">
-                                            <i class="fas fa-times"></i>
-                                            Từ chối
-                                        </button> --}}
+
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-        </div>
-        </form>
-        <script>
-            const warehouses = @json($warehouses);
+            </form>
+            <script>
+                const warehouses = @json($warehouses);
                 const products = @json($products);
                 const units = @json($units);
-                const authId = {{ auth()->id() }};
+                const authId = {
+                    { auth()->id() }
+                };
                 const authName = @json(auth()->user()->name);
-        </script>
-        <script>
-            let rowIndex = 1;
-                                    function addMaterialRow() {
-                                        const tableBody = document.getElementById('materialTableBody');
-                                        const newRow = document.createElement('tr');
+            </script>
+            <script>
+                let rowIndex = 1;
 
-                                        newRow.innerHTML = `
-                                            <td class="editable-cell">
-                                                <select name="items[${rowIndex}][warehouseID]" class="editable-select">
-                                                    <option value="">Chọn kho</option>
-                                                    @foreach($warehouses as $w)
-                                                    <option value="{{ $w->id }}">{{ $w->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </td>
-                                            <td class="editable-cell">
-                                                <select name="items[${rowIndex}][productID]" class="editable-select">
-                                                    <option value="">Chọn vật tư</option>
-                                                    @foreach($products as $product)
-                                                    <option value="{{ $product->id }}">{{ $product->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </td>
-                                            <td class="editable-cell">
-                                                <input type="text" name="items[${rowIndex}][quantity]" class="editable-input" placeholder="Số lượng">
-                                            </td>
-                                            <td class="editable-cell">
-                                                <select name="items[${rowIndex}][unit]" class="editable-select">
-                                                    <option value="">Chọn đơn vị</option>
-                                                    @foreach($units as $unit)
-                                                    <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </td>
-                                            <td class="editable-cell">
-                                                <input type="hidden" name="items[${rowIndex}][created_by]" value="{{ auth()->id() }}">
-                                                <input type="text" name="items[${rowIndex}][proposer_name]" class="editable-input"
-                                                    value="{{ auth()->user()->name }}" readonly>
-                                            </td>
-                                            <td class="editable-cell">
-                                                <input type="text" name="items[${rowIndex}][note]" class="editable-input" placeholder="Ghi chú">
-                                            </td>
-                                            <td style="text-align: center;">
-                                                <button type="button" class="btn-remove-row" onclick="removeMaterialRow(this)">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        `;
-                                        tableBody.appendChild(newRow);
+            function addMaterialRow() {
+                const tableBody = document.getElementById('materialTableBody');
+                const newRow = document.createElement('tr');
 
-                                        rowIndex++;
-                                        newRow.querySelector('.editable-select').focus();
-                                        updateRemoveButtons();
-                                    }
+                newRow.innerHTML = `
+                    <td class="editable-cell">
+                        <select name="items[${rowIndex}][warehouseID]" class="editable-select">
+                            <option value="">Chọn kho</option>
+                            @foreach($warehouses as $w)
+                            <option value="{{ $w->id }}">{{ $w->name }}</option>
+                            @endforeach
+                        </select>
+                    </td>
+                    <td class="editable-cell">
+                        <select name="items[${rowIndex}][productID]" class="editable-select">
+                            <option value="">Chọn vật tư</option>
+                            @foreach($products as $product)
+                            <option value="{{ $product->id }}">{{ $product->name }}</option>
+                            @endforeach
+                        </select>
+                    </td>
+                    <td class="editable-cell">
+                        <input type="text" name="items[${rowIndex}][quantity]" class="editable-input" placeholder="Số lượng">
+                    </td>
+                    <td class="editable-cell">
+                        <select name="items[${rowIndex}][unit]" class="editable-select">
+                            <option value="">Chọn đơn vị</option>
+                            @foreach($units as $unit)
+                            <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                            @endforeach
+                        </select>
+                    </td>
+                    <td class="editable-cell">
+                        <input type="hidden" name="items[${rowIndex}][created_by]" value="{{ auth()->id() }}">
+                        <input type="text" name="items[${rowIndex}][proposer_name]" class="editable-input"
+                            value="{{ auth()->user()->name }}" readonly>
+                    </td>
+                    <td class="editable-cell">
+                        <input type="text" name="items[${rowIndex}][note]" class="editable-input" placeholder="Ghi chú">
+                    </td>
+                    <td style="text-align: center;">
+                        <button type="button" class="btn-remove-row" onclick="removeMaterialRow(this)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(newRow);
+
+                rowIndex++;
+                newRow.querySelector('.editable-select').focus();
+                updateRemoveButtons();
+            }
 
 
-                                    // Remove material row
-                                    function removeMaterialRow(button) {
-                                        if (confirm('Bạn có chắc muốn xóa dòng này?')) {
-                                            button.closest('tr').remove();
-                                            updateRemoveButtons();
-                                            showMessage('success', 'Đã xóa dòng!');
-                                        }
-                                    }
+            // Remove material row
+            function removeMaterialRow(button) {
+                if (confirm('Bạn có chắc muốn xóa dòng này?')) {
+                    button.closest('tr').remove();
+                    updateRemoveButtons();
+                    showMessage('success', 'Đã xóa dòng!');
+                }
+            }
 
-                                    // Update remove buttons visibility
-                                    function updateRemoveButtons() {
-                                        const rows = document.querySelectorAll('#materialTableBody tr');
-                                        rows.forEach((row, index) => {
-                                            const removeBtn = row.querySelector('.btn-remove-row');
-                                            if (removeBtn) {
-                                                // Always show remove button except for first row if it's the only row
-                                                removeBtn.style.display = rows.length > 1 ? 'inline-block' : (index === 0 ? 'none' : 'inline-block');
-                                            }
-                                        });
-                                    }
+            // Update remove buttons visibility
+            function updateRemoveButtons() {
+                const rows = document.querySelectorAll('#materialTableBody tr');
+                rows.forEach((row, index) => {
+                    const removeBtn = row.querySelector('.btn-remove-row');
+                    if (removeBtn) {
+                        // Always show remove button except for first row if it's the only row
+                        removeBtn.style.display = rows.length > 1 ? 'inline-block' : (index === 0 ? 'none' : 'inline-block');
+                    }
+                });
+            }
 
-                                    // Get current material data
-                                    function getCurrentMaterialData() {
-                                        const materials = [];
-                                        const rows = document.querySelectorAll('#materialTableBody tr');
-                                        
-                                        rows.forEach(row => {
-                                            const cells = row.querySelectorAll('td');
-                                            if (cells.length >= 5) {
-                                                const material = {
-                                                    name: cells[0].querySelector('select, input')?.value || cells[0].textContent.trim(),
-                                                    quantity: cells[1].querySelector('input')?.value || cells[1].textContent.trim(),
-                                                    task: cells[2].querySelector('select, input')?.value || cells[2].textContent.trim(),
-                                                    requester: cells[3].querySelector('input')?.value || cells[3].textContent.trim(),
-                                                    note: cells[4].querySelector('input')?.value || cells[4].textContent.trim()
-                                                };
-                                                
-                                                // Only add if at least name or quantity is filled
-                                                if (material.name || material.quantity) {
-                                                    materials.push(material);
-                                                }
-                                            }
-                                        });
-                                        
-                                        console.log(materials); // Hiển thị dữ liệu
-                                        return materials;
-                                    }
-        </script>
-    </div>
+            // Get current material data
+            function getCurrentMaterialData() {
+                const materials = [];
+                const rows = document.querySelectorAll('#materialTableBody tr');
+
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length >= 5) {
+                        const material = {
+                            name: cells[0].querySelector('select, input')?.value || cells[0].textContent.trim(),
+                            quantity: cells[1].querySelector('input')?.value || cells[1].textContent.trim(),
+                            task: cells[2].querySelector('select, input')?.value || cells[2].textContent.trim(),
+                            requester: cells[3].querySelector('input')?.value || cells[3].textContent.trim(),
+                            note: cells[4].querySelector('input')?.value || cells[4].textContent.trim()
+                        };
+
+                        // Only add if at least name or quantity is filled
+                        if (material.name || material.quantity) {
+                            materials.push(material);
+                        }
+                    }
+                });
+
+                console.log(materials); // Hiển thị dữ liệu
+                return materials;
+            }
+            </script>
+        </div>
     </div>
 </section>
 <script>
     $(document).ready(function() {
-            $('#taskID').select2({
-                language: "vi",
-                placeholder: "Chọn mã phân công",
-                allowClear: true,
-                minimumResultsForSearch: 0,
-                width: '100%',
-            });
-            $('#type_of_pus_id').select2({
-                language: "vi",
-                placeholder: "Chọn Loại Mủ",
-                allowClear: true,
-                minimumResultsForSearch: 0,
-                width: '100%',
-            });
-            $('#batch_code').select2({
-                language: "vi",
-                placeholder: "Chọn Lô",
-                allowClear: true,
-                minimumResultsForSearch: 0,
-                width: '100%',
-            });
+        $('#taskID').select2({
+            language: "vi",
+            placeholder: "Chọn mã phân công",
+            allowClear: true,
+            minimumResultsForSearch: 0,
+            width: '100%',
         });
+        $('#type_of_pus_id').select2({
+            language: "vi",
+            placeholder: "Chọn Loại Mủ",
+            allowClear: true,
+            minimumResultsForSearch: 0,
+            width: '100%',
+        });
+        $('#batch_code').select2({
+            language: "vi",
+            placeholder: "Chọn Lô",
+            allowClear: true,
+            minimumResultsForSearch: 0,
+            width: '100%',
+        });
+    });
 </script>
 
 <style>
@@ -832,10 +812,10 @@
     }
 </style>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-    const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
-    document.getElementById("sendDate").value = today;
-  });
+    document.addEventListener("DOMContentLoaded", function() {
+        const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
+        document.getElementById("sendDate").value = today;
+    });
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

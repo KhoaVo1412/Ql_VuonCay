@@ -161,7 +161,7 @@ class OutputController extends Controller
         $warehouseIds = $warehouses->pluck('id');
         $units = UnitOfMeasure::all();
         $products = Product::all();
-        $outputs = Invoice::with('invoiceProducts')->findOrFail($id);
+        $outputs = Invoice::with('invoice_products')->findOrFail($id);
         return view('outputs.edit_outputs', compact('outputs', 'units', 'products', 'warehouses'));
     }
     public function update(Request $request, $id)
@@ -174,23 +174,23 @@ class OutputController extends Controller
             'supplier' => 'nullable|string',
             'status' => 'nullable|string',
             'date' => 'required|date',
-            'invoiceProducts' => 'required|array',
-            'invoiceProducts.*.warehouseID' => 'required|integer|exists:ware_houses,id',
-            'invoiceProducts.*.productID' => 'required|integer|exists:products,id',
-            'invoiceProducts.*.quantity' => 'required|numeric',
-            'invoiceProducts.*.unitID' => 'nullable|integer|exists:unit_of_measures,id',
-            'invoiceProducts.*.quality' => 'nullable|string',
-            'invoiceProducts.*.slice' => 'nullable|integer',
-            'invoiceProducts.*.price' => 'nullable|numeric',
+            'invoice_products' => 'required|array',
+            'invoice_products.*.warehouseID' => 'required|integer|exists:ware_houses,id',
+            'invoice_products.*.productID' => 'required|integer|exists:products,id',
+            'invoice_products.*.quantity' => 'required|numeric',
+            'invoice_products.*.unitID' => 'nullable|integer|exists:unit_of_measures,id',
+            'invoice_products.*.quality' => 'nullable|string',
+            'invoice_products.*.slice' => 'nullable|integer',
+            'invoice_products.*.price' => 'nullable|numeric',
         ]);
 
-        $invoice = Invoice::with('invoiceProducts')->findOrFail($id);
+        $invoice = Invoice::with('invoice_products')->findOrFail($id);
 
         $invoice->update($request->only(['code', 'name', 'desc', 'supplier', 'status', 'date']));
-        $invoice->invoiceProducts()->delete();
+        $invoice->invoice_products()->delete();
 
-        foreach ($request->invoiceProducts as $productData) {
-            $invoice->invoiceProducts()->create([
+        foreach ($request->invoice_products as $productData) {
+            $invoice->invoice_products()->create([
                 'warehouseID' => $productData['warehouseID'],
                 'productID' => $productData['productID'],
                 'quantity' => $productData['quantity'],
@@ -263,7 +263,7 @@ class OutputController extends Controller
     // }
     public function toggleStatus(Request $request)
     {
-        $invoice = Invoice::with('invoiceProducts')->find($request->id);
+        $invoice = Invoice::with('invoice_products')->find($request->id);
 
         if (!$invoice) {
             return response()->json(['success' => false, 'message' => 'Không tìm thấy phiếu.']);
@@ -286,7 +286,7 @@ class OutputController extends Controller
                 $from = $invoice->status; // 'Chờ duyệt' hoặc 'Duyệt'
                 $to   = $from === 'Duyệt' ? 'Chờ duyệt' : 'Duyệt';
 
-                foreach ($invoice->invoiceProducts as $item) {
+                foreach ($invoice->invoice_products as $item) {
                     $stock = InventoryStock::firstOrCreate(
                         [
                             'productID'   => $item->productID,

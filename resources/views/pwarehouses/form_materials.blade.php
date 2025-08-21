@@ -11,18 +11,16 @@
                                 <!-- Second Row -->
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label for="code" class="form-label required">Mã Phiếu</label>
-                                        <input type="text" name="code" class="form-input" placeholder="Nhập mã phiếu"
-                                            required>
+                                        <label for="code" class="form-label ">Mã Phiếu</label>
+                                        <input type="text" name="code" class="form-input" placeholder="Nhập mã phiếu">
                                     </div>
                                     <div class="form-group">
-                                        <label for="name" class="form-label required">Tên Phiếu</label>
-                                        <input type="text" name="name" class="form-input" placeholder="Nhập tên phiếu"
-                                            required>
+                                        <label for="name" class="form-label ">Tên Phiếu</label>
+                                        <input type="text" name="name" class="form-input" placeholder="Nhập tên phiếu">
                                     </div>
                                     <div class="form-group">
-                                        <label for="name" class="form-label required">Loại Phiếu</label>
-                                        <select name="type" id="type" class="form-select" required>
+                                        <label for="name" class="form-label ">Loại Phiếu</label>
+                                        <select name="type" id="type" class="form-select">
                                             <option value="Khai thác">Khai thác</option>
                                         </select>
                                     </div>
@@ -30,16 +28,16 @@
 
                                 <div class="form-row">
                                     <div class="form-group">
-                                        <label for="warehouseID" class="form-label required">Kho</label>
-                                        <select name="warehouseID" class="form-select" required>
+                                        <label for="warehouseID" class="form-label ">Kho</label>
+                                        <select name="warehouseID" class="form-select">
                                             @foreach($warehouses as $warehouse)
                                             <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="form-group wide">
-                                        <label for="createName" class="form-label required">Người Tạo</label>
-                                        <select name="createName" class="form-select" required>
+                                        <label for="createName" class="form-label ">Người Tạo</label>
+                                        <select name="createName" class="form-select">
                                             <option value="">Chọn người tạo</option>
                                             @foreach($users as $user)
                                             <option value="{{ $user->name }}">{{ $user->name }}</option>
@@ -48,7 +46,7 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="quantity" class="form-label">Ngày Tạo</label>
-                                        <input type="date" id="startDate" name="createDate" class="form-input" required>
+                                        <input type="date" id="startDate" name="createDate" class="form-input">
                                     </div>
 
                                 </div>
@@ -56,7 +54,7 @@
                                     <div class="form-group" style="flex: 1;">
                                         <label class="form-label">Ghi Chú</label>
                                         <textarea class="form-input" name="desc" placeholder="Ghi chú..."
-                                            style="min-height: 80px; resize: vertical;" required></textarea>
+                                            style="min-height: 80px; resize: vertical;"></textarea>
                                     </div>
                                 </div>
                                 <div style="border-top: 1px solid #e5e7eb; padding-top: 1.5rem; margin-top: 1.5rem;">
@@ -87,7 +85,7 @@
                                                         <label class="form-label">Tên Vật Tư</label>
                                                         <select name="materials[0][productID]"
                                                             class="form-select product-select" data-index="0"
-                                                            onchange="onProductChange(this)" required>
+                                                            onchange="onProductChange(this)">
                                                             <option value="">Chọn sản phẩm</option>
                                                         </select>
                                                     </div>
@@ -96,13 +94,13 @@
                                                     <div class="form-group">
                                                         <label class="form-label">Số Lượng</label>
                                                         <input type="number" name="materials[0][quantity]"
-                                                            class="form-input" required>
+                                                            class="form-input">
                                                     </div>
 
                                                     <!-- Đơn Vị -->
                                                     <div class="form-group">
                                                         <label class="form-label">Đơn Vị</label>
-                                                        <select name="materials[0][unitID]" class="form-select" required
+                                                        <select name="materials[0][unitID]" class="form-select"
                                                             readonly>
                                                             <option value="">Chọn đơn vị</option>
                                                             @foreach($units as $unit)
@@ -223,17 +221,17 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Tên Vật Tư</label>
-                        <select name="materials[${index}][productID]" class="form-select product-select" data-index="${index}" required onchange="onProductChange(this)">
+                        <select name="materials[${index}][productID]" class="form-select product-select" data-index="${index}"  onchange="onProductChange(this)">
                             <option value="">Chọn sản phẩm</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Số Lượng</label>
-                        <input type="number" name="materials[${index}][quantity]" class="form-input" min="1" required>
+                        <input type="number" name="materials[${index}][quantity]" class="form-input" min="1" >
                     </div>
                     <div class="form-group">
                         <label class="form-label">Đơn Vị</label>
-                        <select name="materials[${index}][unitID]" class="form-select" required readonly>
+                        <select name="materials[${index}][unitID]" class="form-select"  readonly>
                             <option value="">Chọn đơn vị</option>
                         </select>
                     </div>
@@ -321,7 +319,7 @@
         color: #374151;
     }
 
-    .form-label.required::after {
+    .form-label.::after {
         content: " *";
         color: #ef4444;
     }

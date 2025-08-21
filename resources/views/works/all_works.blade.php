@@ -391,8 +391,8 @@
                         name: 'workerID'
                     },
                     {
-                        data: 'status',
-                        name: 'status'
+                        data: 'workStatus',
+                        name: 'workStatus'
                     },
                     { data: 'action', name: 'action', orderable: false, searchable: false }
                 ],
@@ -559,12 +559,12 @@
                         },
                         success: function(response) {
                             if (response.success) {
-                                if (response.status === 'Hoạt động') {
+                                if (response.workStatus === 'Hoàn thành') {
                                     button.removeClass('bg-danger').addClass('bg-success').text(
-                                        'Hoạt động');
+                                        'Hoàn thành');
                                 } else {
                                     button.removeClass('bg-success').addClass('bg-danger').text(
-                                        'Không hoạt động');
+                                        'Đang chờ');
                                 }
 
                                 Swal.fire({

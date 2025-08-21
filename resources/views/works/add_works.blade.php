@@ -63,22 +63,8 @@
                                         </select>
 
                                     </div>
-                                    {{-- <div class="form-group">
-                                        <label class="form-label">Tên Việc</label>
-                                        <select name="workID" class="form-select" id="workID-select" required>
-                                            <option value="">Chọn công việc</option>
-                                            @foreach($works as $work)
-                                            <option value="{{ $work->id }}" data-type="{{ $work->workType }}">{{
-                                                $work->workName }}</option>
-                                            @endforeach
-                                        </select>
-                                        <input type="text" id="work-type-display" class="form-control mt-2" readonly
-                                            placeholder="Loại công việc sẽ hiển thị ở đây">
-
-                                    </div> --}}
-
                                     <div class="form-group">
-                                        <label class="form-label">Người phụ trách</label>
+                                        <label class="form-label">Người Phụ Trách</label>
                                         <select name="workerID" class="form-select" required>
                                             <option value="">Chọn người phụ trách</option>
                                             @foreach($workers as $worker)
@@ -93,7 +79,7 @@
                                 <div class="form-row">
 
                                     <div class="form-group">
-                                        <label class="form-label">Ngày bắt đầu</label>
+                                        <label class="form-label">Ngày Bắt Đầu</label>
                                         <input type="date" name="workDate" value="{{ old('workDate') }}"
                                             class="form-control" required>
                                     </div>
@@ -117,7 +103,7 @@
                                         </select>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">Chọn cây</label>
+                                        <label class="form-label">Chọn Cây</label>
                                         <select name="plantIDs[]" id="plantIDs" class="form-select" multiple required>
                                             {{-- load động --}}
                                         </select>
@@ -133,7 +119,7 @@
                                         </select>
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label">Mức độ ưu tiên</label>
+                                        <label class="form-label">Mức Độ Ưu Tiên</label>
                                         <select name="priority" class="form-select" required>
                                             <option value="Thấp" {{ old('priority')=='Thấp' ? 'selected' : '' }}>Thấp
                                             </option>
@@ -148,7 +134,7 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label class="form-label">Mô tả công việc</label>
+                                    <label class="form-label">Mô Tả Công Việc</label>
                                     <textarea name="description" class="form-control"
                                         placeholder="Ghi mô tả công việc"></textarea>
                                 </div>
@@ -205,20 +191,6 @@
             $('#taskID').select2({
                 language: "vi",
                 placeholder: "Chọn mã phân công",
-                allowClear: true,
-                minimumResultsForSearch: 0,
-                width: '100%',
-            });
-            $('#type_of_pus_id').select2({
-                language: "vi",
-                placeholder: "Chọn Loại Mủ",
-                allowClear: true,
-                minimumResultsForSearch: 0,
-                width: '100%',
-            });
-            $('#batch_code').select2({
-                language: "vi",
-                placeholder: "Chọn Lô",
                 allowClear: true,
                 minimumResultsForSearch: 0,
                 width: '100%',

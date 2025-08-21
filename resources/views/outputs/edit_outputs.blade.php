@@ -82,7 +82,7 @@
                                 <div style="border-top: 1px solid #e5e7eb; padding-top: 1.5rem; margin-top: 1.5rem;">
                                     <div id="treatmentSteps" style="margin-top: 1rem;">
                                         @php
-                                        $oldProducts = old('invoiceProducts', $outputs->invoiceProducts ?? []);
+                                        $oldProducts = old('invoice_products', $outputs->invoice_products ?? []);
                                         @endphp
 
                                         @if(count($oldProducts) > 0)
@@ -97,7 +97,7 @@
                                                     <div class="form-group">
                                                         <label class="form-label">Kho</label>
                                                         <select class="form-select"
-                                                            name="invoiceProducts[{{ $index }}][warehouseID]">
+                                                            name="invoice_products[{{ $index }}][warehouseID]">
                                                             @foreach($warehouses as $w)
                                                             <option value="{{ $w->id }}" {{ (isset($item['warehouseID'])
                                                                 && $item['warehouseID']==$w->id) ? 'selected' : '' }}>{{
@@ -108,7 +108,7 @@
                                                     <div class="form-group">
                                                         <label class="form-label">Tên Vật Tư</label>
                                                         <select class="form-select"
-                                                            name="invoiceProducts[{{ $index }}][productID]">
+                                                            name="invoice_products[{{ $index }}][productID]">
                                                             <option value="">-- Chọn vật tư --</option>
                                                             @foreach($products as $p)
                                                             <option value="{{ $p->id }}" {{ (isset($item['productID'])
@@ -120,13 +120,13 @@
                                                     <div class="form-group">
                                                         <label class="form-label">Số Lượng</label>
                                                         <input type="number" class="form-input"
-                                                            name="invoiceProducts[{{ $index }}][quantity]"
+                                                            name="invoice_products[{{ $index }}][quantity]"
                                                             value="{{ $item['quantity'] ?? '' }}">
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Đơn Vị</label>
                                                         <select class="form-select"
-                                                            name="invoiceProducts[{{ $index }}][unitID]">
+                                                            name="invoice_products[{{ $index }}][unitID]">
                                                             <option value="">-- Chọn đơn vị --</option>
                                                             @foreach($units as $u)
                                                             <option value="{{ $u->id }}" {{ (isset($item['unitID']) &&
@@ -140,19 +140,19 @@
                                                     <div class="form-group">
                                                         <label class="form-label">Chất Lượng</label>
                                                         <input type="text" class="form-input"
-                                                            name="invoiceProducts[{{ $index }}][quality]" placeholder=""
-                                                            value="{{ $item['quality'] ?? '' }}">
+                                                            name="invoice_products[{{ $index }}][quality]"
+                                                            placeholder="" value="{{ $item['quality'] ?? '' }}">
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Số Lát Dao</label>
                                                         <input type="number" class="form-input"
-                                                            name="invoiceProducts[{{ $index }}][slice]"
+                                                            name="invoice_products[{{ $index }}][slice]"
                                                             value="{{ $item['slice'] ?? '' }}">
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Thành Tiền</label>
                                                         <input type="text" class="form-input"
-                                                            name="invoiceProducts[{{ $index }}][price]"
+                                                            name="invoice_products[{{ $index }}][price]"
                                                             value="{{ $item['price'] ?? '' }}">
                                                     </div>
                                                 </div>
@@ -175,7 +175,7 @@
                                                     <div class="form-group">
                                                         <label class="form-label">Kho</label>
                                                         <select class="form-select"
-                                                            name="invoiceProducts[0][warehouseID]">
+                                                            name="invoice_products[0][warehouseID]">
                                                             @foreach($warehouses as $w)
                                                             <option value="{{ $w->id }}">{{ $w->name }}</option>
                                                             @endforeach
@@ -184,7 +184,7 @@
                                                     <div class="form-group">
                                                         <label class="form-label">Tên Vật Tư</label>
                                                         <select class="form-select"
-                                                            name="invoiceProducts[0][productID]">
+                                                            name="invoice_products[0][productID]">
                                                             <option value="">-- Chọn vật tư --</option>
                                                             @foreach($products as $p)
                                                             <option value="{{ $p->id }}">{{ $p->name }}</option>
@@ -194,11 +194,11 @@
                                                     <div class="form-group">
                                                         <label class="form-label">Số Lượng</label>
                                                         <input type="number" class="form-input"
-                                                            name="invoiceProducts[0][quantity]" value="">
+                                                            name="invoice_products[0][quantity]" value="">
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Đơn Vị</label>
-                                                        <select class="form-select" name="invoiceProducts[0][unitID]">
+                                                        <select class="form-select" name="invoice_products[0][unitID]">
                                                             <option value="">-- Chọn đơn vị --</option>
                                                             @foreach($units as $u)
                                                             <option value="{{ $u->id }}">{{ $u->name }}</option>
@@ -210,17 +210,17 @@
                                                     <div class="form-group">
                                                         <label class="form-label">Chất Lượng</label>
                                                         <input type="text" class="form-input"
-                                                            name="invoiceProducts[0][quality]" placeholder="" value="">
+                                                            name="invoice_products[0][quality]" placeholder="" value="">
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Số Lát Dao</label>
                                                         <input type="number" class="form-input"
-                                                            name="invoiceProducts[0][slice]" value="">
+                                                            name="invoice_products[0][slice]" value="">
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Thành Tiền</label>
                                                         <input type="text" class="form-input"
-                                                            name="invoiceProducts[0][price]" value="">
+                                                            name="invoice_products[0][price]" value="">
                                                     </div>
                                                 </div>
                                             </div>
@@ -278,7 +278,7 @@
                 <div class="form-row" style="margin-bottom: 0.5rem;">
                     <div class="form-group">
                          <label class="form-label">Kho</label>
-                        <select class="form-select" name="invoiceProducts[${treatmentIndex}][warehouseID]" required>
+                        <select class="form-select" name="invoice_products[${treatmentIndex}][warehouseID]" required>
                             @foreach($warehouses as $warehouse)
                                 <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
                             @endforeach
@@ -286,7 +286,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Tên Vật Tư</label>
-                        <select class="form-select" name="invoiceProducts[${treatmentIndex}][productID]" required>
+                        <select class="form-select" name="invoice_products[${treatmentIndex}][productID]" required>
                             <option value="">-- Chọn vật tư --</option>
                             @foreach($products as $p)
                                 <option value="{{ $p->id }}">{{ $p->name }}</option>
@@ -295,11 +295,11 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Số Lượng</label>
-                        <input type="number" class="form-input" name="invoiceProducts[${treatmentIndex}][quantity]">
+                        <input type="number" class="form-input" name="invoice_products[${treatmentIndex}][quantity]">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Đơn Vị</label>
-                        <select class="form-select" name="invoiceProducts[${treatmentIndex}][unitID]">
+                        <select class="form-select" name="invoice_products[${treatmentIndex}][unitID]">
                             <option value="">-- Chọn đơn vị --</option>
                             @foreach($units as $unit)
                                 <option value="{{ $unit->id }}">{{ $unit->name }}</option>
@@ -310,15 +310,15 @@
                 <div class="form-row" style="flex:1">
                     <div class="form-group">
                         <label class="form-label">Chất Lượng</label>
-                        <input type="text" class="form-input" name="invoiceProducts[${treatmentIndex}][quality]" placeholder="">
+                        <input type="text" class="form-input" name="invoice_products[${treatmentIndex}][quality]" placeholder="">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Số Lát Dao</label>
-                       <input type="number" class="form-input" name="invoiceProducts[${treatmentIndex}][slice]">
+                       <input type="number" class="form-input" name="invoice_products[${treatmentIndex}][slice]">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Thành Tiền</label>
-                        <input type="text" class="form-input" name="invoiceProducts[${treatmentIndex}][price]">    
+                        <input type="text" class="form-input" name="invoice_products[${treatmentIndex}][price]">    
                     </div>
                 </div>
             </div>

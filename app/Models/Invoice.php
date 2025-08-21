@@ -18,7 +18,7 @@ class Invoice extends Model
         'date',
     ];
 
-    public function invoiceProducts()
+    public function invoice_products()
     {
         return $this->hasMany(InvoiceProduct::class, 'invoiceID');
     }

@@ -40,12 +40,11 @@
                         <div class="row gy-2">
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>Mã phân công</label>
+                                    <label class="form-label">Mã Phân Công</label>
                                     <select class="form-control" name="taskID" required>
                                         @foreach($gentasks as $task)
                                         <option value="{{ $task->id }}" {{ $task->id == $proposal->taskID ? 'selected' :
-                                            ''
-                                            }}>
+                                            '' }}>
                                             {{ $task->code }} - {{$task->workName}}
                                         </option>
                                         @endforeach
@@ -53,20 +52,20 @@
                                 </div>
 
                                 <div class="form-group">
-                                    <label>Tên phiếu</label>
+                                    <label class="form-label">Tên Phiếu</label>
                                     <input type="text" class="form-control" name="proposaName"
                                         value="{{ $proposal->proposaName }}" required>
                                 </div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>Ngày gửi</label>
+                                    <label class="form-label">Ngày Gửi</label>
                                     <input type="date" class="form-control" name="proposalDate"
                                         value="{{ $proposal->proposalDate }}" required>
                                 </div>
 
                                 <div class="form-group">
-                                    <label>Ngày nhận</label>
+                                    <label class="form-label">Ngày Nhận</label>
                                     <input type="date" class="form-control" name="approvalDate"
                                         value="{{ $proposal->approvalDate }}" required>
                                 </div>
@@ -154,7 +153,7 @@
                                     </td>
                                     <td class="text-center d-flex justify-content-center align-items-center">
                                         <button type="button" class="btn btn-success btn-sm btn-add-row"
-                                            onclick="addMaterialRow()" title="Thêm dòng mới">
+                                            style="margin: 0 2px 0 0" onclick="addMaterialRow()" title="Thêm dòng mới">
                                             <i class="fas fa-plus"></i>
                                         </button>
                                         <button type="button" class="btn btn-danger btn-sm btn-remove-row"
@@ -240,7 +239,7 @@
             </td>
 
             <td class="text-center d-flex justify-content-center align-items-center">
-                 <button type="button" class="btn btn-success btn-sm btn-add-row"
+                 <button type="button" class="btn btn-success btn-sm btn-add-row" style="margin: 0 2px 0 0"
                                             onclick="addMaterialRow()" title="Thêm dòng mới">
                                             <i class="fas fa-plus"></i>
                                         </button>

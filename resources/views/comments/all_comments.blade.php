@@ -62,34 +62,45 @@
                                     value="{{ old('rating') }}" class="form-inputr" required>
                             </div>
                         </div>
-                        {{-- <div class="col-xl-6">
-                            <label for="" class="form-label">Số Lượng Công Việc Hiện</label>
-                            <input type="number" class="form-control" name="countWork" required>
-                        </div>
                         <div class="col-xl-6">
-                            <label for="Hoàn Thành Đúng Hạn" class="form-label">Hoàn Thành Đúng Hạn</label>
-                            <input type="number" class="form-control" name="countCofirm" required>
-                        </div>
-                        <div class="col-xl-6">
-                            <label for="Hoàn Thành Không Đúng Hạn" class="form-label">Hoàn Thành Không Đúng Hạn</label>
-                            <input type="number" class="form-control" name="countUn" required>
-                        </div> --}}
-                        <div class="col-xl-6">
-                            <label class="form-label">Số Lượng Công Việc Hiện</label>
-                            <input type="number" class="form-control" id="countWork_display" readonly>
-                            <input type="hidden" name="countWork" id="countWork" required>
+                            <label class="form-label">Số Lượng Công Việc</label>
+                            <input type="number" class="form-control" id="countWork_display" value="0" readonly>
+                            <input type="hidden" name="countWork" id="countWork" value="0" required>
                         </div>
                         <div class="col-xl-6">
                             <label class="form-label">Hoàn Thành Đúng Hạn</label>
-                            <input type="number" class="form-control" id="countCofirm_display" readonly>
-                            <input type="hidden" name="countCofirm" id="countCofirm" required>
+                            <input type="number" class="form-control" id="countCofirm_display" value="0" readonly>
+                            <input type="hidden" name="countCofirm" id="countCofirm" value="0" required>
                         </div>
                         <div class="col-xl-6">
                             <label class="form-label">Hoàn Thành Không Đúng Hạn</label>
-                            <input type="number" class="form-control" id="countUn_display" readonly>
-                            <input type="hidden" name="countUn" id="countUn" required>
+                            <input type="number" class="form-control" id="countUn_display" value="0" readonly>
+                            <input type="hidden" name="countUn" id="countUn" value="0" required>
                         </div>
-
+                        <script>
+                            document.getElementById('workerID').addEventListener('change', async function () {
+                                const workerID = this.value;
+                                if (!workerID) return;
+                                try {
+                                    const res = await fetch(`/workers/${workerID}/task-stats`, {
+                                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                                    });
+                                    const data = await res.json();
+                                    document.getElementById('countWork_display').value = data.countWork ?? 0;
+                                    document.getElementById('countCofirm_display').value = data.countCofirm ?? 0;
+                                    document.getElementById('countUn_display').value = data.countUn ?? 0;
+                                    document.getElementById('countWork').value = data.countWork ?? 0;
+                                    document.getElementById('countCofirm').value = data.countCofirm ?? 0;
+                                    document.getElementById('countUn').value = data.countUn ?? 0;
+                                } catch (e) {
+                                    console.error(e);
+                                    ['countWork', 'countCofirm', 'countUn'].forEach(k => {
+                                        document.getElementById(k + '_display').value = 0;
+                                        document.getElementById(k).value = 0;
+                                    });
+                                }
+                            });
+                        </script>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="note" class="form-label">Ghi Chú</label>
@@ -99,37 +110,6 @@
                             </div>
                         </div>
                     </div>
-                    <script>
-                        document.getElementById('workerID').addEventListener('change', async function () {
-  const id = this.value;
-  if (!id) return;
-
-  try {
-    const res = await fetch(`/api/workers/${id}/task-stats`, {
-      headers: { 'X-Requested-With': 'XMLHttpRequest' }
-    });
-    const d = await res.json();
-
-    // Fill hiển thị
-    document.getElementById('countWork_display').value   = d.countWork ?? 0;
-    document.getElementById('countCofirm_display').value = d.countCofirm ?? 0;
-    document.getElementById('countUn_display').value     = d.countUn ?? 0;
-
-    // Fill hidden để submit
-    document.getElementById('countWork').value   = d.countWork ?? 0;
-    document.getElementById('countCofirm').value = d.countCofirm ?? 0;
-    document.getElementById('countUn').value     = d.countUn ?? 0;
-  } catch (e) {
-    console.error(e);
-    // fallback 0 nếu lỗi
-    ['countWork','countCofirm','countUn'].forEach(k=>{
-      document.getElementById(k+'_display').value = 0;
-      document.getElementById(k).value = 0;
-    });
-  }
-});
-                    </script>
-
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
@@ -537,7 +517,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '{{ route('farm.status') }}',
+                        url: '{{ route('comments.status') }}',
                         type: 'POST',
                         data: {
                             _token: '{{ csrf_token() }}',

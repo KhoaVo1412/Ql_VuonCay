@@ -43,12 +43,12 @@
                     <div class="row gy-2">
 
                         <div class="form-row">
-                            <div class="col-md-6">
+                            <div class="form-group">
                                 <label class="form-lable">Mã Công Việc</label>
                                 <input type="text" name="code" class="form-control" value="{{ $gentasks->code }}"
                                     readonly>
                             </div>
-                            <div class="col-md-6">
+                            <div class="form-group">
                                 <label class="form-lable">Tên Công Việc</label>
                                 <input type="text" name="workName" class="form-control"
                                     value="{{ $gentasks->workName }}" required>
@@ -73,7 +73,7 @@
                         </div>
 
                         <div class="form-row">
-                            <div class="col-md-6">
+                            <div class="form-group">
                                 <label class="form-lable">Loại Công Việc</label>
                                 <select name="workID" class="form-select" required>
                                     <option value="">Chọn loại công việc</option>
@@ -85,7 +85,7 @@
                                 </select>
                             </div>
                             <!-- Người phụ trách -->
-                            <div class="col-md-6">
+                            <div class="form-group">
                                 <label class="form-lable">Người Phụ Trách</label>
                                 <select name="workerID" class="form-select">
                                     @foreach ($workers as $worker)
@@ -98,14 +98,13 @@
                             </div>
                         </div>
                         <div class="form-row">
-
                             <!-- Ngày bắt đầu -->
-                            <div class="col-md-6">
+                            <div class="form-group">
                                 <label class="form-lable">Ngày Bắt Đầu</label>
                                 <input type="date" name="workDate" class="form-control"
                                     value="{{ $gentasks->workDate }}" required>
                             </div>
-                            <div class="col-md-6">
+                            <div class="form-group">
                                 <label class="form-lable">Ngày Kết Thúc</label>
                                 <input type="date" name="workDate" class="form-control"
                                     value="{{ $gentasks->workDate }}" required>
@@ -113,7 +112,7 @@
                         </div>
                         <div class="form-row">
                             <!-- Lô -->
-                            <div class="col-md-6">
+                            <div class="form-group">
                                 <label class="form-label">Lô</label>
                                 <select name="plotID" id="plotID" class="form-select" required>
                                     @foreach ($plots as $plot)
@@ -126,8 +125,8 @@
                             </div>
 
                             <!-- Cây trồng -->
-                            <div class="col-md-6">
-                                <label class="form-label">Cây trồng</label>
+                            <div class="form-group">
+                                <label class="form-label">Cây Trồng</label>
                                 <select name="plantIDs[]" id="plantIDs" class="form-select" multiple required>
                                     @foreach ($plants as $plant)
                                     <option value="{{ $plant->id }}" @if($gentasks->plants->contains($plant->id))
@@ -140,7 +139,7 @@
                         </div>
                         <div class="form-row">
                             <!-- Loại nhiệm vụ -->
-                            <div class="col-md-6">
+                            <div class="form-group">
                                 <label class="form-lable">Đề Xuất Vật Tư</label>
                                 <select name="type" class="form-select">
                                     <option value="1" @if ($gentasks->type == '1') selected
@@ -151,8 +150,8 @@
                             </div>
 
                             <!-- Ưu tiên -->
-                            <div class="col-md-6">
-                                <label class="form-lable">Mức độ ưu tiên</label>
+                            <div class="form-group">
+                                <label class="form-lable">Mức Độ Ưu Tiên</label>
                                 <select name="priority" class="form-select">
                                     <option value="Thấp" @if ($gentasks->priority == 'Thấp') selected @endif>Thấp
                                     </option>

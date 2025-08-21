@@ -69,6 +69,8 @@ use App\Http\Controllers\Import\UpdatePlantingAreaImportController;
 use App\Http\Controllers\ChartController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InventoryStockController;
+use App\Models\GenTask;
+use App\Models\Worker;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Http\Request;
@@ -362,6 +364,7 @@ Route::middleware(['login'])->group(function () {
 
     Route::get('/workps', [WorkProposalsController::class, 'index'])->name('workps.index');
     Route::get('/add-workps', [WorkProposalsController::class, 'add'])->name('workps.add');
+    Route::get('/add-workps/{taskID}', [WorkProposalsController::class, 'addProposal'])->name('workps.addProposal');
     Route::post('/save-workps', [WorkProposalsController::class, 'save'])->name('workps.save');
     Route::get('/edit-workps/{id}', [WorkProposalsController::class, 'edit'])->name('workps.edit');
     Route::post('/workps/update/{id}', [WorkProposalsController::class, 'update'])->name('workps.update');
@@ -463,6 +466,22 @@ Route::middleware(['login'])->group(function () {
     Route::post('/customers/delete-multiple', [CustomerController::class, 'deleteMultiple'])->name('customers.deleteMultiple');
     Route::post('/contracttype/delete-multiple', [ContractTypeController::class, 'deleteMultiple'])->name('contracttype.deleteMultiple');
 
+    Route::get('/workers/{id}/task-stats', function ($id) {
+        $worker = Worker::find($id);
+        if (!$worker) {
+            return response()->json(['error' => 'Worker not found'], 404);
+        }
+
+        $countWork = GenTask::where('workerID', $id)->count();
+        $countCofirm = GenTask::where('workerID', $id)->where('workStatus', 'Duyệt')->count();
+        $countUn = GenTask::where('workerID', $id)->where('workStatus', 'Đang chờ')->count();
+
+        return response()->json([
+            'countWork' => $countWork,
+            'countCofirm' => $countCofirm,
+            'countUn' => $countUn
+        ]);
+    });
 
     Route::get('/check-login', [CheckLoginController::class, 'index'])->name('checkLogin.index');
     Route::get('/check-action', [CheckActionController::class, 'index'])->name('checkAction.index');

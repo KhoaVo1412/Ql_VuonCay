@@ -20,6 +20,26 @@ class CommentController extends Controller
     {
         $workers = Worker::all();
         $all_comments = Evaluate::with('worker')->orderBy('id', 'desc')->get();
+
+        foreach ($workers as $worker) {
+            $worker->countWork = GenTask::where('workerID', $worker->id)->count();
+
+            $worker->countCofirm = GenTask::where('workerID', $worker->id)
+                ->where(function ($query) {
+                    $query->where('workStatus', 'Hoàn thành')
+                        ->orWhere(function ($subquery) {
+                            $subquery->where('workStatus', 'Đang chờ')
+                                ->where('dateEnd', '>=', now());
+                        });
+                })
+                ->count();
+
+            $worker->countUn = GenTask::where('workerID', $worker->id)
+                ->where('workStatus', 'Đang chờ')
+                ->where('dateEnd', '<', now())
+                ->count();
+        }
+
         // dd($all_comments);
         if ($request->ajax()) {
             return DataTables::of($all_comments)
@@ -83,7 +103,7 @@ class CommentController extends Controller
         }
         return view('comments.all_comments', compact('workers'));
     }
-    public function store(\Illuminate\Http\Request $request)
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'name'            => 'required|string|max:255',
@@ -180,7 +200,24 @@ class CommentController extends Controller
     public function edit($id)
     {
         $workers = Worker::all();
+        foreach ($workers as $worker) {
+            $worker->countWork = GenTask::where('workerID', $worker->id)->count();
 
+            $worker->countCofirm = GenTask::where('workerID', $worker->id)
+                ->where(function ($query) {
+                    $query->where('workStatus', 'Hoàn thành')
+                        ->orWhere(function ($subquery) {
+                            $subquery->where('workStatus', 'Đang chờ')
+                                ->where('dateEnd', '>=', now());
+                        });
+                })
+                ->count();
+
+            $worker->countUn = GenTask::where('workerID', $worker->id)
+                ->where('workStatus', 'Đang chờ')
+                ->where('dateEnd', '<', now())
+                ->count();
+        }
         $comments = Evaluate::find($id);
         return view('comments.edit_comments', compact('comments', 'workers'));
     }
@@ -262,9 +299,9 @@ class CommentController extends Controller
 
         $comments = Evaluate::whereIn('id', $request->ids)->get();
 
-        foreach ($comments as $farm) {
-            $farm->status = ($farm->status === 'Hoạt động') ? 'Không hoạt động' : 'Hoạt động';
-            $farm->save();
+        foreach ($comments as $c) {
+            $c->status = ($c->status === 'Hoạt động') ? 'Không hoạt động' : 'Hoạt động';
+            $c->save();
         }
         return response()->json(['message' => 'Thành Công']);
     }
@@ -278,12 +315,12 @@ class CommentController extends Controller
 
         Evaluate::whereIn('id', $request->ids)->delete();
 
-        foreach ($commentsToDelete as $farm) {
+        foreach ($commentsToDelete as $c) {
             ActionHistory::create([
                 'user_id' => Auth::id(),
                 'action_type' => 'delete',
                 'model_type' => 'Evaluate',
-                'details' => "Đã xóa đánh giá: " . $farm->name,
+                'details' => "Đã xóa đánh giá: " . $c->name,
             ]);
         }
         return response()->json([
@@ -293,11 +330,11 @@ class CommentController extends Controller
     }
     public function toggleStatus(Request $request)
     {
-        $farm = Evaluate::find($request->id);
-        if ($farm) {
-            $farm->status = $farm->status == 'Hoạt động' ? 'Không hoạt động' : 'Hoạt động';
-            $farm->save();
-            return response()->json(['success' => true, 'status' => $farm->status]);
+        $c = Evaluate::find($request->id);
+        if ($c) {
+            $c->status = $c->status == 'Hoạt động' ? 'Không hoạt động' : 'Hoạt động';
+            $c->save();
+            return response()->json(['success' => true, 'status' => $c->status]);
         } else {
             return response()->json(['success' => false]);
         }

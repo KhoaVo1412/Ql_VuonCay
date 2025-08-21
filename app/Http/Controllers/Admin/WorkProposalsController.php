@@ -92,8 +92,16 @@ class WorkProposalsController extends Controller
         $products = Product::all();
         $works = Work::all();
         $gentasks = GenTask::Where('type', 1)->get();
-        // Trả dữ liệu vào view
         return view('workPs.add_workPs', compact('warehouses', 'units', 'products', 'works', 'gentasks'));
+    }
+    public function addProposal($taskID)
+    {
+        $warehouses = WareHouse::all();
+        $units = UnitOfMeasure::all();
+        $products = Product::all();
+        $works = Work::all();
+        $gentask = GenTask::findOrFail($taskID);
+        return view('workps.addProposal', compact('gentask', 'warehouses', 'units', 'products', 'works'));
     }
     public function save(Request $request)
     {

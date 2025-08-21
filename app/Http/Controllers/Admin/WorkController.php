@@ -61,10 +61,10 @@ class WorkController extends Controller
                 ->editColumn('workerID', function ($row) {
                     return $row->worker->name ?? 'Không rõ';
                 })
-                ->editColumn('status', function ($row) {
-                    $statusClass = $row->status == 'Hoàn thành' ? 'success' : 'danger';
-                    $statusText = $row->status == 'Hoàn thành' ? 'Hoàn thành' : 'Chưa hoàn thành';
-                    return '<button class="badge bg-' . $statusClass . ' toggle-status" data-id="' . $row->id . '">' . $statusText . '</button>';
+                ->editColumn('workStatus', function ($row) {
+                    $workStatusClass = $row->workStatus == 'Hoàn thành' ? 'success' : 'danger';
+                    $workStatusText = $row->workStatus == 'Hoàn thành' ? 'Hoàn thành' : 'Đang chờ';
+                    return '<button class="badge bg-' . $workStatusClass . ' toggle-status" data-id="' . $row->id . '">' . $workStatusText . '</button>';
                 })
                 ->addColumn('action', function ($row) {
                     $action = '
@@ -96,7 +96,7 @@ class WorkController extends Controller
                     ';
                     return $action;
                 })
-                ->rawColumns(['check', 'dateEnd', 'code', 'workerID', 'stt', 'workDate', 'workName', 'workType', 'status', 'action'])
+                ->rawColumns(['check', 'dateEnd', 'code', 'workerID', 'stt', 'workDate', 'workName', 'workType', 'workStatus', 'action'])
                 ->make(true);
         }
         return view('works.all_works', compact('gardens', 'workers', 'works', 'plots'));
@@ -123,94 +123,112 @@ class WorkController extends Controller
     }
     public function save(Request $request)
     {
-        // dd($request->all());
         try {
-            $request->validate([
-                'workID' => 'required',
-                'workerID' => 'required',
-                'workName' => 'required',
-                'workDate' => 'required',
-                'dateEnd' => 'required',
-                'plotID' => 'required',
-                'type' => 'required',
-                'priority' => 'required',
+            $rules = [
+                'workID'     => 'required',
+                'workerID'   => 'required',
+                'workName'   => 'required',
+                'workDate'   => 'required',
+                'dateEnd'    => 'required',
+                'plotID'     => 'required',
+                'priority'   => 'required',
                 'description' => 'nullable',
-                'plantIDs' => 'required|array',
+                'plantIDs'   => 'required|array',
+                'code'       => 'nullable',
+                'name'       => 'nullable',
+                'warehouseID' => 'nullable',
+                'createName' => 'nullable',
+                'createDate' => 'nullable|date',
+                'desc'       => 'nullable|string',
+            ];
 
-                'code' => 'required|unique:pickings,code',
-                'name' => 'required',
-                // 'type' => 'required',
-                'warehouseID' => 'required|exists:ware_houses,id',
-                'createName' => 'required',
-                'createDate' => 'required|date',
-                'desc' => 'nullable|string',
-                'materials' => 'required|array|min:1',
-                'materials.*.productID' => 'required|exists:products,id',
-                'materials.*.quantity' => 'required|numeric|min:1',
-            ]);
+            $work = Work::find($request->workID);
+            if (!$work) {
+                return redirect()->back()->withErrors(['workID' => 'Công việc không tồn tại']);
+            }
+
+            if ($work->workType === 'Khai thác') {
+                $rules = array_merge($rules, [
+                    'materials'            => 'required|array|min:1',
+                    'materials.*.productID' => 'required',
+                    'materials.*.quantity'  => 'required|numeric',
+                    'materials.*.unitID'    => 'required',
+                ]);
+            } else {
+                $rules = array_merge($rules, [
+                    'materials'            => 'nullable|array',
+                    'materials.*.productID' => 'nullable',
+                    'materials.*.quantity'  => 'nullable|numeric',
+                    'materials.*.unitID'    => 'nullable',
+                ]);
+            }
+
+            $request->validate($rules);
+
             $invalidPlants = Plant::whereIn('id', $request->plantIDs)
                 ->where('plotID', '!=', $request->plotID)
                 ->count();
-
             if ($invalidPlants > 0) {
                 return redirect()->back()->withErrors(['plantIDs' => 'Một hoặc nhiều cây không thuộc lô đã chọn']);
             }
-            $taskSlug = Str::slug($request->workID, '_');
+
+            $taskSlug  = Str::slug($request->workID, '_');
             $taskSlug1 = Str::slug($request->workerID);
-            $prefix = '#' . $taskSlug . '_' . $taskSlug1;
+            $prefix = "#" . $taskSlug . "_" . $taskSlug1;
             do {
                 $randomCode = $prefix . rand(100, 999);
             } while (GenTask::where('code', $randomCode)->exists());
 
             $task = GenTask::create([
-                'code' => $randomCode,
-                'workID' => $request->workID,
-                'workName' => $request->workName,
-                'workerID' => $request->workerID,
-                'workDate' => $request->workDate,
-                'dateEnd' => $request->dateEnd,
-                'plotID' => $request->plotID,
-                'type' => $request->typeG,
-                'priority' => $request->priority,
+                'code'        => $randomCode,
+                'workID'      => $request->workID,
+                'workName'    => $request->workName,
+                'workerID'    => $request->workerID,
+                'workDate'    => $request->workDate,
+                'dateEnd'     => $request->dateEnd,
+                'plotID'      => $request->plotID,
+                'type'        => $request->typeG,
+                'priority'    => $request->priority,
                 'description' => $request->description,
-                'workStatus' => 'Đang chờ',
+                'workStatus'  => 'Đang chờ',
             ]);
-            // dd($task);
             $task->plants()->sync($request->plantIDs);
 
-            if ($request->type === 'Khai thác') {
-                // $pickingCode = 'PKT_' . strtoupper(Str::random(6));
+            if ($work->workType === 'Khai thác') {
                 $picking = Picking::create([
-                    // 'code' => $pickingCode,
-                    'code' => $request->code,
-                    'name' => $request->name,
-                    'type' => 'Khai thác',
+                    'code'        => $request->code,
+                    'name'        => $request->name,
+                    'type'        => 'Khai thác',
                     'warehouseID' => $request->warehouseID,
-                    'createName' => Auth::user()->name,
-                    'createDate' => $request->createDate,
-                    'desc' => $request->desc,
-                    'active' => $request->active ?? 'Chưa hoàn thành',
-                    'status' => 'Hoạt động',
+                    'createName'  => Auth::user()->name,
+                    'createDate'  => $request->createDate,
+                    'desc'        => $request->desc,
+                    'active'      => $request->active ?? 'Chưa hoàn thành',
+                    'status'      => 'Hoạt động',
                 ]);
 
-                if ($request->has('materials')) {
-                    foreach ($request->materials as $material) {
-                        ProductPicking::create([
-                            'pickingID' => $picking->id,
-                            'productID' => $material['productID'],
-                            'quantity' => $material['quantity'],
-                        ]);
-                    }
+                foreach ($request->materials ?? [] as $material) {
+                    ProductPicking::create([
+                        'pickingID' => $picking->id,
+                        'productID' => $material['productID'],
+                        'quantity'  => $material['quantity'],
+                    ]);
                 }
             }
             ActionHistory::create([
-                'user_id' => Auth::id(),
+                'user_id'     => Auth::id(),
                 'action_type' => 'create',
-                'model_type' => 'GenTask',
-                'details' => "Đã tạo công việc: " . $request->workName . 'với mã là: ' . $randomCode,
+                'model_type'  => 'GenTask',
+                'details'     => "Đã tạo công việc: {$request->workName} với mã: {$randomCode}",
             ]);
-            session()->flash('message', 'Tạo công việc thành công.');
-            return redirect()->route('works.index');
+
+            if ((int)$request->typeG === 1) {
+                return redirect()
+                    ->route('workps.addProposal', ['taskID' => $task->id])
+                    ->with('message', 'Đã tạo công việc. Bạn có thể tạo đề xuất vật tư ngay hoặc để sau.');
+            }
+
+            return redirect()->route('works.index')->with('message', 'Tạo công việc thành công');
         } catch (\Illuminate\Validation\ValidationException $e) {
             dd($e->errors());
         }
@@ -335,9 +353,9 @@ class WorkController extends Controller
     {
         $gen = GenTask::find($request->id);
         if ($gen) {
-            $gen->status = $gen->status == 'Hoàn thành' ? 'Chưa hoàn thành' : 'Hoàn thành';
+            $gen->workStatus = $gen->workStatus == 'Hoàn thành' ? 'Đang chờ' : 'Hoàn thành';
             $gen->save();
-            return response()->json(['success' => true, 'status' => $gen->status]);
+            return response()->json(['success' => true, 'workStatus' => $gen->workStatus]);
         } else {
             return response()->json(['success' => false]);
         }

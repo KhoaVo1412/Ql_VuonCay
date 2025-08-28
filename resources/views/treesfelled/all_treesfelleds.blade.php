@@ -109,24 +109,25 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Ngày Ghi Nhận</label>
-                                <input type="date" class="form-input datepicker" id="taskStartDate"
+                                <input type="date" class="form-input" id="detection_date"
                                     placeholder="Chọn Ngày Bắt Đầu">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Tên Lô</label>
-                                <select class="form-select" id="taskLot">
+                                <label class="form-label">Lô</label>
+                                <select class="form-select" id="task_lot">
                                     <option value="">-- Tất cả --</option>
-                                    <option value="L1">L1</option>
-                                    <option value="L2">L2</option>
+                                    @foreach($plots as $p)
+                                    <option value="{{ $p->id }}">{{ $p->plotName }}</option>
+                                    @endforeach
                                 </select>
                             </div>
-                            <div class="form-group" style="display: flex; align-items: end;">
+                            {{-- <div class="form-group" style="display: flex; align-items: end;">
                                 <button class="btn btn-success" onclick="filterTasks()"
                                     style="width: 30%;border-radius: 10px;">
                                     <i class="fas fa-filter"></i>
                                     Lọc
                                 </button>
-                            </div>
+                            </div> --}}
                         </div>
                     </div>
                 </div>
@@ -226,10 +227,11 @@
     $(document).ready(function() {
             var selectedRows = new Set();
             var dataTable = $('#treesfelleds-table').DataTable({
-                // "language": {
-                //     "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
-                //     "emptyTable": "Không có dữ liệu",
-                // },
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
+                    "emptyTable": "Không có dữ liệu",
+                },
+                 dom: 'lrtip',
                 processing: true,
                 serverSide: true,
                 columnDefs: [{
@@ -259,7 +261,11 @@
                 },
                 ajax: {
                     url: '{{ route('treesfelleds.index') }}',
-                    type: 'GET'
+                    type: 'GET',
+                    data: function (d) {
+                        d.detection_date = $('#detection_date').val(); 
+                        d.task_lot = $('#task_lot').val();
+                    }
                 },
                 columns: [{
                         data: null,
@@ -277,8 +283,8 @@
                         orderable: false,
                         searchable: false
                     },
-                    { data: 'plant_code', name: 'plant.plantCode' },
-                    { data: 'plot_name', name: 'plant.plot.name' },
+                    { data: 'plantCode', name: 'plantCode' },
+                    { data: 'plotName', name: 'plotName' },
                     { data: 'specific_location', name: 'specificLocation' },
                     { data: 'detection_date', name: 'detectionDate' },
                     { data: 'worker_name', name: 'worker.name' },
@@ -293,6 +299,15 @@
                 rowCallback: function(row, data) {
                     $(row).attr('data-id', data.id);
                 }
+            });
+            let t;
+            $('.search-inputs').on('input', function () {
+                clearTimeout(t);
+                const v = this.value;
+                t = setTimeout(() => dataTable.search(v).draw(), 250);
+            });
+            $('#detection_date, #task_lot').on('change', function () {
+                dataTable.ajax.reload(null, true);
             });
             $('#select-all-treesfelleds').on('change', function() {
                 var checked = $(this).prop('checked');

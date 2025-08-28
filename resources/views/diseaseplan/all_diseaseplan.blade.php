@@ -2,7 +2,7 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-md-flex d-block align-items-center justify-content-between my-2 page-header-breadcrumb">
-        <h4 class="page-title fw-semibold fs-18 mb-0">Phiếu Cây Bệnh</h4>
+        <h5 class="page-title fw-semibold fs-18 mb-0">Phiếu Cây Bệnh</h5>
         <div class="ms-md-1 ms-0">
             <nav>
                 <ol class="breadcrumb mb-0 padding">
@@ -166,10 +166,11 @@
     $(document).ready(function() {
             var selectedRows = new Set();
             var dataTable = $('#diseaseplan-table').DataTable({
-                // "language": {
-                //     "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
-                //     "emptyTable": "Không có dữ liệu",
-                // },
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
+                    "emptyTable": "Không có dữ liệu",
+                },
+                dom: 'lrtip',
                 processing: true,
                 serverSide: true,
                 // responsive: true,
@@ -251,6 +252,12 @@
                 rowCallback: function(row, data) {
                     $(row).attr('data-id', data.id);
                 }
+            });
+            let t;
+            $('.search-inputs').on('input', function () {
+                clearTimeout(t);
+                const v = this.value;
+                t = setTimeout(() => dataTable.search(v).draw(), 250);
             });
             $('#select-all-diseaseplan').on('change', function() {
                 var checked = $(this).prop('checked');

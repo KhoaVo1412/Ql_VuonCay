@@ -125,47 +125,29 @@
                     <div class="form-section">
                         <!-- First Filter Row -->
                         <div class="form-row">
-                            {{-- <div class="form-group">
-                                <label class="form-label">Tìm Kiếm</label>
-                                <input type="text" class="form-input" id="taskKeyword"
-                                    placeholder="Tìm kiếm công việc...">
-                            </div> --}}
+
                             <div class="form-group">
-                                <label class="form-label">Loại công việc</label>
-                                <select class="form-select" id="taskType">
-                                    <option value="">Tất cả</option>
-                                    <option value="Tưới nước">Tưới nước</option>
-                                    <option value="Bón phân">Bón phân</option>
-                                    <option value="Cắt tỉa">Cắt tỉa</option>
-                                    <option value="Phun thuốc">Phun thuốc</option>
-                                    <option value="Thu hoạch">Thu hoạch</option>
-                                    <option value="Làm cỏ">Làm cỏ</option>
-                                    <option value="Kiểm tra">Kiểm tra</option>
+                                <label class="form-label">Loại Công Việc</label>
+                                <select class="form-select" id="typeWork">
+                                    <option value="">-- Tất cả --</option>
+                                    @foreach($works as $w)
+                                    <option value="{{ $w->id }}">{{ $w->workType }}</option>
+                                    @endforeach
                                 </select>
                             </div>
-                            {{-- <div class="form-group">
-                                <label class="form-label">Vườn</label>
-                                <select class="form-select" id="taskGarden">
-                                    <option value="">Tất cả vườn</option>
-                                    <option value="Khu A">Khu A</option>
-                                    <option value="Khu B">Khu B</option>
-                                    <option value="Khu C">Khu C</option>
-                                    <option value="Khu D">Khu D</option>
-                                </select>
-                            </div> --}}
+
                             <div class="form-group">
                                 <label class="form-label">Lô</label>
-                                <select class="form-select" id="taskLot">
-                                    <option value="">Tất cả lô</option>
-                                    <option value="Lô 1">Lô 1</option>
-                                    <option value="Lô 2">Lô 2</option>
-                                    <option value="Lô 3">Lô 3</option>
-                                    <option value="Lô 4">Lô 4</option>
+                                <select class="form-select" id="plotID">
+                                    <option value="">-- Tất cả --</option>
+                                    @foreach($plots as $p)
+                                    <option value="{{ $p->id }}">{{ $p->plotName }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Mức độ ưu tiên</label>
-                                <select class="form-select" id="taskPriority">
+                                <select class="form-select" id="priority">
                                     <option value="">Tất cả</option>
                                     <option value="Thấp">Thấp</option>
                                     <option value="Trung bình">Trung bình</option>
@@ -186,12 +168,12 @@
                                 <label class="form-label">Thời gian kết thúc</label>
                                 <input type="date" class="form-input" id="taskEndDate">
                             </div>
-                            <div class="form-group" style="display: flex; align-items: end;">
+                            {{-- <div class="form-group" style="display: flex; align-items: end;">
                                 <button class="btn btn-success btn-w" onclick="filterTasks()">
                                     <i class="fa-light fa-filter-list"></i>
                                     Lọc
                                 </button>
-                            </div>
+                            </div> --}}
                         </div>
                     </div>
 
@@ -218,11 +200,13 @@
 
 
                     </div>
+                    @unlessrole('Công Nhân')
                     <button class="btn btn-success">
                         <a href="{{route('works.add')}}" class="text-white">
                             <i class="fas fa-plus"></i>
                             Thêm Công Việc</a>
                     </button>
+                    @endunlessrole
                     {{-- <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#create-works">
                         <i class="fas fa-plus"></i>
                         Thêm Công Việc
@@ -249,9 +233,12 @@
                                 {{-- <th scope="col">STT</th> --}}
                                 <th scope="col">Mã</th>
                                 <th scope="col">Tên Công Việc</th>
+                                <th scope="col">Lô</th>
                                 <th scope="col">Loại Công Việc</th>
                                 <th scope="col">Ngày Làm</th>
+                                <th scope="col">Ngày Kết Thúc</th>
                                 <th scope="col">Thực Hiện</th>
+                                <th scope="col">Mức Độ</th>
                                 <th scope="col">Trạng Thái</th>
                                 <th scope="col">Thao Tác</th>
                             </tr>
@@ -266,9 +253,12 @@
                                 {{-- <th scope="col">STT</th> --}}
                                 <th scope="col">Mã</th>
                                 <th scope="col">Tên Công Việc</th>
+                                <th scope="col">Lô</th>
                                 <th scope="col">Loại Công Việc</th>
                                 <th scope="col">Ngày Làm</th>
+                                <th scope="col">Ngày Kết Thúc</th>
                                 <th scope="col">Thực Hiện</th>
+                                <th scope="col">Mức Độ</th>
                                 <th scope="col">Trạng Thái</th>
                                 <th scope="col">Thao Tác</th>
                             </tr>
@@ -322,6 +312,7 @@
                      "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
                      "emptyTable": "Không có dữ liệu",
                  },
+                dom: 'lrtip',
                 processing: true,
                 serverSide: true,
                 // responsive: true,
@@ -352,7 +343,14 @@
                 },
                 ajax: {
                     url: '{{ route('works.index') }}',
-                    type: 'GET'
+                    type: 'GET',
+                    data: function (d) {
+                        d.work_id    = $('#typeWork').val();
+                        d.plot_id    = $('#plotID').val();
+                        d.priority   = $('#priority').val();
+                        d.start_date = $('#taskStartDate').val();
+                        d.end_date   = $('#taskEndDate').val();
+                    }
                 },
                 columns: [{
                         data: null,
@@ -379,6 +377,10 @@
                         name: 'workName'
                     },
                     {
+                        data: 'plotName',
+                        name: 'plotName'
+                    },
+                    {
                         data: 'workType',
                         name: 'workType'
                     },
@@ -387,8 +389,16 @@
                         name: 'workDate'
                     },
                     {
+                        data: 'dateEnd',
+                        name: 'dateEnd'
+                    },
+                    {
                         data: 'workerID',
                         name: 'workerID'
+                    },
+                    {
+                        data: 'priority',
+                        name: 'priority'
                     },
                     {
                         data: 'workStatus',
@@ -399,6 +409,15 @@
                 rowCallback: function(row, data) {
                     $(row).attr('data-id', data.id);
                 }
+            });
+            let t;
+            $('.search-inputs').on('input', function () {
+                clearTimeout(t);
+                const v = this.value;
+                t = setTimeout(() => dataTable.search(v).draw(), 250);
+            });
+            $('#typeWork, #plotID, #priority, #taskStartDate, #taskEndDate').on('change', function () {
+                dataTable.ajax.reload(null, true);
             });
             $('#select-all-works').on('change', function() {
                 var checked = $(this).prop('checked');
@@ -559,7 +578,7 @@
                         },
                         success: function(response) {
                             if (response.success) {
-                                if (response.workStatus === 'Hoàn thành') {
+                                if (response.status === 'Hoàn thành') {
                                     button.removeClass('bg-danger').addClass('bg-success').text(
                                         'Hoàn thành');
                                 } else {
@@ -596,105 +615,14 @@
             });
         });
 </script>
-<script>
-    // JS: Gán loại công việc tương ứng
-    document.getElementById('workID-select').addEventListener('change', function () {
-        const selected = this.options[this.selectedIndex];
-        const type = selected.getAttribute('data-type');
-        document.getElementById('work-type-display').value = type || '';
-    });
 
-    function updateTaskCounts() {
-            const total = tasks.length;
-            const completed = tasks.filter(task => task.completed).length;
-            const pending = total - completed;
-
-            const allCountEl = document.getElementById('allTasksCount');
-            const completedCountEl = document.getElementById('completedTasksCount');
-            const pendingCountEl = document.getElementById('pendingTasksCount');
-            
-            if (allCountEl) allCountEl.textContent = total;
-            if (completedCountEl) completedCountEl.textContent = completed;
-            if (pendingCountEl) pendingCountEl.textContent = pending;
-        }
-        function filterTasks() {
-            const keywordEl = document.getElementById('taskKeyword');
-            const typeEl = document.getElementById('taskType');
-            const gardenEl = document.getElementById('taskGarden');
-            const lotEl = document.getElementById('taskLot');
-            const priorityEl = document.getElementById('taskPriority');
-            const startDateEl = document.getElementById('taskStartDate');
-            const endDateEl = document.getElementById('taskEndDate');
-            
-            const keyword = keywordEl ? keywordEl.value.toLowerCase() : '';
-            const type = typeEl ? typeEl.value : '';
-            const garden = gardenEl ? gardenEl.value : '';
-            const lot = lotEl ? lotEl.value : '';
-            const priority = priorityEl ? priorityEl.value : '';
-            const startDate = startDateEl ? startDateEl.value : '';
-            const endDate = endDateEl ? endDateEl.value : '';
-
-            // First apply search filters
-            let searchFiltered = tasks.filter(task => {
-                if (keyword && !task.name.toLowerCase().includes(keyword)) return false;
-                if (type && task.type !== type) return false;
-                if (garden && task.garden !== garden) return false;
-                if (lot && task.lot !== lot) return false;
-                if (priority && task.priority !== priority) return false;
-                if (startDate && task.startDate < startDate) return false;
-                if (endDate && task.startDate > endDate) return false;
-                return true;
-            });
-
-            // Then apply status filter
-            switch(currentTaskFilter) {
-                case 'pending':
-                    filteredTasks = searchFiltered.filter(task => !task.completed);
-                    break;
-                case 'completed':
-                    filteredTasks = searchFiltered.filter(task => task.completed);
-                    break;
-                case 'all':
-                default:
-                    filteredTasks = searchFiltered;
-                    break;
-            }
-
-            renderTasks();
-        }
-
-        function setTaskFilter(filter) {
-            currentTaskFilter = filter;
-            
-            // Update button states
-            document.querySelectorAll('.task-filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
-            
-            // Apply filter
-            applyTaskFilter();
-        }
-        function applyTaskFilter() {
-            switch(currentTaskFilter) {
-                case 'pending':
-                    filteredTasks = tasks.filter(task => !task.completed);
-                    break;
-                case 'completed':
-                    filteredTasks = tasks.filter(task => task.completed);
-                    break;
-                case 'all':
-                default:
-                    filteredTasks = [...tasks];
-                    break;
-            }
-            
-            renderTasks();
-        }
-</script>
 <style>
     #buttons-container {
         visibility: hidden;
+    }
+
+    .bg-warning1 {
+        background-color: rgb(249, 224, 81) !important;
     }
 </style>
 @endsection

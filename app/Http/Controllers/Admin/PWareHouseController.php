@@ -13,6 +13,7 @@ use App\Models\UnitOfMeasure;
 use App\Models\User;
 use App\Models\WareHouse;
 use App\Models\Worker;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -24,9 +25,20 @@ class PWareHouseController extends Controller
     public function index(Request $request)
     {
 
+        $warehouses = WareHouse::all();
         $all_pwarehouses = Picking::with('productPickings.product', 'warehouse')->orderBy('id', 'desc')->get();
         if ($request->ajax()) {
-            return DataTables::of($all_pwarehouses)
+
+            $query = Picking::with(['productPickings.product', 'warehouse'])
+                ->when($request->filled('warehouse_id'), function ($q) use ($request) {
+                    $q->where('warehouseID', $request->warehouse_id);
+                })
+                ->when($request->filled('start_date'), function ($q) use ($request) {
+                    $q->whereDate('createDate', $request->start_date);
+                })
+                ->orderByDesc('id');
+
+            return DataTables::of($query)
                 ->addColumn('check', function ($row) {
                     return '<input class="form-check-input" type="checkbox" id="check-' . $row->id . '" data-id="' . $row->id . '">';
                 })
@@ -48,7 +60,8 @@ class PWareHouseController extends Controller
                     return $row->type ?? 'Không rõ';
                 })
                 ->editColumn('createDate', function ($row) {
-                    return $row->createDate ?? 'Không rõ';
+                    return $row->createDate ? Carbon::parse($row->createDate)->format('d/m/Y')
+                        : null;
                 })
                 ->editColumn('active', function ($row) {
                     $activeClass = $row->active == 'Hoàn thành' ? 'success' : 'danger';
@@ -93,8 +106,7 @@ class PWareHouseController extends Controller
                 ->rawColumns(['check', 'code', 'stt', 'createDate', 'name', 'type', 'warehouseID', 'status', 'active', 'action'])
                 ->make(true);
         }
-        // return view('decomposes.all_decomposes', compact('gardens', 'workers', 'decomposes', 'plots'));
-        return view('pwarehouses.all_pwarehouses');
+        return view('pwarehouses.all_pwarehouses', compact('warehouses'));
     }
     // public function toggleActive(Request $request, $id)
     // {

@@ -53,9 +53,9 @@
                             </select>
                         </div>
                         <div class="col-12">
-                            <label for="unitID" class="form-label">Đơn Vị</label>
+                            <label for="unitID" class="form-label">vật tư</label>
                             <select name="unitID" id="unitID" class="form-select" required>
-                                <option value="">-- Chọn đơn vị --</option>
+                                <option value="">-- Chọn vật tư --</option>
                                 @foreach ($units as $u)
                                 <option value="{{ $u->id }}">{{ $u->name }}</option>
                                 @endforeach
@@ -91,7 +91,7 @@
             </div>
             <div class="container mt-2">
                 <div class="row g-3">
-                    <div class="col-md-10">
+                    <div class="col-md-12">
                         <div class="search-box">
                             <input type="text" class="search-inputs" placeholder="Tìm Kiếm...">
                         </div>
@@ -137,8 +137,8 @@
 
                             {{-- <th scope="col">STT</th> --}}
                             <th scope="col">Tên</th>
-                            <th scope="col">Danh mục</th>
-                            <th scope="col">Đơn vị</th>
+                            <th scope="col">Danh Mục</th>
+                            <th scope="col">Đơn Vị</th>
                             <th scope="col">Trạng Thái</th>
                             <th scope="col">Thao Tác</th>
                         </tr>
@@ -153,8 +153,8 @@
                             </th>
                             {{-- <th scope="col">STT</th> --}}
                             <th scope="col">Tên</th>
-                            <th scope="col">Danh mục</th>
-                            <th scope="col">Đơn vị</th>
+                            <th scope="col">Danh Mục</th>
+                            <th scope="col">Đơn Vị</th>
                             <th scope="col">Trạng Thái</th>
                             <th scope="col">Thao Tác</th>
                         </tr>
@@ -190,7 +190,7 @@
                 <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Bạn chắc chắn muốn xóa đơn vị đã chọn?
+                Bạn chắc chắn muốn xóa vật tư đã chọn?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -204,8 +204,9 @@
             var selectedRows = new Set();
             var dataTable = $('#products-table').DataTable({
                 "language": {
-                    // "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json"
+                    "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json"
                 },
+                dom: 'lrtip',
                 processing: true,
                 serverSide: true,
                 // responsive: true,
@@ -279,6 +280,12 @@
                 rowCallback: function(row, data) {
                     $(row).attr('data-id', data.id);
                 }
+            });
+            let t;
+            $('.search-inputs').on('input', function () {
+                clearTimeout(t);
+                const v = this.value;
+                t = setTimeout(() => dataTable.search(v).draw(), 250);
             });
             $('#select-all-products').on('change', function() {
                 var checked = $(this).prop('checked');
@@ -421,7 +428,7 @@
 
             Swal.fire({
                 title: "Xác nhận thay đổi",
-                text: "Bạn có chắc chắn muốn thay đổi trạng thái của đơn vị này?",
+                text: "Bạn có chắc chắn muốn thay đổi trạng thái của vật tư này?",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#3085d6",
@@ -448,7 +455,7 @@
                                 }
 
                                 Swal.fire({
-                                    text: 'Trạng thái của đơn vị đã được cập nhật.',
+                                    text: 'Trạng thái của vật tư đã được cập nhật.',
                                     icon: 'success',
                                     confirmButtonText: 'OK',
                                     timer: 3000
@@ -456,7 +463,7 @@
                             } else {
                                 Swal.fire({
                                     text: response.message ||
-                                        'Không thể thay đổi trạng thái của đơn vị.',
+                                        'Không thể thay đổi trạng thái của vật tư.',
                                     icon: 'error',
                                     confirmButtonText: 'OK',
                                     timer: 3000

@@ -32,6 +32,19 @@
 
 <div class="row">
     <div class="col-xl-12">
+        @if (session('success'))
+        <div class="alert alert-light-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        @endif
+
+        @if (session('errors'))
+        <div class="alert alert-light-danger alert-dismissible fade show" role="alert">
+            <pre>{{ $errors->first() }}</pre>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        @endif
         <form id="form-works" action="{{ route('works.update', ['id' => $gentasks->id]) }}" method="POST"
             enctype="multipart/form-data">
             {{ csrf_field() }}
@@ -102,12 +115,14 @@
                             <div class="form-group">
                                 <label class="form-lable">Ngày Bắt Đầu</label>
                                 <input type="date" name="workDate" class="form-control"
-                                    value="{{ $gentasks->workDate }}" required>
+                                    value="{{ $gentasks->workDate ? \Carbon\Carbon::parse($gentasks->workDate)->format('Y-m-d') : '' }}"
+                                    onclick="this.showPicker()" onfocus="this.showPicker()" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-lable">Ngày Kết Thúc</label>
-                                <input type="date" name="workDate" class="form-control"
-                                    value="{{ $gentasks->workDate }}" required>
+                                <input type="date" name="dateEnd" class="form-control"
+                                    value="{{ $gentasks->dateEnd ? \Carbon\Carbon::parse($gentasks->dateEnd)->format('Y-m-d') : '' }}"
+                                    onclick="this.showPicker()" onfocus="this.showPicker()" required>
                             </div>
                         </div>
                         <div class="form-row">
@@ -173,6 +188,36 @@
                         <textarea name="description" class="form-control">{{ $gentasks->description }}</textarea>
                     </div>
 
+                    <h5 class="mt-3">Danh Sách Đề Xuất Vật Tư</h5>
+
+                    @foreach($gentasks->taskProductProposals as $proposal)
+                    <div class="mb-3">
+                        <h6>Đề Xuất: {{ $proposal->proposaName }} ({{ $proposal->proposalDate }})</h6>
+
+                        <table class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%">#</th>
+                                    <th style="width: 20%">Tên Vật Tư</th>
+                                    <th style="width: 10%">Số Lượng</th>
+                                    <th style="width: 10%">Đơn Vị</th>
+                                    <th style="width: 55%">Ghi Chú</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($proposal->proposalProducts as $index => $pp)
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td>{{ $pp->product->name ?? 'Không có tên' }}</td>
+                                    <td>{{ $pp->materialQuantity }}</td>
+                                    <td>{{ $pp->unit->name ?? '---' }}</td>
+                                    <td>{{ $pp->note }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @endforeach
 
                     <!-- Submit Button -->
                     <div class="col-md-12 mt-3">

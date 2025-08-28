@@ -34,7 +34,12 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Kho</label>
-                                <input type="text" class="form-input" id="taskKeyword" placeholder="Kho">
+                                <select class="form-select" id="warehouseID" required>
+                                    <option value="">Tất Cả</option>
+                                    @foreach($warehouses as $w)
+                                    <option value="{{ $w->id }}">{{ $w->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
 
                             <div class="form-group">
@@ -42,10 +47,10 @@
                                 <input type="date" class="form-input" id="taskStartDate">
                             </div>
                             <div class="form-group" style="display: flex; align-items: end;">
-                                <button class="btn btn-success btn-w" onclick="filterTasks()">
+                                {{-- <button class="btn btn-success btn-w" onclick="filterTasks()">
                                     <i class="fa-light fa-filter-list"></i>
                                     Lọc
-                                </button>
+                                </button> --}}
                             </div>
                         </div>
 
@@ -142,7 +147,7 @@
                     <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    Bạn chắc chắn muốn xóa phiếu đã chọn?
+                    Bạn chắc chắn muốn xóa Sản Lượng đã chọn?
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -156,10 +161,11 @@
     $(document).ready(function() {
             var selectedRows = new Set();
             var dataTable = $('#decomposes-table').DataTable({
-                // "language": {
-                //     "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
-                //     "emptyTable": "Không có dữ liệu",
-                // },
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
+                    "emptyTable": "Không có dữ liệu",
+                },
+                dom: 'lrtip',
                 processing: true,
                 serverSide: true,
                 // responsive: true,
@@ -190,7 +196,11 @@
                 },
                 ajax: {
                     url: '{{ route('decomposes.index') }}',
-                    type: 'GET'
+                    type: 'GET',
+                    data: function (d) {
+                        d.start_date = $('#taskStartDate').val();
+                        d.warehouse_id   = $('#warehouseID').val();
+                    }
                 },
                 columns: [{
                         data: null,
@@ -233,6 +243,15 @@
                 rowCallback: function(row, data) {
                     $(row).attr('data-id', data.id);
                 }
+            });
+            let t;
+            $('.search-inputs').on('input', function () {
+                clearTimeout(t);
+                const v = this.value;
+                t = setTimeout(() => dataTable.search(v).draw(), 250);
+            });
+            $('#taskStartDate, #warehouseID').on('change', function () {
+                dataTable.ajax.reload(null, true);
             });
             $('#select-all-decomposes').on('change', function() {
                 var checked = $(this).prop('checked');
@@ -399,7 +418,7 @@
                         },
                         success: function(response) {
                             if (response.success) {
-                                if (response.status === 'Duyệt') {
+                                if (response.active === 'Duyệt') {
                                     button.removeClass('bg-danger').addClass('bg-success').text(
                                         'Duyệt');
                                 } else {
@@ -436,4 +455,9 @@
             });
         });
 </script>
+<style>
+    .card {
+        margin-bottom: 0px !important;
+    }
+</style>
 @endsection

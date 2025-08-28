@@ -109,6 +109,22 @@
                                 <input type="text" class="form-input" name="name" required>
                             </div>
                             <div class="col-md-4">
+                                <label class="form-label">Email</label>
+                                <input class="form-input" type="text" name="email" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="role" class="form-label">Mật Khẩu</label>
+                                <input class="form-input" type="password" name="password" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" for="role">Vai trò</label>
+                                <select name="role" id="role" class="form-select" required>
+                                    @foreach($roles as $roleName)
+                                    <option value="{{ $roleName }}">{{ $roleName }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-4">
 
                                 <label class="form-label">Ngày Sinh</label>
                                 <input type="date" class="form-input" name="bdate" placeholder="Ngày sinh" required>

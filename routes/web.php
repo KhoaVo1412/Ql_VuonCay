@@ -37,7 +37,7 @@ use App\Http\Controllers\Export\ExportExcelController;
 use App\Http\Controllers\Export\ExportLatexController;
 use App\Http\Controllers\Export\ExportRssController;
 use App\Http\Controllers\Export\ExportSvrController;
-use App\Http\Controllers\Import\PlantingAreaImportController;
+use App\Http\Controllers\Import\PlotImportController;
 use App\Http\Controllers\Admin\ReportController;
 
 use App\Http\Controllers\Import\ImportLatexController;
@@ -506,8 +506,8 @@ Route::middleware(['login'])->group(function () {
     Route::get('/export-excel', [ExportExcelController::class, 'exportExcel']);
 
     // Thêm khu vực trồng bằng excel
-    Route::get('/add-excel', [PlantingAreaImportController::class, 'add_excel'])->name('add-excel');
-    Route::post('/import-plantingareas', [PlantingAreaImportController::class, 'importExcel'])->name('import-plantingareas');
+    Route::get('/add-excel', [PlotImportController::class, 'add_excel'])->name('add-excel');
+    Route::post('/import-plots', [PlotImportController::class, 'importExcel'])->name('import-plots');
     // Sửa khu vực trồng bằng excel
     Route::get('/edit-excel', [UpdatePlantingAreaImportController::class, 'edit_excel'])->name('edit-excel');
     Route::post('/edit-import-plantingareas', [UpdatePlantingAreaImportController::class, 'importExcel'])->name('edit-import-plantingareas');

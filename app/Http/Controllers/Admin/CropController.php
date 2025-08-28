@@ -20,9 +20,17 @@ class CropController extends Controller
         $plots = Plot::all();
         $varieties = Variety::all();
 
-        $all_plants = Plant::with('plot', 'variety')->orderBy('id', 'desc')->get();
+        // $all_plants = Plant::with('plot', 'variety')->orderBy('id', 'desc')->get();
         // dd($all_plants);
         if ($request->ajax()) {
+            $all_plants = Plant::with('plot', 'variety')
+                ->when($request->filled('plot_id'), function ($q) use ($request) {
+                    $q->where('plotID', $request->plot_id);
+                })
+                ->when($request->filled('start_date'), function ($q) use ($request) {
+                    $q->whereDate('year', $request->start_date);
+                })
+                ->orderByDesc('id');
             return DataTables::of($all_plants)
                 ->addColumn('check', function ($row) {
                     return '<input class="form-check-input" type="checkbox" id="check-' . $row->id . '" data-id="' . $row->id . '">';

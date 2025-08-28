@@ -6,24 +6,40 @@ use App\Http\Controllers\Controller;
 use App\Models\ActionHistory;
 use App\Models\Duty;
 use App\Models\Team;
+use App\Models\User;
 use App\Models\Worker;
 use Carbon\CarbonInterval;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
+use Spatie\Permission\Models\Role;
 use Yajra\DataTables\DataTables;
 
 class WorkerController extends Controller
 {
     public function index(Request $request)
     {
-        // dd(route('aaa'));
         $duties = Duty::all();
         $teams = Team::all();
-        $all_workers = Worker::with('team', 'duty')->orderBy('id', 'desc')->get();
+        // $all_workers = Worker::with('team', 'duty')->orderBy('id', 'desc')->get();
         // dd($all_workers);
         if ($request->ajax()) {
+            $all_workers = Worker::with(['team:id,name', 'duty:id,dutyName'])
+                ->when(
+                    $request->filled('team_id'),
+                    fn($q) =>
+                    $q->where('team_id', $request->team_id)
+                )
+                ->when(
+                    $request->filled('duty_id'),
+                    fn($q) =>
+                    $q->where('duty_id', $request->duty_id)
+                )
+                ->orderByDesc('id');
             return DataTables::of($all_workers)
                 ->addColumn('check', function ($row) {
                     return '<input class="form-check-input" type="checkbox" id="check-' . $row->id . '" data-id="' . $row->id . '">';
@@ -104,13 +120,15 @@ class WorkerController extends Controller
     {
         $duties = Duty::all();
         $teams = Team::all();
+        $roles = Role::pluck('name', 'name');
         $workers = Worker::with('team', 'duty')->orderBy('id', 'desc')->get();
-        return view('workers.add_workers', compact('duties', 'teams', 'workers'));
+        return view('workers.add_workers', compact('duties', 'teams', 'workers', 'roles'));
     }
     public function save(Request $request)
     {
         // dd($request->all());
         $request->validate([
+            'email' => 'nullable|email',
             'image' => 'nullable|image|max:2048',
             'code_name' => 'required|string|max:100',
             'name' => 'required|string|max:255',
@@ -136,19 +154,37 @@ class WorkerController extends Controller
             $request->file('image')->move(public_path('/image_workers'), $imageName);
             $imagePath = 'image_workers/' . $imageName;
         }
-        Worker::create([
-            'name' => $request->name,
-            'code_name' => $request->code_name,
-            'bdate' => $request->bdate,
-            'cccd' => $request->cccd,
-            'address' => $request->address,
-            'team_id' => $request->team_id,
-            'duty_id' => $request->duty_id,
-            'gender' => $request->gender,
-            'phone' => $request->phone,
-            'image' => $imagePath,
-            'status' => $request->status ?? 'Đang làm việc',
-        ]);
+        $result = DB::transaction(function () use ($request, $imagePath) {
+            $rawPassword = $request->password;
+            $user = User::create([
+                'name'     => $request->name,
+                'email' => $request->email,
+                'phone'    => $request->phone ?? null,
+                'password' => Hash::make($rawPassword ?? '123'),
+            ]);
+
+            $user->assignRole($request->role);
+
+            $worker = Worker::create([
+                'name'      => $request->name,
+                'email'      => $request->email,
+                'code_name' => $request->code_name,
+                'bdate'     => $request->bdate,
+                'cccd'      => $request->cccd,
+                'address'   => $request->address,
+                'team_id'   => $request->team_id,
+                'duty_id'   => $request->duty_id,
+                'gender'    => $request->gender,
+                'phone'     => $request->phone,
+                'image'     => $imagePath,
+                'status'    => $request->status ?? 'Đang làm việc',
+                'user_id' => $user->id,
+            ]);
+
+            return [$user, $worker, $rawPassword];
+        });
+
+
         ActionHistory::create([
             'user_id' => Auth::id(),
             'action_type' => 'create',
@@ -161,56 +197,76 @@ class WorkerController extends Controller
     {
         $duties = Duty::all();
         $teams = Team::all();
+        $roles = Role::pluck('name', 'name');
         $workers = Worker::find($id);
-        return view('workers.edit_workers', compact('workers', 'duties', 'teams'));
+        $user = $workers->user;
+        return view('workers.edit_workers', compact('user', 'roles', 'workers', 'duties', 'teams'));
     }
     public function update(Request $request, $id)
     {
+        $worker = Worker::findOrFail($id);
+        $user   = $worker->user;
+
         $request->validate([
-            'name' => 'required|string',
-            'code_name' => 'required|string',
+            'email' => 'nullable|email',
+            'image' => 'nullable|image|max:2048',
+            'code_name' => 'required|string|max:100',
+            'name' => 'required|string|max:255',
             'bdate' => 'required|date',
-            'cccd' => 'nullable|digits_between:9,12',
+            'cccd' => 'nullable|numeric|digits_between:9,12',
             'address' => 'required|string',
             'team_id' => 'required',
-            'duty_id' => 'required',
-            'gender' => 'required|in:0,1',
-            'phone' => 'required|regex:/^\d{10,11}$/',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'duty_id' => 'nullable',
+            'gender' => 'required',
+            'phone' => 'required',
+            'status' => 'nullable|string',
+            'role'      => 'nullable',
         ]);
-
-        $worker = Worker::findOrFail($id);
-
+        $imagePath = $worker->image;
         if ($request->hasFile('image')) {
-            if ($worker->image) {
-                $oldImagePath = public_path('storage/' . $worker->image);
-                if (file_exists($oldImagePath)) {
-                    unlink($oldImagePath);
+            if ($imagePath && File::exists(public_path($imagePath))) {
+                File::delete(public_path($imagePath));
+            }
+            $imageName = time() . '_' . $request->file('image')->getClientOriginalName();
+            $request->file('image')->move(public_path('/image_workers'), $imageName);
+            $imagePath = 'image_workers/' . $imageName;
+        }
+
+        DB::transaction(function () use ($request, $worker, $user, $imagePath) {
+            if ($user) {
+                $user->name  = $request->name;
+                $user->email = $request->email;
+                $user->save();
+
+                if ($request->filled('role')) {
+                    $user->syncRoles([$request->role]);
                 }
             }
 
-            $imageName = time() . '_' . $request->file('image')->getClientOriginalName();
-            $imagePath = 'image_workers/' . $imageName;
-            $request->file('image')->move(public_path('/image_workers'), $imageName);
-
-            $worker->image = $imagePath;
-        }
-        $worker->update([
-            'name' => $request->name,
-            'code_name' => $request->code_name,
-            'bdate' => $request->bdate,
-            'cccd' => $request->cccd,
-            'address' => $request->address,
-            'team_id' => $request->team_id,
-            'duty_id' => $request->duty_id,
-            'gender' => $request->gender,
-            'phone' => $request->phone,
-            'status' => $request->status,
+            $worker->update([
+                'name'      => $request->name,
+                'email'     => $request->email,
+                'code_name' => $request->code_name,
+                'bdate'     => $request->bdate,
+                'cccd'      => $request->cccd,
+                'address'   => $request->address,
+                'team_id'   => $request->team_id,
+                'duty_id'   => $request->duty_id,
+                'gender'    => $request->gender,
+                'phone'     => $request->phone,
+                'image'     => $imagePath,
+                'status'    => $request->status,
+            ]);
+        });
+        ActionHistory::create([
+            'user_id'     => Auth::id(),
+            'action_type' => 'update',
+            'model_type'  => 'Worker',
+            'details'     => "Đã cập nhật công nhân: {$worker->name} (mã: {$worker->code_name})",
         ]);
 
-        return redirect()->route('workers.index')->with('message', 'Công Nhân đã được cập nhật!');
+        return redirect()->route('workers.index')->with('message', 'Cập nhật công nhân thành công');
     }
-
     public function destroy($id)
     {
         $workers = Worker::find($id);

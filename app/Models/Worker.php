@@ -22,7 +22,8 @@ class Worker extends Model
         'duty_id',
         'gender',
         'phone',
-        'status'
+        'status',
+        'user_id',
     ];
     public function evaluations()
     {
@@ -33,6 +34,11 @@ class Worker extends Model
     // {
     //     return $this->belongsTo(Team::class, 'id');
     // }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
     public function team()
     {
         return $this->belongsTo(Team::class, 'team_id');

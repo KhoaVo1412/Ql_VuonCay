@@ -10,6 +10,7 @@ use App\Models\Plant;
 use App\Models\Product;
 use App\Models\TreatmentSessions;
 use App\Models\Worker;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
@@ -20,7 +21,14 @@ class DiseaseplanController extends Controller
     public function index(Request $request)
     {
 
-        $all_dis = DiseasePlant::with('disease', 'plant', 'worker')->get();
+        // $all_dis = DiseasePlant::with('disease', 'plant', 'worker')->get();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $all_dis = DiseasePlant::with(['disease', 'plant', 'worker'])
+            ->when(!$user->hasRole('Admin'), function ($q) use ($user) {
+                $q->whereHas('worker', fn($w) => $w->where('user_id', $user->id));
+            })
+            ->get();
         if ($request->ajax()) {
             return DataTables::of($all_dis)
                 ->addColumn('check', function ($row) {
@@ -41,7 +49,8 @@ class DiseaseplanController extends Controller
                     return $row->plant ? $row->plant->plantCode : 'Không rõ';
                 })
                 ->addColumn('detectionDate', function ($row) {
-                    return $row->detectionDate;
+                    return $row->detectionDate ? Carbon::parse($row->detectionDate)->format('d/m/Y')
+                        : null;
                 })
                 ->editColumn('name', function ($row) {
                     return $row->name;

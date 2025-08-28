@@ -260,123 +260,6 @@
   });
 </script>
 
-{{-- <script>
-    $(document).on('click', '.view-map', function () {
-        const id_plot = $(this).data('id_plot');
-        console.log("Click id_plot:", id_plot);
-        const allPlots = @json($all_plots);
-        const plot = allPlots.find(p => p.id === id_plot);
-
-        if (!plot) {
-            alert("Không tìm thấy plot!");
-            return;
-        }
-
-        $('#loading-message').fadeIn();
-        $('#map-modal').fadeIn();
-        if (window.__arcgisView) { try { window.__arcgisView.destroy(); } catch(e){} }
-        const containerEl = document.getElementById('viewMap');
-        if (containerEl) containerEl.innerHTML = "";
-        require([
-            "esri/WebMap",
-            "esri/views/MapView",
-            "esri/config",
-            "esri/layers/GraphicsLayer",
-            "esri/Graphic",
-            "esri/geometry/Polygon",
-            "esri/symbols/TextSymbol",
-            "esri/geometry/Point",
-            "esri/geometry/projection" 
-        ], function(WebMap, MapView, esriConfig, GraphicsLayer, Graphic, Polygon, TextSymbol, Point) {
-            esriConfig.apiKey = 'AAPTxy8BH1VEsoebNVZXo8HurOadC8u-UIHoZRb-lXA-3rkDu_-XvNmTAkDyub3lRUmC8opcXCyL0s2ZXRCaabr-0W_mTQODDQjoxFA7bzeneym8cc7T6retjmqiAgVD52KNfFwO9aDBzBNwGpXLnZxmDumfBBo5NSsT3CPe8mcayFVA4-iaFGgByWubANLOFhj3AgrYBaWsfyCBJSz76VDY6OFtZElcdmA7m9bmHkvGfOo.AT1_x0a0pTBz';
-            const map = new WebMap({
-                portalItem: { id: '5ec8ed782e5146d1909f76e14e293059' }
-            });
-            const view = new MapView({
-                container: "viewMap",
-                map: map,
-                zoom: 12,
-                center: [107.3877, 10.6695]
-            });
-
-            const highlightLayer = new GraphicsLayer();
-            map.add(highlightLayer);
-
-            const otherPlotsLayer = new GraphicsLayer();
-            map.add(otherPlotsLayer);
-
-            view.when(() => {
-                highlightLayer.removeAll();
-                otherPlotsLayer.removeAll();
-                let geojson;
-                try {
-                    geojson = JSON.parse(plot.mapJs);
-                } catch(err) {
-                    console.error("Lỗi parse GeoJSON:", err);
-                    $('#loading-message').fadeOut();
-                    return;
-                }
-                allPlots.forEach(p => {
-                    if (!p.mapJs) return;
-
-                    let data;
-                    try {
-                        data = JSON.parse(p.mapJs);
-                    } catch { return; }
-
-                    if (data.type === "FeatureCollection" && data.features.length > 0) {
-                        const feature = data.features[0];
-                        let geom;
-
-                        if (feature.geometry.type === "Polygon") {
-                            geom = new Polygon({ rings: feature.geometry.coordinates });
-                        } else if (feature.geometry.type === "MultiPolygon") {
-                            geom = new Polygon({ rings: feature.geometry.coordinates.flat() });
-                        }
-                        // Nếu không phải lô đang view thì màu nhạt
-                        if (p.id !== plot.id) {
-                            otherPlotsLayer.add(new Graphic({
-                                geometry: geom,
-                                symbol: {
-                                    type: "simple-fill",
-                                    color: [255, 255, 255, 0.1],
-                                    outline: { color: [100, 100, 100], width: 1 }
-                                }
-                            }));
-                        }
-                    }
-                });
-                // Lô đang chọn màu đậm hơn
-                if (geojson.type === "FeatureCollection" && geojson.features.length > 0) {
-                    const feature = geojson.features[0];
-                    let polygonGeometry;
-                    if (feature.geometry.type === "Polygon") {
-                        polygonGeometry = new Polygon({
-                            rings: feature.geometry.coordinates
-                        });
-                    } else if (feature.geometry.type === "MultiPolygon") {
-                        polygonGeometry = new Polygon({
-                            rings: feature.geometry.coordinates.flat()
-                        });
-                    }
-                    const highlightGraphic = new Graphic({
-                        geometry: polygonGeometry,
-                        symbol: {
-                            type: "simple-fill",
-                            color: [255, 0, 0, 0.3], // đỏ mờ
-                            outline: { color: [255, 255, 255, 1], width: 3 } // viền
-                        }
-                    });
-                    highlightLayer.add(highlightGraphic);
-                    view.goTo({ target: polygonGeometry, zoom: 16 });
-                }
-                $('#loading-message').fadeOut();
-            });
-
-        });
-    });
-</script> --}}
-
 <!-- Add plots Modal -->
 <form id="plots-form" action="{{ route('plots.save') }}" method="POST" enctype="multipart/form-data">
     {{ csrf_field() }}
@@ -475,11 +358,21 @@
                                     <option value=""></option>
                                 </select>
                             </div>
+                            <div class="form-group">
+                                <label class="form-label">Nhập Lô(Excel)</label>
+                                <a href="{{route('add-excel')}}" class="text-white">
+                                    <button class="btn btn-success btn-w" onclick="filterTasks()">
+                                        <i class="fa fa-plus"></i>
+                                        Nhập
+                                    </button>
+                                </a>
+                            </div>
                             <div class="form-group" style="display: flex; align-items: end;">
-                                <button class="btn btn-success btn-w" onclick="filterTasks()">
+                                {{-- <button class="btn btn-success btn-w" style="margin: 0 0px 1px 2px;"
+                                    onclick="filterTasks()">
                                     <i class="fa-light fa-filter-list"></i>
                                     Lọc
-                                </button>
+                                </button> --}}
                             </div>
                         </div>
                     </div>
@@ -509,6 +402,7 @@
                                     aria-label="...">
                             </th>
                             {{-- <th scope="col">STT</th> --}}
+                            <th scope="col">Mã Lô</th>
                             <th scope="col">Tên Lô</th>
                             {{-- <th scope="col">Vườn</th> --}}
                             <th scope="col">Diện Tích</th>
@@ -525,6 +419,7 @@
                             <th></th>
                             <th></th>
                             {{-- <th scope="col">STT</th> --}}
+                            <th scope="col">Mã Lô</th>
                             <th scope="col">Tên Lô</th>
                             <th scope="col">Diện Tích</th>
                             <th scope="col">Số Lượng Cây</th>
@@ -578,9 +473,10 @@
             var selectedRows = new Set();
             var dataTable = $('#plots-table').DataTable({
                 "language": {
-                    // "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
+                    "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
                     "emptyTable": "Không có dữ liệu",
                 },
+                 dom: 'lrtip',
                 processing: true,
                 serverSide: true,
                 // responsive: true,
@@ -631,6 +527,10 @@
                         searchable: false
                     },
                     {
+                        data: 'plotCode',
+                        name: 'plotCode'
+                    },
+                    {
                         data: 'plotName',
                         name: 'plotName'
                     },
@@ -656,6 +556,12 @@
                 rowCallback: function(row, data) {
                     $(row).attr('data-id', data.id);
                 }
+            });
+            let t;
+            $('.search-inputs').on('input', function () {
+                clearTimeout(t);
+                const v = this.value;
+                t = setTimeout(() => dataTable.search(v).draw(), 250);
             });
             $('#select-all-plots').on('change', function() {
                 var checked = $(this).prop('checked');

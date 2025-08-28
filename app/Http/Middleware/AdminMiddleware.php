@@ -25,7 +25,7 @@ class AdminMiddleware
         $allowedRoles = [
             'Admin',
             'Quản Lý Tài Khoản',
-            'Quản Lý Công Nhân',
+            'Công Nhân',
             'Tổ Trưởng',
             // 'Khách Hàng',
             'Cấu Hình Trang Chủ',

@@ -34,7 +34,7 @@ class WorkControllerApi extends Controller
     public function gentasks()
     {
 
-        $all_gentask = GenTask::with('work', 'worker')->orderBy('id', 'desc')->get();
+        $all_gentask = GenTask::with('work', 'worker', 'worker.team', 'worker.duty')->orderBy('id', 'desc')->get();
         if ($all_gentask->isNotEmpty()) {
 
             return response()->json([
@@ -55,7 +55,7 @@ class WorkControllerApi extends Controller
     }
     public function detailG($id)
     {
-        $all_gentask = GenTask::with('work', 'worker')->find($id);
+        $all_gentask = GenTask::with('work', 'worker', 'plot', 'plants')->find($id);
 
         if (!$all_gentask) {
             return response()->json([

@@ -70,28 +70,7 @@
                     </div>
                 </div>
             </div>
-            {{-- <div class="card">
-                <div class="card-content">
-                    <div class="form-section">
-                        <div class="form-row">
 
-                            <div class="form-group">
-                                <label class="form-label">Diện Tích</label>
-                                <select class="form-select" id="taskLot">
-                                    <option value=""></option>
-                                </select>
-                            </div>
-                            <div class="form-group" style="display: flex; align-items: end;">
-                                <button class="btn btn-success btn-w" onclick="filterTasks()">
-                                    <i class="fa-light fa-filter-list"></i>
-                                    Lọc
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div> --}}
             <div class="card-body">
                 <table id="stocks-table" class="table table-bordered text-nowrap w-100">
                     <div id="buttons-container" class="d-flex justify-content-end gap-2">
@@ -171,7 +150,7 @@
                 <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Bạn chắc chắn muốn xóa vườn cây đã chọn?
+                Bạn chắc chắn muốn xóa vật tư đã chọn?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -185,9 +164,10 @@
             var selectedRows = new Set();
             var dataTable = $('#stocks-table').DataTable({
                 "language": {
-                    // "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
+                    "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
                     "emptyTable": "Không có dữ liệu",
                 },
+                dom: 'lrtip',
                 processing: true,
                 serverSide: true,
                 // responsive: true,
@@ -267,6 +247,12 @@
                 rowCallback: function(row, data) {
                     $(row).attr('data-id', data.id);
                 }
+            });
+            let t;
+            $('.search-inputs').on('input', function () {
+                clearTimeout(t);
+                const v = this.value;
+                t = setTimeout(() => dataTable.search(v).draw(), 250);
             });
             $('#select-all-stocks').on('change', function() {
                 var checked = $(this).prop('checked');

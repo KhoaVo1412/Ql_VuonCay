@@ -70,7 +70,7 @@
                                         value="{{ $proposal->approvalDate }}" required>
                                 </div>
                             </div>
-                            <div class="form-group">
+                            {{-- <div class="form-group">
                                 <label class="form-label">Tình Trạng</label>
                                 <select name="request_status" class="form-control" required>
                                     <option value="Duyệt" {{ $proposal->request_status=='Đã duyệt' ? 'selected' : ''
@@ -78,12 +78,12 @@
                                     <option value="Chờ duyệt" {{ $proposal->request_status=='Chờ duyệt' ? 'selected' :
                                         '' }}>Chờ
                                         duyệt</option>
-                                    {{-- <option value="Từ chối" {{ $proposal->request_status=='Từ chối' ? 'selected' :
+                                    <option value="Từ chối" {{ $proposal->request_status=='Từ chối' ? 'selected' :
                                         ''
                                         }}>Từ chối
-                                    </option> --}}
+                                    </option>
                                 </select>
-                            </div>
+                            </div> --}}
                         </div>
 
                         <hr>

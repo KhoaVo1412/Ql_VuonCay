@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Models\WareHouse;
 use App\Models\Work;
 use App\Models\Worker;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
@@ -31,10 +32,54 @@ class WorkController extends Controller
         $gardens = Garden::with('plots')->get();
         $workers = Worker::all();
         $plots = Plot::with('garden')->get();
-        $all_gentask = GenTask::with('work', 'worker')->orderBy('id', 'desc')->get();
         // dd($all_gentask);
+
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        // $all_gentask = GenTask::with(['work', 'worker'])
+        //     ->when(!$user->hasRole('Admin'), function ($q) use ($user) {
+        //         $q->whereHas('worker', fn($w) => $w->where('user_id', $user->id));
+        //     })
+        //     ->latest()
+        //     ->get();
+
         if ($request->ajax()) {
+            $all_gentask = GenTask::with([
+                'work:id,workName,workType',
+                'worker:id,name,user_id',
+                'plot:id,plotName',
+            ])
+                ->when(!$user->hasRole('Admin'), function ($q) use ($user) {
+                    $q->whereHas('worker', fn($w) => $w->where('user_id', $user->id));
+                })
+                ->when($request->filled('work_id'),  fn($q) => $q->where('workID',  $request->work_id))
+                ->when($request->filled('plot_id'),  fn($q) => $q->where('plotID',  $request->plot_id))
+                ->when($request->filled('priority'), fn($q) => $q->where('priority', $request->priority))
+                ->when($request->filled(['start_date', 'end_date']), function ($q) use ($request) {
+                    $start = \Carbon\Carbon::parse($request->start_date)->toDateString();
+                    $end = \Carbon\Carbon::parse($request->end_date)->toDateString();
+                    $q->whereDate('workDate', '<=', $end)
+                        ->whereDate('dateEnd',  '>=', $start);
+                })
+                ->when(
+                    $request->filled('start_date') && !$request->filled('end_date'),
+                    fn($q) => $q->whereDate('dateEnd', '>=', $request->start_date)
+                )
+                ->when(
+                    $request->filled('end_date') && !$request->filled('start_date'),
+                    fn($q) => $q->whereDate('workDate', '<=', $request->end_date)
+                )
+                ->latest();
             return DataTables::of($all_gentask)
+                ->setRowClass(function ($row) {
+                    if ($row->dateEnd && $row->workStatus !== 'Hoàn thành') {
+                        if (\Carbon\Carbon::parse($row->dateEnd)->lt(now())) {
+                            return 'bg-warning1';
+                        }
+                    }
+                    return '';
+                })
                 ->addColumn('check', function ($row) {
                     return '<input class="form-check-input" type="checkbox" id="check-' . $row->id . '" data-id="' . $row->id . '">';
                 })
@@ -49,14 +94,22 @@ class WorkController extends Controller
                 ->addColumn('workName', function ($row) {
                     return $row->workName ?? 'Không rõ';
                 })
+                ->addColumn('plotName', function ($row) {
+                    return $row->plot->plotName ?? 'Không rõ';
+                })
                 ->addColumn('workType', function ($row) {
                     return $row->work->workType ?? 'Không rõ';
                 })
+                ->addColumn('priority', function ($row) {
+                    return $row->priority ?? 'Không rõ';
+                })
                 ->editColumn('workDate', function ($row) {
-                    return $row->workDate ?? 'Không rõ';
+                    return $row->workDate ? Carbon::parse($row->workDate)->format('d/m/Y')
+                        : null;
                 })
                 ->editColumn('dateEnd', function ($row) {
-                    return $row->dateEnd ?? 'Không rõ';
+                    return $row->dateEnd ? Carbon::parse($row->dateEnd)->format('d/m/Y')
+                        : null;
                 })
                 ->editColumn('workerID', function ($row) {
                     return $row->worker->name ?? 'Không rõ';
@@ -96,7 +149,7 @@ class WorkController extends Controller
                     ';
                     return $action;
                 })
-                ->rawColumns(['check', 'dateEnd', 'code', 'workerID', 'stt', 'workDate', 'workName', 'workType', 'workStatus', 'action'])
+                ->rawColumns(['check', 'priority', 'plotName', 'dateEnd', 'code', 'workerID', 'stt', 'workDate', 'workName', 'workType', 'workStatus', 'action'])
                 ->make(true);
         }
         return view('works.all_works', compact('gardens', 'workers', 'works', 'plots'));
@@ -129,7 +182,7 @@ class WorkController extends Controller
                 'workerID'   => 'required',
                 'workName'   => 'required',
                 'workDate'   => 'required',
-                'dateEnd'    => 'required',
+                'dateEnd'    => 'required|date|after_or_equal:workDate',
                 'plotID'     => 'required',
                 'priority'   => 'required',
                 'description' => 'nullable',
@@ -141,7 +194,25 @@ class WorkController extends Controller
                 'createDate' => 'nullable|date',
                 'desc'       => 'nullable|string',
             ];
-
+            $messages = [
+                'required'                  => ':attribute là bắt buộc.',
+                'date'                      => ':attribute không đúng định dạng ngày.',
+                'array'                     => ':attribute phải là mảng.',
+                'plantIDs.min'              => 'Vui lòng chọn ít nhất một cây.',
+                'dateEnd.after_or_equal'    => 'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.',
+                'plantIDs.*.integer'        => 'ID cây không hợp lệ.',
+            ];
+            $attributes = [
+                'workID'     => 'Mã công việc',
+                'workerID'   => 'Người thực hiện',
+                'workName'   => 'Tên công việc',
+                'workDate'   => 'Ngày bắt đầu',
+                'dateEnd'    => 'Ngày kết thúc',
+                'plotID'     => 'Lô',
+                'priority'   => 'Độ ưu tiên',
+                'plantIDs'   => 'Danh sách cây',
+                'createDate' => 'Ngày tạo phiếu',
+            ];
             $work = Work::find($request->workID);
             if (!$work) {
                 return redirect()->back()->withErrors(['workID' => 'Công việc không tồn tại']);
@@ -154,6 +225,14 @@ class WorkController extends Controller
                     'materials.*.quantity'  => 'required|numeric',
                     'materials.*.unitID'    => 'required',
                 ]);
+                $messages = array_merge($messages, [
+                    'materials.required'               => 'Cần chọn ít nhất 1 vật tư.',
+                    'materials.min'                    => 'Cần chọn ít nhất 1 vật tư.',
+                    'materials.*.productID.required'   => 'Vui lòng chọn sản phẩm cho từng vật tư.',
+                    'materials.*.quantity.required'    => 'Vui lòng nhập số lượng cho từng vật tư.',
+                    'materials.*.quantity.numeric'     => 'Số lượng vật tư phải là số.',
+                    'materials.*.unitID.required'      => 'Vui lòng chọn đơn vị tính cho từng vật tư.',
+                ]);
             } else {
                 $rules = array_merge($rules, [
                     'materials'            => 'nullable|array',
@@ -163,7 +242,8 @@ class WorkController extends Controller
                 ]);
             }
 
-            $request->validate($rules);
+            // $request->validate($rules);
+            $request->validate($rules, $messages, $attributes);
 
             $invalidPlants = Plant::whereIn('id', $request->plantIDs)
                 ->where('plotID', '!=', $request->plotID)
@@ -230,7 +310,9 @@ class WorkController extends Controller
 
             return redirect()->route('works.index')->with('message', 'Tạo công việc thành công');
         } catch (\Illuminate\Validation\ValidationException $e) {
-            dd($e->errors());
+            return back()->withErrors($e->errors())->withInput();
+
+            // dd($e->errors());
         }
     }
     public function edit($id)
@@ -240,7 +322,7 @@ class WorkController extends Controller
         $workers = Worker::all();
         $plots = Plot::all();
 
-        $gentasks = GenTask::with(['plants.variety'])->findOrFail($id);
+        $gentasks = GenTask::with('plants.variety', 'taskProductProposals.proposalProducts.product', 'taskProductProposals.proposalProducts.unit')->findOrFail($id);
         $plants = Plant::with('variety')->get();
         return view('works.edit_work', compact('gardens', 'workers', 'works', 'plots', 'gentasks', 'plants'));
     }
@@ -259,50 +341,61 @@ class WorkController extends Controller
         //     return redirect()->back()->with(['error' => 'Mã công việc này đã tồn tại!']);
         // }
         // }
-        $gentasks = GenTask::find($id);
-        if (!$gentasks) {
-            return redirect()->back()->with('error', 'Công việc không tồn tại');
-        }
-        $request->validate([
-            'workID' => 'required',
-            'workerID' => 'required',
-            'workDate' => 'required',
-            'plotID' => 'required',
-            'type' => 'required',
-            'priority' => 'required',
-            'description' => 'nullable',
-        ]);
-        if ($gentasks->workID != $request->workID || $gentasks->workerID != $request->workerID) {
-            $taskSlug = Str::slug($request->workID, '_');
-            $taskSlug1 = Str::slug($request->workerID);
-            $prefix = '#' . $taskSlug . '_' . $taskSlug1;
-            do {
-                $randomCode = $prefix . rand(100, 999);
-            } while (GenTask::where('code', $randomCode)->exists());
-            $gentasks->code = $randomCode;
-        }
+        try {
+            $gentasks = GenTask::find($id);
+            if (!$gentasks) {
+                return redirect()->back()->with('error', 'Công việc không tồn tại');
+            }
+            $request->validate([
+                'workID' => 'required',
+                'workerID' => 'required',
+                'workDate' => 'required',
+                'dateEnd' => 'required|after_or_equal:workDate',
+                'plotID' => 'required',
+                'type' => 'required',
+                'priority' => 'required',
+                'description' => 'nullable',
+            ], [
+                'dateEnd.after_or_equal'    => 'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.',
+            ]);
+            if ($gentasks->workID != $request->workID || $gentasks->workerID != $request->workerID) {
+                $taskSlug = Str::slug($request->workID, '_');
+                $taskSlug1 = Str::slug($request->workerID);
+                $prefix = '#' . $taskSlug . '_' . $taskSlug1;
+                do {
+                    $randomCode = $prefix . rand(100, 999);
+                } while (GenTask::where('code', $randomCode)->exists());
+                $gentasks->code = $randomCode;
+            }
 
-        $gentasks->update([
-            'workID' => $request->workID,
-            'workName' => $request->workName,
-            'workerID' => $request->workerID,
-            'workDate' => $request->workDate,
-            'plotID' => $request->plotID,
-            'type' => $request->type,
-            'workDate' => $request->workDate,
-            'priority' => $request->priority,
-            'description' => $request->description,
-            'workStatus' => $request->workStatus,
-        ]);
-        $gentasks->plants()->sync($request->plantIDs);
+            $gentasks->update([
+                'workID' => $request->workID,
+                'workName' => $request->workName,
+                'workerID' => $request->workerID,
+                'workDate' => $request->workDate,
+                'plotID' => $request->plotID,
+                'type' => $request->type,
+                'workDate' => $request->workDate,
+                'priority' => $request->priority,
+                'description' => $request->description,
+                'workStatus' => $request->workStatus,
+            ]);
+            $gentasks->plants()->sync($request->plantIDs);
 
-        ActionHistory::create([
-            'user_id' => Auth::id(),
-            'action_type' => 'update',
-            'model_type' => 'GenTask',
-            'details' => "Đã cập nhật công việc: " . $gentasks->workName . " với mã: " . $gentasks->code,
-        ]);
-        return redirect()->route('works.index')->with('message', 'Cập nhật công việc thành công');
+            ActionHistory::create([
+                'user_id' => Auth::id(),
+                'action_type' => 'update',
+                'model_type' => 'GenTask',
+                'details' => "Đã cập nhật công việc: " . $gentasks->workName . " với mã: " . $gentasks->code,
+            ]);
+            return redirect()->route('works.index')->with('message', 'Cập nhật công việc thành công');
+        } catch (\Exception $e) {
+            return back()->withErrors($e->getMessage())->withInput();
+
+            // return redirect()->back()
+            //     ->withErrors(['error' => 'Có lỗi xảy ra khi tạo công việc: ' . $e->getMessage()])
+            //     ->withInput();
+        }
     }
     public function destroy($id)
     {

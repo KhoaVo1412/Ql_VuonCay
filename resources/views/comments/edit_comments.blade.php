@@ -146,9 +146,13 @@
                                 <label for="note" class="form-label">Ghi chú</label>
                                 <textarea class="form-control" name="note" rows="3">{{ $comments->note }}</textarea>
                             </div>
-
-
-
+                            @hasanyrole('Công Nhân')
+                            <div class="col-md-12">
+                                <label for="note" class="form-label">Ý Kiến</label>
+                                <textarea class="form-control" name="opinion"
+                                    rows="3">{{ $comments->opinion }}</textarea>
+                            </div>
+                            @endhasanyrole
                             <div class="p-t-10 col-sm-12" style="margin-top: 10px">
                                 <button type="submit" class="btn btn-success">Lưu Thay Đổi</button>
                             </div>

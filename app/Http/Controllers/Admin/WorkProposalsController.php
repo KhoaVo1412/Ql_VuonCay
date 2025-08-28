@@ -12,6 +12,7 @@ use App\Models\TaskProductProposalProduct;
 use App\Models\UnitOfMeasure;
 use App\Models\WareHouse;
 use App\Models\Work;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,8 +23,23 @@ class WorkProposalsController extends Controller
 {
     public function index(Request $request)
     {
-        $all_workps = TaskProductProposal::with('task', 'creator')->orderBy('id', 'desc')->get();
+        // $all_workps = TaskProductProposal::with('task', 'creator')->orderBy('id', 'desc')->get();
         if ($request->ajax()) {
+            $all_workps = TaskProductProposal::with('task', 'creator')
+                ->orderBy('id', 'desc');
+
+            $start = $request->input('start_date');
+            $end   = $request->input('end_date');
+
+            if ($start && $end) {
+                $startDT = Carbon::parse($start)->startOfDay();
+                $endDT   = Carbon::parse($end)->endOfDay();
+                $all_workps->whereBetween('proposalDate', [$startDT, $endDT]);
+            } elseif ($start) {
+                $all_workps->where('proposalDate', '>=', Carbon::parse($start)->startOfDay());
+            } elseif ($end) {
+                $all_workps->where('proposalDate', '<=', Carbon::parse($end)->endOfDay());
+            }
             return DataTables::of($all_workps)
                 ->addColumn('check', function ($row) {
                     return '<input class="form-check-input" type="checkbox" id="check-' . $row->id . '" data-id="' . $row->id . '">';
@@ -37,10 +53,12 @@ class WorkProposalsController extends Controller
                     return $row->proposaName;
                 })
                 ->editColumn('proposalDate', function ($row) {
-                    return $row->proposalDate;
+                    return $row->proposalDate ? Carbon::parse($row->proposalDate)->format('d/m/Y')
+                        : null;
                 })
                 ->addColumn('approvalDate', function ($row) {
-                    return $row->approvalDate;
+                    return $row->approvalDate ? Carbon::parse($row->approvalDate)->format('d/m/Y')
+                        : null;
                 })
                 ->addColumn('created_by', function ($row) {
                     return $row->creator ? $row->creator->name : 'N/A';
@@ -126,7 +144,6 @@ class WorkProposalsController extends Controller
             'treatmentID' => $request->treatmentID,
             // 'sessionID' => 4,
             'status' => $request->status ?? 'Chờ duyệt',
-            'request_status' => $request->request_status ?? 'Chờ duyệt',
             'created_by' => Auth::id(),
             'reason' => $request->reason,
         ]);
@@ -159,81 +176,6 @@ class WorkProposalsController extends Controller
         $gentasks = GenTask::Where('type', 1)->get();
         return view('workPs.edit_workPs', compact('warehouses', 'units', 'proposal', 'products', 'works', 'gentasks'));
     }
-    // public function update(Request $request, $id)
-    // {
-    //     // Kiểm tra phiếu khác nhưng trùng tên
-    //     $existingTaskProductProposal = TaskProductProposal::where('proposaName', $request->proposaName)
-    //         ->where('id', '!=', $id)
-    //         ->first();
-
-    //     if ($existingTaskProductProposal) {
-    //         return redirect()->back()->with(['error' => 'Đề xuất này đã tồn tại!']);
-    //     }
-
-    //     // Lấy phiếu đề xuất
-    //     $proposal = TaskProductProposal::find($id);
-    //     if (!$proposal) {
-    //         return redirect()->back()->with('error', 'Đề xuất không tồn tại');
-    //     }
-
-    //     // Cập nhật thông tin chính
-    //     $proposal->update([
-    //         'proposaName'    => $request->proposaName,
-    //         'proposalDate'   => $request->proposalDate,
-    //         'approvalDate'   => $request->approvalDate,
-    //         'taskID'         => $request->taskID,
-    //         'treatmentID'    => $request->treatmentID,
-    //         'sessionID'      => 1,
-    //         'status'         => $request->status,
-    //         'request_status' => $request->request_status,
-    //         'created_by'     => Auth::id(),
-    //         'reason'         => $request->reason,
-    //     ]);
-
-    //     $oldIDs = TaskProductProposalProduct::where('taskproposalID', $proposal->id)->pluck('id')->toArray();
-    //     $newIDs = [];
-
-    //     if ($request->has('proposalProducts')) {
-    //         foreach ($request->proposalProducts as $item) {
-    //             if (isset($item['id'])) {
-    //                 $existingItem = TaskProductProposalProduct::find($item['id']);
-    //                 if ($existingItem) {
-    //                     $existingItem->update([
-    //                         'taskproposalID'   => $proposal->id,
-    //                         'productID'        => $item['productID'],
-    //                         'warehouseID'      => $item['warehouseID'],
-    //                         'unitID'           => $item['unitID'],
-    //                         'materialQuantity' => $item['quantity'],
-    //                         'note'             => $item['note'] ?? null,
-    //                         // 'sessionID'        => 1,
-    //                     ]);
-    //                     $newIDs[] = $existingItem->id;
-    //                 }
-    //             } else {
-    //                 $newItem = TaskProductProposalProduct::create([
-    //                     'taskproposalID'    => $proposal->id,
-    //                     'productID'         => $item['productID'],
-    //                     'materialQuantity'  => $item['quantity'],
-    //                     'note'              => $item['note'] ?? null,
-    //                     'sessionID'         => 1,
-    //                 ]);
-    //                 $newIDs[] = $newItem->id;
-    //             }
-    //         }
-    //         $toDelete = array_diff($oldIDs, $newIDs);
-    //         TaskProductProposalProduct::whereIn('id', $toDelete)->delete();
-    //     }
-
-    //     // Ghi lịch sử
-    //     ActionHistory::create([
-    //         'user_id'     => Auth::id(),
-    //         'action_type' => 'update',
-    //         'model_type'  => 'Workp',
-    //         'details'     => "Đã cập nhật đề xuất: " . $proposal->proposaName,
-    //     ]);
-
-    //     return redirect()->route('workps.index')->with('message', 'Cập nhật đề xuất thành công');
-    // }
     public function update(Request $request, $id)
     {
         // validate
@@ -244,7 +186,6 @@ class WorkProposalsController extends Controller
             'taskID'       => 'nullable|integer',
             'treatmentID'  => 'nullable|integer',
             'status'       => 'nullable|string',
-            'request_status' => 'nullable|string',
             'reason'       => 'nullable|string',
 
             'proposalProducts'               => 'required|array|min:1',
@@ -280,7 +221,6 @@ class WorkProposalsController extends Controller
                 'treatmentID'    => $request->treatmentID,
                 // 'sessionID'      => 1,
                 'status'         => $request->status ?? $proposal->status,
-                'request_status' => $request->request_status ?? $proposal->request_status,
                 'reason'         => $request->reason,
                 // 'updated_by'   => Auth::id(), // nếu có cột
             ]);
@@ -404,7 +344,12 @@ class WorkProposalsController extends Controller
                 if (!$proposal) {
                     return response()->json(['success' => false, 'message' => 'Không tìm thấy đề xuất.'], 404);
                 }
-
+                if ($proposal->status === 'Duyệt') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Phiếu đã được duyệt trước đó.'
+                    ]);
+                }
                 $current = $proposal->status ?? 'Chờ duyệt';
                 $next = ($current === 'Duyệt') ? 'Chờ duyệt' : 'Duyệt';
 

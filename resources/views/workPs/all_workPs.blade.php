@@ -41,7 +41,7 @@
                                 <input type="date" class="form-input" id="EndDate">
                             </div>
                             <div class="form-group" style="display: flex; align-items: end;">
-                                <button class="btn btn-success btn-w" onclick="filterTasks()">
+                                <button type="button" class="btn btn-success btn-w" id="btnFilter">
                                     <i class="fa-light fa-filter-list"></i>
                                     Lọc
                                 </button>
@@ -65,12 +65,6 @@
                                 <span>Đã Duyệt</span>
                                 <span class="task-count" id="completedTasksCount"></span>
                             </button>
-                            <button class="task-filter-btn" data-filter="completed"
-                                onclick="setTaskFilter('completed')">
-                                <span>Từ Chối</span>
-                                <span class="task-count" id="completedTasksCount"></span>
-                            </button>
-
 
                         </div>
                     </div>
@@ -207,7 +201,11 @@
                 },
                 ajax: {
                     url: '{{ route('workps.index') }}',
-                    type: 'GET'
+                    type: 'GET',
+                    data: function (d) {
+                        d.start_date = $('#StartDate').val();
+                        d.end_date   = $('#EndDate').val();  
+                    }
                 },
                 columns: [
                     {
@@ -252,14 +250,17 @@
                     $(row).attr('data-id', data.id);
                 }
             });
+            $('#btnFilter').on('click', function () {
+                dataTable.ajax.reload(null, true);
+            });
             $('#select-all-workps').on('change', function() {
                 var checked = $(this).prop('checked');
                 $('#workps-table tbody .form-check-input').each(function() {
-                    var farmId = $(this).data('id');
+                    var workPsID = $(this).data('id');
                     if (checked) {
-                        selectedRows.add(farmId);
+                        selectedRows.add(workPsID);
                     } else {
-                        selectedRows.delete(farmId);
+                        selectedRows.delete(workPsID);
                     }
                     $(this).prop('checked', checked);
                 });
@@ -268,21 +269,21 @@
                 console.log([...selectedRows]);
             });
             $('#workps-table tbody').on('change', '.form-check-input', function() {
-                var farmId = $(this).data('id');
+                var workPsID = $(this).data('id');
                 toggleButtons();
 
                 if ($(this).prop('checked')) {
-                    selectedRows.add(farmId);
+                    selectedRows.add(workPsID);
                 } else {
-                    selectedRows.delete(farmId);
+                    selectedRows.delete(workPsID);
                 }
                 console.log([...selectedRows]);
             });
 
             $('#workps-table').on('draw.dt', function() {
                 $('#workps-table tbody .form-check-input').each(function() {
-                    var farmId = $(this).data('id');
-                    if (selectedRows.has(farmId)) {
+                    var workPsID = $(this).data('id');
+                    if (selectedRows.has(workPsID)) {
                         $(this).prop('checked', true);
                     }
                 });
@@ -493,51 +494,6 @@
             if (allCountEl) allCountEl.textContent = total;
             if (completedCountEl) completedCountEl.textContent = completed;
             if (pendingCountEl) pendingCountEl.textContent = pending;
-        }
-        function filterTasks() {
-            const keywordEl = document.getElementById('taskKeyword');
-            const typeEl = document.getElementById('taskType');
-            const gardenEl = document.getElementById('taskGarden');
-            const lotEl = document.getElementById('taskLot');
-            const priorityEl = document.getElementById('taskPriority');
-            const startDateEl = document.getElementById('taskStartDate');
-            const endDateEl = document.getElementById('taskEndDate');
-            
-            const keyword = keywordEl ? keywordEl.value.toLowerCase() : '';
-            const type = typeEl ? typeEl.value : '';
-            const garden = gardenEl ? gardenEl.value : '';
-            const lot = lotEl ? lotEl.value : '';
-            const priority = priorityEl ? priorityEl.value : '';
-            const startDate = startDateEl ? startDateEl.value : '';
-            const endDate = endDateEl ? endDateEl.value : '';
-
-            // First apply search filters
-            let searchFiltered = tasks.filter(task => {
-                if (keyword && !task.name.toLowerCase().includes(keyword)) return false;
-                if (type && task.type !== type) return false;
-                if (garden && task.garden !== garden) return false;
-                if (lot && task.lot !== lot) return false;
-                if (priority && task.priority !== priority) return false;
-                if (startDate && task.startDate < startDate) return false;
-                if (endDate && task.startDate > endDate) return false;
-                return true;
-            });
-
-            // Then apply status filter
-            switch(currentTaskFilter) {
-                case 'pending':
-                    filteredTasks = searchFiltered.filter(task => !task.completed);
-                    break;
-                case 'completed':
-                    filteredTasks = searchFiltered.filter(task => task.completed);
-                    break;
-                case 'all':
-                default:
-                    filteredTasks = searchFiltered;
-                    break;
-            }
-
-            renderTasks();
         }
 
         function setTaskFilter(filter) {

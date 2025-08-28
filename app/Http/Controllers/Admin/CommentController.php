@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ActionHistory;
 use App\Models\Evaluate;
 use App\Models\GenTask;
+use App\Models\Plot;
 use App\Models\Worker;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -18,9 +19,23 @@ class CommentController extends Controller
 {
     public function index(Request $request)
     {
-        $workers = Worker::all();
-        $all_comments = Evaluate::with('worker')->orderBy('id', 'desc')->get();
-
+        $plots = Plot::all();
+        // $all_comments = Evaluate::with('worker')->orderBy('id', 'desc')->get();
+        $user = Auth::user();
+        /** @var \App\Models\User $user */
+        $workers = Worker::query()
+            ->when(!$user->hasRole('Admin'), fn($q) => $q->where('user_id', $user->id))
+            ->get();
+        $all_comments = Evaluate::with('worker')
+            ->when($request->filled('warehouse_id'), function ($q) use ($request) {
+                $q->where('warehouseID', $request->warehouse_id);
+            })
+            ->when($request->filled('start_date'), function ($q) use ($request) {
+                $q->whereDate('date_comment', $request->start_date);
+            })
+            ->when(!$user->hasRole('Admin'), fn($q) => $q->whereHas('worker', fn($w) => $w->where('user_id', $user->id)))
+            ->orderByDesc('id');
+        // ->get();
         foreach ($workers as $worker) {
             $worker->countWork = GenTask::where('workerID', $worker->id)->count();
 
@@ -53,6 +68,17 @@ class CommentController extends Controller
                 })
                 ->editColumn('name', function ($row) {
                     return $row->name;
+                })
+                ->editColumn('date_comment', function ($row) {
+                    return $row->date_comment ? Carbon::parse($row->date_comment)->format('d/m/Y')
+                        : null;
+                })
+                ->editColumn('opinion', function ($row) {
+                    if ($row->opinion) {
+                        return '<span style="color:red;">' . e($row->opinion) . '</span>';
+                    } else {
+                        return '<span style="color:black;">Chưa có ý kiến</span>';
+                    }
                 })
                 ->editColumn('rating', function ($row) {
                     return $row->rating;
@@ -98,10 +124,10 @@ class CommentController extends Controller
                     ';
                     return $action;
                 })
-                ->rawColumns(['check', 'stt', 'name', 'workerID', 'rating', 'note', 'status', 'action'])
+                ->rawColumns(['check', 'opinion', 'stt', 'name', 'date_comment', 'workerID', 'rating', 'note', 'status', 'action'])
                 ->make(true);
         }
-        return view('comments.all_comments', compact('workers'));
+        return view('comments.all_comments', compact('workers', 'plots'));
     }
     public function store(Request $request)
     {
@@ -180,6 +206,7 @@ class CommentController extends Controller
         // Tạo đánh giá mới
         $evaluate = Evaluate::create([
             'name' => $request->name,
+            'date_comment' => $request->date_comment,
             'workerID' => $request->workerID,
             'deductionPoints' => $request->deductionPoints ?? 0,
             'rating' => $request->rating,
@@ -246,6 +273,8 @@ class CommentController extends Controller
             'rating' => 'nullable',
             'note' => 'nullable',
             'status' => 'nullable',
+            'date_comment' => 'nullable',
+            'opinion' => 'nullable',
         ]);
         $originalData = $comments->only([
             'name',
@@ -253,14 +282,18 @@ class CommentController extends Controller
             'deductionPoints',
             'rating',
             'note',
-            'status'
+            'status',
+            'date_comment',
+            'opinion',
         ]);
         $comments->update([
             'name' => $request->name,
+            'date_comment' => $request->date_comment,
             'workerID' => $request->workerID,
             'deductionPoints' => $request->deductionPoints ?? 0,
             'rating' => $request->rating,
             'note' => $request->note,
+            'opinion' => $request->opinion,
             'status' => $request->status,
         ]);
         $changedFields = [];

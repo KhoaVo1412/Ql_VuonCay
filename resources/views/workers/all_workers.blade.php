@@ -136,22 +136,27 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Tổ</label>
-                                <select class="form-select" id="taskType">
+                                <select class="form-select" id="team">
                                     <option value="">-- Tất cả --</option>
-
+                                    @foreach($teams as $t)
+                                    <option value="{{ $t->id }}">{{ $t->name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Chức Vụ</label>
                                 <select class="form-select" id="duty">
                                     <option value="">-- Tất cả --</option>
+                                    @foreach($duties as $t)
+                                    <option value="{{ $t->id }}">{{ $t->dutyName }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="form-group" style="display: flex; align-items: end;">
-                                <button class="btn btn-success btn-w" onclick="filterTasks()">
+                                {{-- <button class="btn btn-success btn-w" onclick="filterTasks()">
                                     <i class="fa-light fa-filter-list"></i>
                                     Lọc
-                                </button>
+                                </button> --}}
                             </div>
                             {{-- <div class="form-group" style="display: flex; align-items: end;">
                                 <button class="btn btn-sm btn-success btn-wave waves-light" data-bs-toggle="modal"
@@ -178,7 +183,7 @@
                                 Xóa
                             </button>
                             <button id="add-selected-btn" class="btn btn-success" style="border-radius: 7px;">
-                                <a href="{{ route('workers.add') }}" class="text-white"><i class="fa fa-plus"></i>Thêm
+                                <a href="{{route('workers.add')}}" class="text-white"><i class="fa fa-plus"></i>Thêm
                                     Công Nhân</a>
                             </button>
                         </div>
@@ -267,6 +272,7 @@
                     "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
                      "emptyTable": "Không có dữ liệu",
                  },
+                dom: 'lrtip',
                 processing: true,
                 serverSide: true,
                 columnDefs: [{
@@ -296,7 +302,11 @@
                 },
                 ajax: {
                     url: '{{ route('workers.index') }}',
-                    type: 'GET'
+                    type: 'GET',
+                    data: function (d) {
+                        d.team_id = $('#team').val();
+                        d.duty_id = $('#duty').val();
+                    }
                 },
                 columns: [{
                         data: null,
@@ -347,6 +357,15 @@
                 rowCallback: function(row, data) {
                     $(row).attr('data-id', data.id);
                 }
+            });
+            let t;
+            $('.search-inputs').on('input', function () {
+                clearTimeout(t);
+                const v = this.value;
+                t = setTimeout(() => dataTable.search(v).draw(), 250);
+            });
+            $('#team, #duty').on('change', function () {
+                dataTable.ajax.reload();
             });
             $('#select-all-workers').on('change', function() {
                 var checked = $(this).prop('checked');

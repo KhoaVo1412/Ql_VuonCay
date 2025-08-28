@@ -15,7 +15,9 @@ class Evaluate extends Model
         'deductionPoints',
         'rating',
         'note',
-        'status'
+        'status',
+        'date_comment',
+        'opinion',
     ];
 
     public function worker()

@@ -23,12 +23,16 @@ class TaskProductProposalProduct extends Model
 
     public function product()
     {
-        return $this->belongsTo(Product::class);
+        return $this->belongsTo(Product::class, 'productID');
+    }
+    public function unit()
+    {
+        return $this->belongsTo(UnitOfMeasure::class, 'unitID');
     }
 
     public function taskProductProposal()
     {
-        return $this->belongsTo(TaskProductProposal::class);
+        return $this->belongsTo(TaskProductProposal::class, 'taskproposalID');
     }
 
     public function productProposalPickings()

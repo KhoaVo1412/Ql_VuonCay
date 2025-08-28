@@ -21,7 +21,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h6 class="modal-title">Tạo mới</h6>
+                    <h6 class="modal-title">Tạo Đánh Giá</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body px-4">
@@ -61,6 +61,11 @@
                                 <input type="text" name="rating" class="form-input" id="rating"
                                     value="{{ old('rating') }}" class="form-inputr" required>
                             </div>
+                        </div>
+                        <div class="col-xl-6">
+                            <label class="form-label">Ngày Đánh Giá</label>
+                            <input type="date" class="form-control" name="date_comment"
+                                value="{{ now()->format('Y-m-d') }}">
                         </div>
                         <div class="col-xl-6">
                             <label class="form-label">Số Lượng Công Việc</label>
@@ -140,24 +145,23 @@
                         <div class="form-row">
 
                             <div class="form-group">
-                                <label class="form-label">Tên Tổ</label>
-                                <select class="form-select" id="taskLot">
-                                    <option value="">Tất cả</option>
-                                    <option value="Tổ 1">Tổ 1</option>
-                                    <option value="Tổ 2">Tổ 2</option>
-                                    <option value="Tổ 3">Tổ 3</option>
-                                    <option value="Tổ 4">Tổ 4</option>
+                                <label class="form-label">Tổ</label>
+                                <select class="form-select" id="plotID" required>
+                                    <option value="">Tất Cả</option>
+                                    @foreach($plots as $p)
+                                    <option value="{{ $p->id }}">{{ $p->plotName }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Điểm</label>
-                                <input type="number" step="0.1" min="0" max="10" class="form-input" id="taskEndDate">
+                                <label class="form-label">Ngày Đánh Giá</label>
+                                <input type="date" class="form-input" id="Datecomment">
                             </div>
                             <div class="form-group" style="display: flex; align-items: end;">
-                                <button class="btn btn-success btn-w" onclick="filterTasks()">
+                                {{-- <button class="btn btn-success btn-w" onclick="filterTasks()">
                                     <i class="fa-light fa-filter-list"></i>
                                     Lọc
-                                </button>
+                                </button> --}}
                             </div>
                         </div>
 
@@ -198,10 +202,12 @@
                                 style="border-radius: 30px; display: none;">
                                 Xóa
                             </button>
+                            @unlessrole('Công Nhân')
                             <button id="add-selected-btn" class="btn btn-success" style="border-radius: 7px;"
                                 data-bs-toggle="modal" data-bs-target="#create-comments">
                                 <i class="fa fa-plus"></i>Tạo Đánh Giá
                             </button>
+                            @endunlessrole
                         </div>
                         <thead>
                             <tr>
@@ -210,10 +216,12 @@
                                     <input class="form-check-input check-all" type="checkbox" id="select-all-comments"
                                         value="" aria-label="...">
                                 </th>
+                                <th scope="col">Tên Đánh Giá</th>
                                 <th scope="col">Tên Công Nhân</th>
-                                <th scope="col">Công Việc</th>
+                                <th scope="col">Ngày Đánh Giá</th>
                                 <th scope="col">Điểm</th>
                                 <th scope="col">Xếp Loại</th>
+                                <th scope="col">Ý Kiến Công Nhân</th>
                                 <th scope="col">Trạng Thái</th>
                                 <th scope="col">Thao Tác</th>
                             </tr>
@@ -226,10 +234,12 @@
                                 <th></th>
                                 <th></th>
                                 {{-- <th scope="col">STT</th> --}}
+                                <th scope="col">Tên Đánh Giá</th>
                                 <th scope="col">Tên Công Nhân</th>
-                                <th scope="col">Công Việc</th>
+                                <th scope="col">Ngày Đánh Giá</th>
                                 <th scope="col">Điểm</th>
                                 <th scope="col">Xếp Loại</th>
+                                <th scope="col">Ý Kiến Công Nhân</th>
                                 <th scope="col">Trạng Thái</th>
                                 <th scope="col">Thao Tác</th>
                             </tr>
@@ -283,6 +293,7 @@
                     "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
                     "emptyTable": "Không có dữ liệu",
                 },
+                dom: 'lrtip',
                 processing: true,
                 serverSide: true,
                 // responsive: true,
@@ -313,7 +324,11 @@
                 },
                 ajax: {
                     url: '{{ route('comments.index') }}',
-                    type: 'GET'
+                    type: 'GET',
+                    data: function (d) {
+                        d.start_date = $('#Datecomment').val();
+                        d.plot_id   = $('#plotID').val();
+                    }
                 },
                 columns: [{
                         data: null,
@@ -340,12 +355,20 @@
                         name: 'workerID'
                     },
                     {
+                        data: 'date_comment',
+                        name: 'date_comment'
+                    },
+                    {
                         data: 'deductionPoints',
                         name: 'deductionPoints'
                     },
                     {
                         data: 'rating',
                         name: 'rating'
+                    },
+                    {
+                        data: 'opinion',
+                        name: 'opinion'
                     },
                     {
                         data: 'status',
@@ -357,6 +380,15 @@
                 rowCallback: function(row, data) {
                     $(row).attr('data-id', data.id);
                 }
+            });
+            let t;
+            $('.search-inputs').on('input', function () {
+                clearTimeout(t);
+                const v = this.value;
+                t = setTimeout(() => dataTable.search(v).draw(), 250);
+            });
+            $('#Datecomment, #plotID').on('change', function () {
+                dataTable.ajax.reload(null, true);
             });
             $('#select-all-comments').on('change', function() {
                 var checked = $(this).prop('checked');
@@ -576,52 +608,6 @@
             if (completedCountEl) completedCountEl.textContent = completed;
             if (pendingCountEl) pendingCountEl.textContent = pending;
         }
-        function filterTasks() {
-            const keywordEl = document.getElementById('taskKeyword');
-            const typeEl = document.getElementById('taskType');
-            const gardenEl = document.getElementById('taskGarden');
-            const lotEl = document.getElementById('taskLot');
-            const priorityEl = document.getElementById('taskPriority');
-            const startDateEl = document.getElementById('taskStartDate');
-            const endDateEl = document.getElementById('taskEndDate');
-            
-            const keyword = keywordEl ? keywordEl.value.toLowerCase() : '';
-            const type = typeEl ? typeEl.value : '';
-            const garden = gardenEl ? gardenEl.value : '';
-            const lot = lotEl ? lotEl.value : '';
-            const priority = priorityEl ? priorityEl.value : '';
-            const startDate = startDateEl ? startDateEl.value : '';
-            const endDate = endDateEl ? endDateEl.value : '';
-
-            // First apply search filters
-            let searchFiltered = tasks.filter(task => {
-                if (keyword && !task.name.toLowerCase().includes(keyword)) return false;
-                if (type && task.type !== type) return false;
-                if (garden && task.garden !== garden) return false;
-                if (lot && task.lot !== lot) return false;
-                if (priority && task.priority !== priority) return false;
-                if (startDate && task.startDate < startDate) return false;
-                if (endDate && task.startDate > endDate) return false;
-                return true;
-            });
-
-            // Then apply status filter
-            switch(currentTaskFilter) {
-                case 'pending':
-                    filteredTasks = searchFiltered.filter(task => !task.completed);
-                    break;
-                case 'completed':
-                    filteredTasks = searchFiltered.filter(task => task.completed);
-                    break;
-                case 'all':
-                default:
-                    filteredTasks = searchFiltered;
-                    break;
-            }
-
-            renderTasks();
-        }
-
         function setTaskFilter(filter) {
             currentTaskFilter = filter;
             

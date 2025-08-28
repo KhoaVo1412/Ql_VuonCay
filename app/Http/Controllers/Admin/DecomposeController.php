@@ -11,6 +11,7 @@ use App\Models\ProductDecompose;
 use App\Models\UnitOfMeasure;
 use App\Models\WareHouse;
 use App\Models\Worker;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -23,9 +24,18 @@ class DecomposeController extends Controller
     {
         $decomposes = Decompose::with(['warehouse', 'user'])->get();
         $workers = Worker::all();
+        $warehouses = WareHouse::all();
 
         if ($request->ajax()) {
-            return DataTables::of($decomposes)
+            $query = Decompose::with(['warehouse', 'user'])
+                ->when($request->filled('warehouse_id'), function ($q) use ($request) {
+                    $q->where('warehouseID', $request->warehouse_id);
+                })
+                ->when($request->filled('start_date'), function ($q) use ($request) {
+                    $q->whereDate('date', $request->start_date);
+                })
+                ->orderByDesc('id');
+            return DataTables::of($query)
                 ->addColumn('check', function ($row) {
                     return '<input class="form-check-input" type="checkbox" id="check-' . $row->id . '" data-id="' . $row->id . '">';
                 })
@@ -38,7 +48,8 @@ class DecomposeController extends Controller
                     return $row->warehouse->name ?? 'Không rõ';
                 })
                 ->addColumn('date', function ($row) {
-                    return $row->date ?? 'Không rõ';
+                    return $row->date ? Carbon::parse($row->date)->format('d/m/Y')
+                        : null;
                 })
                 ->addColumn('userName', function ($row) {
                     return $row->user->name ?? 'Không rõ';
@@ -85,7 +96,7 @@ class DecomposeController extends Controller
                 ->rawColumns(['check', 'active', 'stt', 'warehouseName', 'userName', 'status', 'action'])  // Đảm bảo các cột như button, modal được render đúng
                 ->make(true);
         }
-        return view('decomposes.all_decomposes', compact('decomposes', 'workers'));
+        return view('decomposes.all_decomposes', compact('warehouses', 'decomposes', 'workers'));
     }
     public function approve($id)
     {
@@ -338,7 +349,7 @@ class DecomposeController extends Controller
                     $stockOld->decrement('quantity', $item->quantityProduct);
 
                     // Tăng tồn kho vật tư mới
-                    $stockNew = InventoryStock::updateOrCreate(
+                    $stockNew = InventoryStock::firstOrCreate(
                         [
                             'productID' => $item->productDecomposeID,
                             'unitID' => $item->unitDecomposeID,

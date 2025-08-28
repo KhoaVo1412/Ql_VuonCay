@@ -36,7 +36,12 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Kho</label>
-                                <input type="text" class="form-input" id="taskKeyword" placeholder="Kho">
+                                <select class="form-select" id="warehouseID" required>
+                                    <option value="">Tất Cả</option>
+                                    @foreach($warehouses as $w)
+                                    <option value="{{ $w->id }}">{{ $w->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
 
                             <div class="form-group">
@@ -44,10 +49,10 @@
                                 <input type="date" class="form-input" id="taskStartDate">
                             </div>
                             <div class="form-group" style="display: flex; align-items: end;">
-                                <button class="btn btn-success btn-w" onclick="filterTasks()">
+                                {{-- <button class="btn btn-success btn-w" onclick="filterTasks()">
                                     <i class="fa-light fa-filter-list"></i>
                                     Lọc
-                                </button>
+                                </button> --}}
                             </div>
                         </div>
 
@@ -161,10 +166,11 @@
     $(document).ready(function() {
             var selectedRows = new Set();
             var dataTable = $('#pwarehouses-table').DataTable({
-                // "language": {
-                //     "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
-                //     "emptyTable": "Không có dữ liệu",
-                // },
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
+                    "emptyTable": "Không có dữ liệu",
+                },
+                dom: 'lrtip',
                 processing: true,
                 serverSide: true,
                 // responsive: true,
@@ -195,7 +201,11 @@
                 },
                 ajax: {
                     url: '{{ route('pwarehouses.index') }}',
-                    type: 'GET'
+                    type: 'GET',
+                    data: function (d) {
+                        d.start_date = $('#taskStartDate').val();
+                        d.warehouse_id   = $('#warehouseID').val();
+                    }
                 },
                 columns: [{
                         data: null,
@@ -242,6 +252,15 @@
                 rowCallback: function(row, data) {
                     $(row).attr('data-id', data.id);
                 }
+            });
+            let t;
+            $('.search-inputs').on('input', function () {
+                clearTimeout(t);
+                const v = this.value;
+                t = setTimeout(() => dataTable.search(v).draw(), 250);
+            });
+             $('#taskStartDate, #warehouseID').on('change', function () {
+                dataTable.ajax.reload(null, true);
             });
             $('#select-all-pwarehouses').on('change', function() {
                 var checked = $(this).prop('checked');
@@ -521,51 +540,6 @@
             if (completedCountEl) completedCountEl.textContent = completed;
             if (pendingCountEl) pendingCountEl.textContent = pending;
         }
-        function filterTasks() {
-            const keywordEl = document.getElementById('taskKeyword');
-            const typeEl = document.getElementById('taskType');
-            const gardenEl = document.getElementById('taskGarden');
-            const lotEl = document.getElementById('taskLot');
-            const priorityEl = document.getElementById('taskPriority');
-            const startDateEl = document.getElementById('taskStartDate');
-            const endDateEl = document.getElementById('taskEndDate');
-            
-            const keyword = keywordEl ? keywordEl.value.toLowerCase() : '';
-            const type = typeEl ? typeEl.value : '';
-            const garden = gardenEl ? gardenEl.value : '';
-            const lot = lotEl ? lotEl.value : '';
-            const priority = priorityEl ? priorityEl.value : '';
-            const startDate = startDateEl ? startDateEl.value : '';
-            const endDate = endDateEl ? endDateEl.value : '';
-
-            // First apply search filters
-            let searchFiltered = tasks.filter(task => {
-                if (keyword && !task.name.toLowerCase().includes(keyword)) return false;
-                if (type && task.type !== type) return false;
-                if (garden && task.garden !== garden) return false;
-                if (lot && task.lot !== lot) return false;
-                if (priority && task.priority !== priority) return false;
-                if (startDate && task.startDate < startDate) return false;
-                if (endDate && task.startDate > endDate) return false;
-                return true;
-            });
-
-            // Then apply status filter
-            switch(currentTaskFilter) {
-                case 'pending':
-                    filteredTasks = searchFiltered.filter(task => !task.completed);
-                    break;
-                case 'completed':
-                    filteredTasks = searchFiltered.filter(task => task.completed);
-                    break;
-                case 'all':
-                default:
-                    filteredTasks = searchFiltered;
-                    break;
-            }
-
-            renderTasks();
-        }
 
         function setTaskFilter(filter) {
             currentTaskFilter = filter;
@@ -596,4 +570,9 @@
             renderTasks();
         }
 </script>
+<style>
+    .card {
+        margin-bottom: 0px !important;
+    }
+</style>
 @endsection

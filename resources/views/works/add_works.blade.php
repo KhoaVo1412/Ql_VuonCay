@@ -29,13 +29,7 @@
             font-weight: normal;
         }
     </style>
-    @if(session('error'))
-    <div class="alert alert-danger">
-        <ul>
-            <li>{{ session('error') }}</li>
-        </ul>
-    </div>
-    @endif
+    @include('layouts.alert')
     <div class="row">
         <div class="col-xl-12">
             <form id="form-works" action="{{route('works.save')}}" method="POST" enctype="multipart/form-data">
@@ -80,14 +74,27 @@
 
                                     <div class="form-group">
                                         <label class="form-label">Ngày Bắt Đầu</label>
-                                        <input type="date" name="workDate" value="{{ old('workDate') }}"
-                                            class="form-control" required>
+                                        <input id="workDate" type="date" name="workDate" class="form-control"
+                                            value="{{ old('workDate') }}" autocomplete="off" required>
                                     </div>
+
                                     <div class="form-group">
                                         <label class="form-label">Ngày Kết Thúc</label>
-                                        <input type="date" name="dateEnd" value="{{ old('dateEnd') }}"
-                                            class="form-control" required>
+                                        <input id="dateEnd" type="date" name="dateEnd" class="form-control"
+                                            value="{{ old('dateEnd') }}" autocomplete="off" required>
                                     </div>
+
+                                    <script>
+                                        function bindPicker(id) {
+                                            const el = document.getElementById(id);
+                                            if (!el) return;
+                                            const open = () => { if (typeof el.showPicker === 'function') el.showPicker(); };
+                                            el.addEventListener('focus', open);
+                                            el.addEventListener('click', open);
+                                        }
+                                        bindPicker('workDate');
+                                        bindPicker('dateEnd');
+                                    </script>
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group">

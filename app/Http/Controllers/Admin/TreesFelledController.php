@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ActionHistory;
 use App\Models\FallentPlant;
 use App\Models\Plant;
+use App\Models\Plot;
 use App\Models\Worker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,10 +18,22 @@ class TreesFelledController extends Controller
     public function index(Request $request)
     {
         $plants = Plant::all();
+        $plots = Plot::all();
         $workers = Worker::all();
-        $fallentplants = FallentPlant::with(['plant.plot', 'worker'])->orderBy('id', 'desc')->get();
+        // $fallentplants = FallentPlant::with(['plant.plot', 'worker'])->orderBy('id', 'desc')->get();
 
         if ($request->ajax()) {
+            $fallentplants = FallentPlant::with(['plant.plot', 'worker'])->orderByDesc('id');
+            if ($request->filled('detection_date')) {
+                $fallentplants->whereDate('detectionDate', $request->detection_date);
+            }
+
+            if ($request->filled('task_lot') && $request->task_lot !== '') {
+                $plotId = $request->task_lot;
+                $fallentplants->whereHas('plant', function ($qq) use ($plotId) {
+                    $qq->where('plotID', $plotId);
+                });
+            }
             return DataTables::of($fallentplants)
                 ->addColumn('check', function ($row) {
                     return '<input class="form-check-input" type="checkbox" id="check-' . $row->id . '" data-id="' . $row->id . '">';
@@ -29,10 +42,10 @@ class TreesFelledController extends Controller
                     static $stt = 0;
                     return ++$stt;
                 })
-                ->addColumn('plant_code', function ($row) {
+                ->addColumn('plantCode', function ($row) {
                     return $row->plant->plantCode ?? '---';
                 })
-                ->addColumn('plot_name', function ($row) {
+                ->addColumn('plotName', function ($row) {
                     return $row->plant->plot->plotName ?? '---';
                 })
                 ->addColumn('specific_location', function ($row) {
@@ -85,10 +98,10 @@ class TreesFelledController extends Controller
                     </div>
                 ';
                 })
-                ->rawColumns(['check', 'detection_date', 'plant_code', 'plot_name', 'specific_location', 'worker_name', 'tree_condition', 'report_status', 'status', 'action'])
+                ->rawColumns(['check', 'detection_date', 'plantCode', 'plotName', 'specific_location', 'worker_name', 'tree_condition', 'report_status', 'status', 'action'])
                 ->make(true);
         }
-        return view('treesfelled.all_treesfelleds', compact('plants', 'workers'));
+        return view('treesfelled.all_treesfelleds', compact('plots', 'plants', 'workers'));
     }
 
     public function save(Request $request)

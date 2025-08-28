@@ -43,10 +43,12 @@
                             style="border-radius: 7px; display: none;">
                             Xóa
                         </button>
+                        @unlessrole('Công Nhân')
                         <button id="add-selected-btn" class="btn btn-success" style="border-radius: 7px;">
                             <a href="{{ route('treatmentslips.add') }}" class="text-white"><i class="fa fa-plus"></i>Tạo
                                 Phiếu Trị Bệnh</a>
                         </button>
+                        @endunlessrole
                     </div>
                     <thead>
                         <tr>
@@ -132,6 +134,7 @@
                 //     "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
                 //     "emptyTable": "Không có dữ liệu",
                 // },
+                dom: 'lrtip',
                 processing: true,
                 serverSide: true,
                 // responsive: true,
@@ -212,6 +215,12 @@
                 rowCallback: function(row, data) {
                     $(row).attr('data-id', data.id);
                 }
+            });
+            let t;
+            $('.search-inputs').on('input', function () {
+                clearTimeout(t);
+                const v = this.value;
+                t = setTimeout(() => dataTable.search(v).draw(), 250);
             });
             $('#select-all-treatmentslip').on('change', function() {
                 var checked = $(this).prop('checked');
@@ -362,7 +371,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '{{ route('farm.status') }}',
+                        url: '{{ route('treatmentslip.status') }}',
                         type: 'POST',
                         data: {
                             _token: '{{ csrf_token() }}',

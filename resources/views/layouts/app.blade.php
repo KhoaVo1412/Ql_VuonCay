@@ -66,6 +66,10 @@
         .dt-type-numeric {
             text-align: left !important
         }
+
+        .dt-paging {
+            text-align: right !important;
+        }
     </style>
     <style>
         .loading-wrapper {
@@ -142,13 +146,13 @@
                                 <span>Trang Chủ</span>
                             </a>
                         </li>
-                        {{-- Quản Lý Nông trường --}}
-                        @hasanyrole('Admin')
-                        <li
-                            class="sidebar-item has-sub {{ request()->is('plots*') || request()->is('add-plots*') || request()->is('edit-plots*') || 
+                        {{-- Quản Lý Vườn Cây --}}
+                        @hasanyrole('Admin|Quản Lý')
+                        <li class="sidebar-item has-sub {{ request()->is('plots*') || request()->is('add-plots*') || request()->is('edit-plots*') || 
                                 request()->is('seedgardens*') || request()->is('edit-seedgardens*') || 
                                 request()->is('crops*') || request()->is('edit-crops*') || 
-                                request()->is('ingredients*') || request()->is('farms*') || request()->is('vehicles*') || request()->is('plantingareas*') ? 'active' : '' }}">
+                                request()->is('ingredients*') || request()->is('farms*') || request()->is('vehicles*') || request()->is('plantingareas*') || 
+                                request()->is('add-excel*') ? 'active' : '' }}">
                             <a href="#" class='sidebar-link {{ request()->is(' add-plots*') ||
                                 request()->is('edit-plots*') ||
                                 request()->is('seedgardens*') ||
@@ -162,7 +166,7 @@
                                 request()->is('edit-plantingareas*') ||
                                 request()->is('add-excel*') ||
                                 request()->is('edit-excel*') ||
-                                request()->is('add-plantingareas*')
+                                request()->is('add-plantingareas*') || request()->is('add-excel*')
                                 ? 'active'
                                 : '' }}'
                                 onclick="toggleActive(this)">
@@ -185,7 +189,7 @@
                                     <a href="{{ route('farms.index') }}">Vườn Cây</a>
                                 </li> --}}
                                 <li
-                                    class="submenu-item d-flex align-items-center ms-3 {{ Route::is('plots.index') || Route::is('plots.add') || Route::is('plots.edit') ? 'active' : '' }}">
+                                    class="submenu-item d-flex align-items-center ms-3 {{ Route::is('plots.index') || Route::is('plots.add') || Route::is('plots.edit') || Route::is('add-excel') ? 'active' : '' }}">
                                     <i class="fa-solid fa-chart-scatter text-green"></i>
                                     <a href="{{ route('plots.index') }}">Lô</a>
                                 </li>
@@ -210,7 +214,7 @@
                                 <span>Công Nhân</span>
                             </a>
                         </li> --}}
-                        @hasanyrole('Admin|Quản Lý Công Nhân')
+                        @hasanyrole('Admin|Quản Lý|Tổ Trưởng')
                         <li
                             class="sidebar-item has-sub {{ request()->is('duty*') || request()->is('edit-duty*') || request()->is('teams*') || request()->is('edit-teams*') 
                                 || request()->is('workers*') || request()->is('edit-workers*') || request()->is('add-workers*')  ? 'active' : '' }}">
@@ -225,6 +229,7 @@
                             </a>
                             <ul
                                 class="submenu {{ request()->is('workers*') || request()->is('add-workers*') || request()->is('edit-workers*') ? 'active' : '' }}">
+                                {{-- @unlessrole('Công Nhân') --}}
                                 <li
                                     class="submenu-item d-flex d-flex align-items-center ms-3 {{Route::is('duty.index') || Route::is('duty.edit') ? 'active' : '' }}">
                                     <i class="fa-solid fa-list-check text-green"></i>
@@ -235,6 +240,7 @@
                                     <i class="fa-solid fa-people-group text-green"></i>
                                     <a href="{{ route('teams.index')}}">Tổ</a>
                                 </li>
+                                {{-- @endunlessrole --}}
                                 <li
                                     class="submenu-item d-flex align-items-center ms-3 {{ Route::is('workers.index') || Route::is('workers.add') || Route::is('workers.edit') ? 'active' : '' }}">
                                     <i class="fa-solid fa-user-plus text-green"></i>
@@ -242,6 +248,8 @@
                                 </li>
                             </ul>
                         </li>
+                        @endhasanyrole
+                        @hasanyrole('Admin|Quản Lý|Tổ Trưởng|Công Nhân')
                         {{-- Quản Lý Công việc --}}
                         <li class="sidebar-item has-sub {{ request()->is('works*') || request()->is('edit-works*') || request()->is('add-works*') ||
                                 request()->is('aworks*') || request()->is('edit-aworks*') ||
@@ -259,22 +267,26 @@
                             </a>
                             <ul
                                 class="submenu {{ request()->is('works*') || request()->is('workps*') || request()->is('comments*') ? 'active' : '' }}">
+                                @unlessrole('Công Nhân')
                                 <li
                                     class="submenu-item d-flex d-flex align-items-center ms-3 {{ Route::is('aworks.index') || Route::is('aworks.edit') ? 'active' : '' }}">
                                     <i class="fa-solid fa-list-check text-green"></i>
                                     <a href="{{ route('aworks.index')}}">Loại Công Việc</a>
                                 </li>
+                                @endunlessrole
                                 <li
                                     class="submenu-item d-flex d-flex align-items-center ms-3 {{ Route::is('works.index') || Route::is('works.add') || Route::is('works.edit') ? 'active' : '' }}">
 
                                     <i class="fa-solid fa-briefcase text-green"></i>
                                     <a href="{{ route('works.index')}}">Phân Công Công Việc</a>
                                 </li>
+                                @unlessrole('Công Nhân')
                                 <li
                                     class="submenu-item d-flex d-flex align-items-center ms-3 {{ Route::is('workps.index') || Route::is('workps.add') || Route::is('workps.edit') ? 'active' : '' }}">
                                     <i class="fas fa-box-open text-green"></i>
                                     <a href="{{ route('workps.index')}}">Đề Xuất Vật Tư</a>
                                 </li>
+                                @endunlessrole
                                 <li
                                     class="submenu-item d-flex align-items-center ms-3 {{ Route::is('comments.index') || Route::is('comments.edit') ? 'active' : '' }}">
                                     <i class="fas fa-clipboard-check text-green"></i>
@@ -289,6 +301,7 @@
                         </li>
                         @endhasrole
                         {{-- Quản Lý cây bệnh --}}
+                        @hasanyrole('Admin|Quản Lý|Tổ Trưởng|Công Nhân')
                         <li class="sidebar-item has-sub {{ request()->is('diseaseplans*') || request()->is('add-diseaseplans*') ||  request()->is('edit-diseaseplans*') ||
                             request()->is('treatmentslips*') || request()->is('add-treatmentslips*') || request()->is('edit-treatmentslips*') ||
                             request()->is('materialproposals*') || request()->is('add-materialproposals*') || request()->is('edit-materialproposals*') ||
@@ -297,8 +310,8 @@
                                 request()->is('add-diseaseplans*') || request()->is('edit-diseaseplans*') ||
                                 request()->is('materialproposals*') || request()->is('add-materialproposals*') ||
                                 request()->is('edit-materialproposals*') ||
-                                request()->is('treatmentslips*') || request()->is('add-treatmentslips') ||
-                                request()->is('edit-treatmentslips') ? 'active' : '' }}' onclick="toggleActive(this)">
+                                request()->is('treatmentslips*') || request()->is('add-treatmentslips*') ||
+                                request()->is('edit-treatmentslips*') ? 'active' : '' }}' onclick="toggleActive(this)">
                                 <img src="/imgs/caybenh.png" width="25px" height="25px">
                                 <span>Cây Bệnh</span>
                             </a>
@@ -314,16 +327,18 @@
                                     <i class="fas fa-stethoscope text-green"></i>
                                     <a href="{{ route('treatmentslips.index') }}">Phiếu Trị</a>
                                 </li>
+                                @unlessrole('Công Nhân')
                                 <li
                                     class="submenu-item d-flex align-items-center ms-3 {{ Route::is('materialproposals.index') || Route::is('materialproposals.add') || Route::is('materialproposals.edit') ? 'active' : '' }}">
                                     <i class="fas fa-clipboard-check text-green"></i>
                                     <a href="{{ route('materialproposals.index') }}">Đề Xuất Vật Tư</a>
                                 </li>
+                                @endunlessrole
                             </ul>
                         </li>
-
+                        @endhasrole
                         {{-- Quản Lý cây đỗ --}}
-                        @hasanyrole('Admin|Quản Lý Kho')
+                        @hasanyrole('Admin|Quản Lý|Tổ Trưởng|Công Nhân')
                         <li class="sidebar-item one-sub {{ request()->is('treesfelleds*') ? 'active' : '' }}">
                             <a href="{{ route('treesfelleds.index') }}" class='sidebar-link'
                                 onclick="toggleActive(this)">
@@ -334,7 +349,7 @@
                         @endhasanyrole
 
                         {{-- Quản Lý kho --}}
-                        @hasanyrole('Admin|Quản Lý Kho')
+                        @hasanyrole('Admin|Quản Lý Kho|Quản Lý')
                         <li class="sidebar-item has-sub {{ request()->is('units*') || request()->is('edit-units*') 
                             || request()->is('warehouses*') || request()->is('edit-warehouses*') 
                             || request()->is('categories*') || request()->is('edit-categories*')

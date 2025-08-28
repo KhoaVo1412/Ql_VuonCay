@@ -62,8 +62,8 @@
 
                         <!-- RFID -->
                         <div class="col-xl-12">
-                            <label for="rfID" class="form-label">Mã RFID</label>
-                            <input type="text" class="form-control" name="rfID" id="rfID" placeholder="Nhập mã RFID">
+                            <label for="RF_id" class="form-label">Mã RFID</label>
+                            <input type="text" class="form-control" name="RF_id" id="RF_id" placeholder="Nhập mã RFID">
                         </div>
 
                         <!-- Năm trồng -->
@@ -114,23 +114,25 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Lô Trồng</label>
-                                <select class="form-select" id="taskplot">
-                                    <option value="">Tất cả</option>
-
+                                <select class="form-select" id="plots" required>
+                                    <option value="">Tất Cả</option>
+                                    @foreach($plots as $p)
+                                    <option value="{{ $p->id }}">{{ $p->plotName }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Diện Tích</label>
+                                {{-- <label class="form-label">Diện Tích</label>
                                 <select class="form-select" id="taskLot">
                                     <option value=""></option>
 
-                                </select>
+                                </select> --}}
                             </div>
                             <div class="form-group" style="display: flex; align-items: end; width: 20%;">
-                                <button class="btn btn-success btn-w" onclick="filterTasks()">
+                                {{-- <button class="btn btn-success btn-w" onclick="filterTasks()">
                                     <i class="fa-light fa-filter-list"></i>
                                     Lọc
-                                </button>
+                                </button> --}}
                             </div>
                         </div>
                     </div>
@@ -240,9 +242,10 @@
             var selectedRows = new Set();
             var dataTable = $('#crops-table').DataTable({
                 "language": {
-                    // "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
+                    "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
                     "emptyTable": "Không có dữ liệu",
                 },
+                dom: 'lrtip',
                 processing: true,
                 serverSide: true,
                 // responsive: true,
@@ -273,7 +276,11 @@
                 },
                 ajax: {
                     url: '{{ route('crops.index') }}',
-                    type: 'GET'
+                    type: 'GET',
+                    data: function (d) {
+                        d.plot_id = $('#plots').val();
+                        d.warehouse_id   = $('#warehouseID').val();
+                    }
                 },
                 columns: [
                     {
@@ -326,6 +333,15 @@
                 rowCallback: function(row, data) {
                     $(row).attr('data-id', data.id);
                 }
+            });
+             let t;
+            $('.search-inputs').on('input', function () {
+                clearTimeout(t);
+                const v = this.value;
+                t = setTimeout(() => dataTable.search(v).draw(), 250);
+            });
+            $('#plots, #warehouseID').on('change', function () {
+                dataTable.ajax.reload(null, true);
             });
             $('#select-all-crops').on('change', function() {
                 var checked = $(this).prop('checked');

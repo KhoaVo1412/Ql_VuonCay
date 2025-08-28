@@ -8,6 +8,7 @@ use App\Models\DiseasePlant;
 use App\Models\Product;
 use App\Models\TreatmentSessions;
 use App\Models\Worker;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,8 +19,17 @@ class TreatmentSlipController extends Controller
 {
     public function index(Request $request)
     {
-
-        $treatmentslips = TreatmentSessions::with('diseasePlant', 'assignedWorker')->whereHas('diseasePlant')->get();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $treatmentslips = TreatmentSessions::with(['diseasePlant', 'assignedWorker'])
+            ->whereHas('diseasePlant') // giữ điều kiện của bạn
+            ->when(!($user?->hasRole('Admin')), function ($q) use ($user) {
+                $q->whereHas('assignedWorker', fn($w) => $w->where('user_id', $user->id));
+                // nếu cột là userID thì đổi 'user_id' -> 'userID'
+            })
+            ->latest()
+            ->get();
+        // $treatmentslips = TreatmentSessions::with('diseasePlant', 'assignedWorker')->whereHas('diseasePlant')->get();
         if ($request->ajax()) {
             return DataTables::of($treatmentslips)
                 ->addColumn('check', function ($row) {
@@ -40,10 +50,14 @@ class TreatmentSlipController extends Controller
                     return $row->plant ? $row->plant->plantCode : 'Không rõ';
                 })
                 ->addColumn('sessionStart', function ($row) {
-                    return $row->sessionStart;
+                    return $row->sessionStart
+                        ? Carbon::parse($row->sessionStart)->format('d/m/Y')
+                        : null;
                 })
                 ->editColumn('sessionEnd', function ($row) {
-                    return $row->sessionEnd;
+                    return $row->sessionEnd
+                        ? Carbon::parse($row->sessionEnd)->format('d/m/Y')
+                        : null;
                 })
                 ->editColumn('assigned_to', function ($row) {
                     return $row->assignedWorker->name;

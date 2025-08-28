@@ -25,6 +25,7 @@ class User extends Authenticatable implements JWTSubject, Auditable
      *
      * @var array<int, string>
      */
+    protected $guard_name = 'web';
     protected $fillable = [
         'name',
         'email',
@@ -50,6 +51,10 @@ class User extends Authenticatable implements JWTSubject, Auditable
     public function decomposes()
     {
         return $this->hasMany(Decompose::class);
+    }
+    public function worker()
+    {
+        return $this->hasOne(Worker::class, 'user_id');
     }
     /**
      * Get the attributes that should be cast.

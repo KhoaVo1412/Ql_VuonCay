@@ -121,7 +121,26 @@
                                 <input type="text" class="form-control" name="name" placeholder="Tên Công Nhân"
                                     value="{{ $workers->name }}" required>
                             </div>
-
+                            <div class="col-md-4">
+                                <label class="form-label">Email</label>
+                                <input class="form-input" type="text" name="email" value="{{ $workers->email }}"
+                                    required>
+                            </div>
+                            {{-- <div class="col-md-4">
+                                <label for="role" class="form-label">Mật Khẩu</label>
+                                <input class="form-input" type="password" name="password"
+                                    value="{{ $workers->passwork }}" required>
+                            </div> --}}
+                            <div class="col-md-4">
+                                <label class="form-label" for="role">Vai trò</label>
+                                <select name="role" id="role" class="form-select" required>
+                                    @foreach($roles as $roleName)
+                                    <option value="{{ $roleName }}" {{ $user->hasRole($roleName) ? 'selected' : '' }}>
+                                        {{ $roleName }}
+                                    </option>
+                                    @endforeach
+                                </select>
+                            </div>
                             <!-- Birth Date -->
                             <div class="col-md-4">
                                 <label for="bdate" class="form-label">Ngày Sinh</label>

@@ -99,9 +99,9 @@ class LoginControllerApi extends Controller
                 return response()->json(['error' => 'Người dùng không tồn tại.'], 404);
             }
             $roles = $user->roles->pluck('name')->toArray();
-            if (!in_array('Khách Hàng', $roles) && !in_array('Admin', $roles)) {
-                return response()->json(['error' => 'Bạn không có quyền truy cập.'], 403);
-            }
+            // if (!in_array('Khách Hàng', $roles) && !in_array('Admin', $roles)) {
+            //     return response()->json(['error' => 'Bạn không có quyền truy cập.'], 403);
+            // }
 
             // Lấy permissions và roles
             $userPermissions = $user->getAllPermissions()->pluck('name', 'name')->all();

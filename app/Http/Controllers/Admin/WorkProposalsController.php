@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\ValidationException;
 use Yajra\DataTables\DataTables;
 
 class WorkProposalsController extends Controller
@@ -105,13 +106,15 @@ class WorkProposalsController extends Controller
     }
     public function add(Request $request)
     {
-        $warehouses = WareHouse::all();
-        $units = UnitOfMeasure::all();
-        $products = Product::all();
+        $warehouses = WareHouse::all(['id', 'name']);
+        // $units = UnitOfMeasure::all();   // không cần trong view này
+        // $products = Product::all();      // bỏ, vì sẽ lấy từ stock theo kho
         $works = Work::all();
-        $gentasks = GenTask::Where('type', 1)->get();
-        return view('workPs.add_workPs', compact('warehouses', 'units', 'products', 'works', 'gentasks'));
+        $gentasks = GenTask::where('type', 1)->get();
+
+        return view('workPs.add_workPs', compact('warehouses', 'works', 'gentasks'));
     }
+
     public function addProposal($taskID)
     {
         $warehouses = WareHouse::all();
@@ -122,6 +125,81 @@ class WorkProposalsController extends Controller
         return view('workps.addProposal', compact('gentask', 'warehouses', 'units', 'products', 'works'));
     }
     public function save(Request $request)
+    {
+        // 1) Validate input
+        $validated = $request->validate([
+            'proposaName'   => 'required|string|max:255',
+            'proposalDate'  => 'nullable|date',
+            'approvalDate'  => 'nullable|date',
+            'taskID'        => 'required|integer|exists:gen_tasks,id',
+            'treatmentID'   => 'nullable|integer',
+            'status'        => 'nullable|string',
+            'reason'        => 'nullable|string',
+
+            'items'               => 'required|array|min:1',
+            'items.*.warehouseID' => 'required|integer|exists:ware_houses,id',
+            'items.*.productID'   => 'required|integer|exists:products,id',
+            'items.*.unit'        => 'required|integer|exists:unit_of_measures,id',
+            'items.*.quantity'    => 'required|numeric|min:0.000001',
+            'items.*.note'        => 'nullable|string',
+        ]);
+        foreach ($validated['items'] as $i => $it) {
+            $exists = InventoryStock::where('warehouseID', $it['warehouseID'])
+                ->where('productID',   $it['productID'])
+                ->where('unitID',      $it['unit'])
+                ->exists();
+
+            if (!$exists) {
+                throw ValidationException::withMessages([
+                    "items.$i.unit" => "Dòng " . ($i + 1) . ": Đơn vị không tồn tại trong tồn kho của (Kho/Vật tư) đã chọn.",
+                ]);
+            }
+
+            // (Tuỳ chọn) Chặn số lượng > tổng tồn theo unit
+            // $available = InventoryStock::where('warehouseID', $it['warehouseID'])
+            //     ->where('productID',   $it['productID'])
+            //     ->where('unitID',      $it['unit'])
+            //     ->sum('quantity');
+            // if ($it['quantity'] > $available) {
+            //     throw ValidationException::withMessages([
+            //         "items.$i.quantity" => "Dòng ".($i+1).": Số lượng vượt quá tồn khả dụng (".$available.").",
+            //     ]);
+            // }
+        }
+        DB::transaction(function () use ($validated) {
+            $proposal = TaskProductProposal::create([
+                'proposaName'  => $validated['proposaName'],
+                'proposalDate' => $validated['proposalDate'] ?? null,
+                'approvalDate' => $validated['approvalDate'] ?? null,
+                'taskID'       => $validated['taskID'],
+                'treatmentID'  => $validated['treatmentID'] ?? null,
+                'status'       => $validated['status'] ?? 'Chờ duyệt',
+                'created_by'   => Auth::id(),
+                'reason'       => $validated['reason'] ?? null,
+            ]);
+
+            foreach ($validated['items'] as $it) {
+                TaskProductProposalProduct::create([
+                    'taskproposalID'    => $proposal->id,
+                    'warehouseID'       => $it['warehouseID'],
+                    'productID'         => $it['productID'],
+                    'materialQuantity'  => $it['quantity'],
+                    'unitID'            => $it['unit'],
+                    'note'              => $it['note'] ?? null,
+                    'status'            => 'Chờ duyệt',
+                ]);
+            }
+
+            ActionHistory::create([
+                'user_id'     => Auth::id(),
+                'action_type' => 'create',
+                'model_type'  => 'TaskProductProposal', // đặt đúng model để sau này lọc/trace
+                'details'     => "Đã tạo đề xuất: " . $proposal->proposaName,
+            ]);
+        });
+        return redirect()->route('workps.index')->with('message', 'Tạo đề xuất thành công');
+    }
+    public function save1(Request $request)
     {
         // dd($request->all());
         // $request->validate([
@@ -168,15 +246,112 @@ class WorkProposalsController extends Controller
     }
     public function edit($id)
     {
-        $warehouses = WareHouse::all();
-        $units = UnitOfMeasure::all();
-        $proposal = TaskProductProposal::with('creator', 'task', 'proposalProducts')->findOrFail($id);
-        $products = Product::all();
-        $works = Work::all();
-        $gentasks = GenTask::Where('type', 1)->get();
-        return view('workPs.edit_workPs', compact('warehouses', 'units', 'proposal', 'products', 'works', 'gentasks'));
+        $warehouses = WareHouse::all(['id', 'name']);
+        $proposal   = TaskProductProposal::with('creator', 'task', 'proposalProducts')->findOrFail($id);
+        $works      = Work::all();
+        $gentasks   = GenTask::where('type', 1)->get();
+
+        return view('workPs.edit_workPs', compact('warehouses', 'proposal', 'works', 'gentasks'));
     }
     public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'proposaName'  => 'required|string|max:255',
+            'proposalDate' => 'nullable|date',
+            'approvalDate' => 'nullable|date',
+            'taskID'       => 'nullable|integer',
+            'treatmentID'  => 'nullable|integer',
+            'status'       => 'nullable|string',
+            'reason'       => 'nullable|string',
+            'proposalProducts'               => 'required|array|min:1',
+            'proposalProducts.*.id'          => 'nullable|integer',
+            'proposalProducts.*.productID'   => 'required|integer|exists:products,id',
+            'proposalProducts.*.warehouseID' => 'required|integer|exists:ware_houses,id',
+            'proposalProducts.*.unitID'      => 'required|integer|exists:unit_of_measures,id',
+            'proposalProducts.*.quantity'    => 'required|numeric|min:0.000001',
+            'proposalProducts.*.note'        => 'nullable|string',
+        ]);
+        $exists = TaskProductProposal::where('proposaName', $validated['proposaName'])
+            ->where('id', '!=', $id)
+            ->exists();
+        if ($exists) {
+            return back()->with(['error' => 'Đề xuất này đã tồn tại!'])->withInput();
+        }
+        foreach ($validated['proposalProducts'] as $i => $it) {
+            $inStock = InventoryStock::where('warehouseID', $it['warehouseID'])
+                ->where('productID',   $it['productID'])
+                ->where('unitID',      $it['unitID'])
+                ->exists();
+            if (!$inStock) {
+                return back()->withErrors([
+                    "proposalProducts.$i.unitID" => "Dòng " . ($i + 1) . ": Đơn vị không tồn tại trong tồn kho của (Kho/Vật tư) đã chọn.",
+                ])->withInput();
+            }
+            // (Tuỳ chọn) chặn vượt tồn
+            // $available = InventoryStock::where('warehouseID', $it['warehouseID'])
+            //     ->where('productID',   $it['productID'])
+            //     ->where('unitID',      $it['unitID'])
+            //     ->sum('quantity');
+            // if ($it['quantity'] > $available) {
+            //     return back()->withErrors([
+            //         "proposalProducts.$i.quantity" => "Dòng ".($i+1).": Số lượng vượt tồn khả dụng (".$available.").",
+            //     ])->withInput();
+            // }
+        }
+        return DB::transaction(function () use ($validated, $id) {
+            /** @var TaskProductProposal|null $proposal */
+            $proposal = TaskProductProposal::lockForUpdate()->find($id);
+            if (!$proposal) {
+                return back()->with('error', 'Đề xuất không tồn tại');
+            }
+            $proposal->update([
+                'proposaName'  => $validated['proposaName'],
+                'proposalDate' => $validated['proposalDate'] ?? null,
+                'approvalDate' => $validated['approvalDate'] ?? null,
+                'taskID'       => $validated['taskID'] ?? null,
+                'treatmentID'  => $validated['treatmentID'] ?? null,
+                'status'       => $validated['status'] ?? $proposal->status,
+                'reason'       => $validated['reason'] ?? null,
+            ]);
+            $oldIDs = $proposal->proposalProducts()->pluck('id')->toArray();
+            $newIDs = [];
+            foreach ($validated['proposalProducts'] as $it) {
+                $payload = [
+                    'taskproposalID'   => $proposal->id,
+                    'productID'        => $it['productID'],
+                    'warehouseID'      => $it['warehouseID'],
+                    'unitID'           => $it['unitID'],
+                    'materialQuantity' => $it['quantity'],
+                    'note'             => $it['note'] ?? null,
+                ];
+                if (!empty($it['id'])) {
+                    $existingItem = TaskProductProposalProduct::where('id', $it['id'])
+                        ->where('taskproposalID', $proposal->id)
+                        ->first();
+                    if ($existingItem) {
+                        $existingItem->update($payload);
+                        $newIDs[] = $existingItem->id;
+                    }
+                } else {
+                    $newItem = TaskProductProposalProduct::create($payload);
+                    $newIDs[] = $newItem->id;
+                }
+            }
+            $toDelete = array_diff($oldIDs, $newIDs);
+            if (!empty($toDelete)) {
+                TaskProductProposalProduct::whereIn('id', $toDelete)->delete();
+            }
+            ActionHistory::create([
+                'user_id'     => Auth::id(),
+                'action_type' => 'update',
+                'model_type'  => 'TaskProductProposal',
+                'details'     => "Đã cập nhật đề xuất: " . $proposal->proposaName,
+            ]);
+            return redirect()->route('workps.index')->with('message', 'Cập nhật đề xuất thành công');
+        });
+    }
+
+    public function updateOld(Request $request, $id)
     {
         // validate
         $request->validate([

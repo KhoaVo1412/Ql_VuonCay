@@ -1,4 +1,6 @@
-
+div.dt-container div.dt-length {
+        text-align: left !important;
+    }
 .alert {
     border: none;
 }
@@ -1162,6 +1164,9 @@
     background: #750102;
 }
 @media screen and (max-width: 1199px) {
+ .dt-paging {
+            text-align: right !important;
+        }
     #main,
     #main2 {
         margin-left: 0;
@@ -1304,7 +1309,15 @@ a {
       margin-top: 20px;
     }
  
+    @media screen and (min-width: 1199px) {
+        .dt-paging {
+            text-align: right !important;
+        }
+    }
 @media screen and (max-width: 767px) {
+ 	.dt-paging {
+            text-align: center !important;
+        }
     .sidebar-wrapper .sidebar-toggler.x {
         display: none;
     }

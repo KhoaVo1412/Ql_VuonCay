@@ -9,7 +9,7 @@
                         <div class="row modal-body gy-4">
                             <div class="form-section">
                                 <!-- Second Row -->
-                                <div class="form-row">
+                                {{-- <div class="form-row">
                                     <div class="form-group">
                                         <label for="code" class="form-label ">Mã Phiếu</label>
                                         <input type="text" name="code" class="form-input" placeholder="Nhập mã phiếu">
@@ -24,8 +24,7 @@
                                             <option value="Khai thác">Khai thác</option>
                                         </select>
                                     </div>
-                                </div>
-
+                                </div> --}}
                                 <div class="form-row">
                                     <div class="form-group">
                                         <label for="warehouseID" class="form-label ">Kho</label>
@@ -35,7 +34,7 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="form-group wide">
+                                    {{-- <div class="form-group wide">
                                         <label for="createName" class="form-label ">Người Tạo</label>
                                         <select name="createName" class="form-select">
                                             <option value="">Chọn người tạo</option>
@@ -43,12 +42,12 @@
                                             <option value="{{ $user->name }}">{{ $user->name }}</option>
                                             @endforeach
                                         </select>
-                                    </div>
+                                    </div> --}}
                                     <div class="form-group">
                                         <label for="quantity" class="form-label">Ngày Tạo</label>
-                                        <input type="date" id="startDate" name="createDate" class="form-input">
+                                        <input type="date" id="startDate" name="createDate" class="form-input"
+                                            value="{{ old('createDate', now()->toDateString()) }}">
                                     </div>
-
                                 </div>
                                 <div class="form-row">
                                     <div class="form-group" style="flex: 1;">
@@ -79,7 +78,6 @@
                                                             @endforeach
                                                         </select>
                                                     </div>
-
                                                     <!-- Tên Vật Tư -->
                                                     <div class="form-group">
                                                         <label class="form-label">Tên Vật Tư</label>
@@ -89,14 +87,12 @@
                                                             <option value="">Chọn sản phẩm</option>
                                                         </select>
                                                     </div>
-
                                                     <!-- Số lượng -->
                                                     <div class="form-group">
                                                         <label class="form-label">Số Lượng</label>
                                                         <input type="number" name="materials[0][quantity]"
                                                             class="form-input">
                                                     </div>
-
                                                     <!-- Đơn Vị -->
                                                     <div class="form-group">
                                                         <label class="form-label">Đơn Vị</label>
@@ -119,7 +115,7 @@
                                     </div>
 
                                     <div class="add-material" onclick="addTreatmentStep()" style="margin-top: 1rem;">
-                                        <i class="fas fa-plus"></i> Thêm Vật Tư
+                                        <i class="fas fa-plus"></i> Thêm Sản Lượng
                                     </div>
                                 </div>
                             </div>
@@ -277,6 +273,16 @@
         treatmentStepCounter = steps.length;
     }
 
+</script>
+<script>
+    (function(){
+    const el = document.getElementById('startDate');
+    if (el && !el.value) {
+        const t = new Date();
+        const pad = n => String(n).padStart(2,'0');
+        el.value = `${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`;
+    }
+    })();
 </script>
 
 <style>

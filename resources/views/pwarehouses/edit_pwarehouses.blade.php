@@ -117,9 +117,9 @@
                                                             onchange="onCategoryChange(this)">
                                                             <option value="">Chọn danh mục</option>
                                                             @foreach($categories as $category)
-                                                            <option value="{{ $category->id }}" {{ $material->
-                                                                product->categoryID == $category->id ? 'selected' :
-                                                                ''}}>
+                                                            <option value="{{ $category->id }}" {{ optional($material->
+                                                                product)->categoryID == $category->id ? 'selected' : ''
+                                                                }}>
                                                                 {{ $category->name }}
                                                             </option>
                                                             @endforeach
@@ -135,7 +135,8 @@
                                                             @foreach($products as $product)
                                                             <option value="{{ $product->id }}" {{ $product->id ==
                                                                 $material->productID ? 'selected' : '' }}>{{
-                                                                $product->name }}</option>
+                                                                $product->name }}
+                                                            </option>
                                                             @endforeach
                                                         </select>
                                                     </div>
@@ -152,8 +153,10 @@
                                                             <option value="">Chọn đơn vị</option>
                                                             @foreach($units as $unit)
                                                             <option value="{{ $unit->id }}" {{ $unit->id ==
-                                                                $material->product->unitID ? 'selected' : '' }}>{{
-                                                                $unit->name }}</option>
+                                                                optional($material->product)->unitID ? 'selected' : ''
+                                                                }}>
+                                                                {{ $unit->name }}
+                                                            </option>
                                                             @endforeach
                                                         </select>
                                                     </div>

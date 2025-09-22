@@ -18,6 +18,10 @@ class Evaluate extends Model
         'status',
         'date_comment',
         'opinion',
+        'countWork',
+        'countCofirm',
+        'countLate',
+        'countUn'
     ];
 
     public function worker()

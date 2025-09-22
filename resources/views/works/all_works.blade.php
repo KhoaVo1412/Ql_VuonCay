@@ -553,67 +553,67 @@
 
 <script>
     $(document).on('click', '.toggle-status', function(e) {
-            e.preventDefault();
-
-            let button = $(this);
-            let id = button.data('id');
-
-            Swal.fire({
-                title: "Xác nhận thay đổi",
-                text: "Bạn có chắc chắn muốn thay đổi trạng thái của Công Việc này?",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Thay đổi",
-                cancelButtonText: "Hủy"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: '{{ route('works.status') }}',
-                        type: 'POST',
-                        data: {
-                            _token: '{{ csrf_token() }}',
-                            id: id
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                if (response.status === 'Hoàn thành') {
-                                    button.removeClass('bg-danger').addClass('bg-success').text(
-                                        'Hoàn thành');
-                                } else {
-                                    button.removeClass('bg-success').addClass('bg-danger').text(
-                                        'Đang chờ');
-                                }
-
-                                Swal.fire({
-                                    text: 'Trạng thái của Công Việc đã được cập nhật.',
-                                    icon: 'success',
-                                    confirmButtonText: 'OK',
-                                    timer: 3000
-                                });
-                            } else {
-                                Swal.fire({
-                                    text: response.message ||
-                                        'Không thể thay đổi trạng thái của Công Việc.',
-                                    icon: 'error',
-                                    confirmButtonText: 'OK',
-                                    timer: 3000
-                                });
-                            }
-                        },
-                        error: function() {
-                            Swal.fire({
-                                text: 'Không thể thay đổi trạng thái, vui lòng thử lại.',
-                                icon: 'error',
-                                confirmButtonText: 'OK',
-                                timer: 3000
-                            });
-                        }
-                    });
+        e.preventDefault();
+        e.stopPropagation();
+        const button = $(this);
+        const id     = button.data('id');
+        Swal.fire({
+            title: "Xác nhận thay đổi",
+            text: "Bạn có chắc chắn muốn thay đổi trạng thái của Công Việc này?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Thay đổi",
+            cancelButtonText: "Hủy"
+        }).then((result) => {
+            if (!result.isConfirmed) return;
+            const oldText = button.text();
+            button.prop('disabled', true);
+            $.ajax({
+            url: '{{ route('works.status') }}',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                _token: '{{ csrf_token() }}',
+                id: id
+            },
+            success: function(res) {
+                if (!res || !res.success) {
+                Swal.fire({ text: (res && res.message) || 'Không thể thay đổi trạng thái của Công Việc.', icon: 'error', timer: 3000 });
+                button.text(oldText);
+                return;
                 }
+                const classMap = {
+                'Đang chờ':        'bg-danger',
+                'Hoàn thành':      'bg-success',
+                'Hoàn thành trễ':  'bg-warning text-dark'
+                };
+                button.removeClass('bg-success bg-danger bg-warning text-dark')
+                    .addClass(classMap[res.status] || 'bg-secondary')
+                    .text(res.status);
+                if (res.tooltip) {
+                button.attr('title', res.tooltip);
+                try {
+                    const tip = bootstrap.Tooltip.getInstance(button[0]);
+                    if (tip) tip.dispose();
+                    new bootstrap.Tooltip(button[0]);
+                } catch (e) {}
+                }
+                Swal.fire({ text: res.message || 'Trạng thái đã được cập nhật.', icon: 'success', timer: 2500 });
+            },
+            error: function(xhr) {
+                let msg = 'Không thể thay đổi trạng thái, vui lòng thử lại.';
+                if (xhr && xhr.status === 419) msg = 'Phiên CSRF hết hạn. Vui lòng tải lại trang.';
+                Swal.fire({ text: msg, icon: 'error', timer: 3000 });
+                button.text(oldText);
+            },
+            complete: function() {
+                button.prop('disabled', false);
+            }
             });
         });
+    });
 </script>
 
 <style>

@@ -2,100 +2,51 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-md-flex d-block align-items-center justify-content-between my-2 page-header-breadcrumb">
-        <h5 class="page-title fw-semibold fs-18 mb-0">Cây Trồng</h5>
+        <h4 class="page-title fw-semibold fs-18 mb-0 padding">Loại Bệnh</h4>
         <div class="ms-md-1 ms-0">
             <nav>
                 <ol class="breadcrumb mb-0 padding">
                     <li class="breadcrumb-item"><a href="javascript:void(0);">Trang Chủ</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Danh Sách Cây Trồng</li>
+                    <li class="breadcrumb-item active" aria-current="page">Danh Sách Loại Bệnh</li>
                 </ol>
             </nav>
         </div>
     </div>
 </div>
 
-<!-- Add crops Modal -->
-<form id="crops-form" action="{{ route('crops.save') }}" method="POST" enctype="multipart/form-data">
+<!-- Add diseaseT Modal -->
+<form id="diseaseT-form" action="{{ route('diseaseT.save') }}" method="POST" enctype="multipart/form-data">
     {{ csrf_field() }}
-    <div class="modal fade" id="create-crops" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="create-diseaseT" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h6 class="modal-title">Tạo Cây Trồng</h6>
+                    <h6 class="modal-title">Tạo Loại Bệnh</h6>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body px-4">
                     <div class="row gy-2">
-                        <!-- Mã cây -->
-                        <div class="col-xl-12">
-                            <label for="plantCode" class="form-label">Mã Cây</label>
-                            <input type="text" class="form-control" name="plantCode" id="plantCode" required
-                                placeholder="Mã cây">
-                        </div>
-                        {{-- <div class="col-xl-12">
-                            <label for="plantCode" class="form-label">Mã Cây</label>
-                            <input type="text" class="form-control" name="plantCode" id="plantCode" required
-                                placeholder="Mã cây tự động" readonly>
-                        </div> --}}
-
-                        <!-- Giống cây -->
-                        <div class="col-xl-12">
-                            <label for="varietyID" class="form-label">Giống Cây</label>
-                            <select name="varietyID" id="varietyID" class="form-control" required>
-                                <option value="">-- Chọn giống cây --</option>
-                                @foreach($varieties as $variety)
-                                <option value="{{ $variety->id }}">{{ $variety->varietyName }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Lô -->
-                        <div class="col-xl-12">
-                            <label for="plotID" class="form-label">Lô</label>
-                            <select name="plotID" id="plotID" class="form-control" required>
-                                <option value="">-- Chọn lô --</option>
-                                @foreach($plots as $plot)
-                                <option value="{{ $plot->id }}">{{ $plot->plotName }}</option>
-                                @endforeach
-                            </select>
+                        <!-- Tên -->
+                        <div class="col-xl-6">
+                            <label for="diseaseName" class="form-label">Tên Bệnh</label>
+                            <input type="text" class="form-control" name="diseaseName" id="diseaseName" required>
                         </div>
                         <div class="col-xl-6">
-                            <label for="lat" class="form-label">Tọa Độ 1</label>
-                            <input type="text" class="form-control" name="lat" id="lat" placeholder="Tọa độ 1">
-
-                        </div>
-                        <div class="col-xl-6">
-                            <label for="lng" class="form-label">Tọa Độ 2</label>
-                            <input type="text" class="form-control" name="lng" id="lng" placeholder="Tọa độ 2">
-                        </div>
-                        <!-- RFID -->
-                        <div class="col-xl-12">
-                            <label for="RF_id" class="form-label">Mã RFID</label>
-                            <input type="text" class="form-control" name="RF_id" id="RF_id" placeholder="Nhập mã RFID">
-                        </div>
-
-                        <!-- Năm trồng -->
-                        <div class="col-xl-12">
-                            <label for="year" class="form-label">Năm Trồng</label>
-                            <input type="number" min="2000" max="{{ date('Y') }}" class="form-control" name="year"
-                                id="year" placeholder="VD: 2024">
-                        </div>
-                        <div class="col-xl-12">
-                            <label for="year" class="form-label">Tình Trạng Cây</label>
-                            <input type="text" class="form-control" name="statusTree" placeholder="Tình trạng cây">
+                            <label for="desc" class="form-label">Mô Tả Bệnh</label>
+                            <input type="text" class="form-control" name="desc" id="desc" required>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-success" id="submit-btn-crops">Lưu</button>
+                    <button type="submit" class="btn btn-success" id="submit-btn-diseaseT">Lưu</button>
                 </div>
             </div>
         </div>
     </div>
 </form>
 
-<!-- crops List -->
+<!-- diseaseT List -->
 <div class="row">
     <div class="col-xl-12">
         <div class="card custom-card">
@@ -103,112 +54,61 @@
                 <div class="row g-3">
                     <div class="col-md-12">
                         <div class="search-box">
-                            <input type="text" class="search-inputs" placeholder="Tìm Kiếm...">
+                            <input type="text" class="search-inputs" placeholder="Tìm kiếm...">
                         </div>
                     </div>
                 </div>
             </div>
-            {{-- <div class="card-header d-flex justify-content-between align-items-center" style="grid-gap: 3px">
-                <h5>Danh Sách Cây Trồng</h5>
-                <button class="btn btn-sm btn-success btn-wave waves-light" data-bs-toggle="modal"
-                    data-bs-target="#create-crops">
-                    <i class="fa fa-plus"></i> Tạo Cây Trồng
-                </button>
-            </div> --}}
-            <div class="card">
-                <div class="card-content">
-                    <div class="form-section">
-                        <!-- First Filter Row -->
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Lô Trồng</label>
-                                <select class="form-select" id="plots" required>
-                                    <option value="">Tất Cả</option>
-                                    @foreach($plots as $p)
-                                    <option value="{{ $p->id }}">{{ $p->plotName }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                {{-- <label class="form-label">Diện Tích</label>
-                                <select class="form-select" id="taskLot">
-                                    <option value=""></option>
 
-                                </select> --}}
-                            </div>
-                            <div class="form-group" style="display: flex; align-items: end; width: 20%;">
-                                {{-- <button class="btn btn-success btn-w" onclick="filterTasks()">
-                                    <i class="fa-light fa-filter-list"></i>
-                                    Lọc
-                                </button> --}}
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
             <div class="card-body">
-                {{-- <div style="position: relative;"> --}}
-                    {{-- <div class="table-responsive"> --}}
-                        <table id="crops-table" class="table table-bordered text-nowrap w-100">
-                            <div id="buttons-container" class="d-flex justify-content-end gap-2">
-                                <button id="edit-selected-btn" class="btn btn-warning"
-                                    style="border-radius: 7px; color: #FFFFFF; display: none">Không/Hoạt
-                                    Động
-                                </button>
-                                <button id="delete-selected-btn" class="btn btn-danger"
-                                    style="border-radius: 7px; display: none;">
-                                    Xóa
-                                </button>
-                                <button id="add-selected-btn" class="btn btn-success" style="border-radius: 7px;"
-                                    data-bs-toggle="modal" data-bs-target="#create-crops">
-                                    <i class="fa fa-plus"></i>Tạo Cây Trồng
-                                </button>
-                            </div>
-                            <thead>
-                                <tr>
-                                    <th></th>
-                                    <th>
-                                        <input class="form-check-input check-all" type="checkbox" id="select-all-crops"
-                                            value="" aria-label="...">
-                                    </th>
-                                    {{-- <th scope="col">STT</th> --}}
-                                    <th scope="col">Mã Cây</th>
-                                    <th scope="col">Giống Cây</th>
-                                    <th scope="col">Vị Trí</th>
-                                    <th scope="col">Lô</th>
-                                    <th scope="col">Năm Trồng</th>
-                                    <th scope="col">Tình Trạng Cây</th>
-                                    <th scope="col">Trạng Thái</th>
-                                    <th scope="col">Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- DataTables will populate this section -->
-
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th></th>
-                                    <th></th>
-                                    {{-- <th scope="col">STT</th> --}}
-                                    <th scope="col">Mã Cây</th>
-                                    <th scope="col">Giống Cây</th>
-                                    <th scope="col">Vị Trí</th>
-                                    <th scope="col">Lô</th>
-                                    <th scope="col">Năm Trồng</th>
-                                    <th scope="col">Tình Trạng Cây</th>
-                                    <th scope="col">Trạng Thái</th>
-                                    <th scope="col">Thao tác</th>
-                                </tr>
-                            </tfoot>
-                        </table>
-                        {{--
-                    </div> --}}
-                    {{-- </div> --}}
-            </div>
-        </div>
+                <table id="diseaseT-table" class="table table-bordered text-nowrap w-100">
+                    <div id="buttons-container" class="d-flex justify-content-end gap-3">
+                        <button id="edit-selected-btn" class="btn btn-warning"
+                            style="border-radius: 7px; color: #FFFFFF; display: none">Không/Hoạt
+                            Động</button>
+                        <button id="delete-selected-btn" class="btn btn-danger"
+                            style="border-radius: 7px; display: none;">
+                            Xóa
+                        </button>
+                        <button id="add-selected-btn" class="btn btn-success" style="border-radius: 7px;"
+                            data-bs-toggle="modal" data-bs-target="#create-diseaseT">
+                            <i class="fa fa-plus"></i>Tạo Loại Bệnh
+                        </button>
+                    </div>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>
+                                <input class="form-check-input check-all" type="checkbox" id="select-all-diseaseT"
+                                    value="" aria-label="...">
+                            </th>
+                            <th scope="col">Tên Bệnh</th>
+                            <th scope="col">Mô Tả Bệnh</th>
+                            <th scope="col">Trạng Thái</th>
+                            <th scope="col">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- DataTables will populate this section -->
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th></th>
+                            <th></th>
+                            <th scope="col">Tên Bệnh</th>
+                            <th scope="col">Mô Tả Bệnh</th>
+                            <th scope="col">Trạng Thái</th>
+                            <th scope="col">Thao Tác</th>
+                        </tr>
+                    </tfoot>
+                </table>
+                {{--
+            </div> --}}
+            {{--
+        </div> --}}
     </div>
+</div>
+</div>
 </div>
 <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -236,7 +136,7 @@
                 <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                Bạn chắc chắn muốn xóa vườn cây đã chọn?
+                Bạn chắc chắn muốn xóa Loại Bệnh đã chọn?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
@@ -248,12 +148,11 @@
 <script>
     $(document).ready(function() {
             var selectedRows = new Set();
-            var dataTable = $('#crops-table').DataTable({
+            var dataTable = $('#diseaseT-table').DataTable({
                 "language": {
                     "url": "//cdn.datatables.net/plug-ins/1.10.21/i18n/Vietnamese.json",
                     "emptyTable": "Không có dữ liệu",
                 },
-                dom: 'lrtip',
                 processing: true,
                 serverSide: true,
                 // responsive: true,
@@ -283,12 +182,8 @@
                     }
                 },
                 ajax: {
-                    url: '{{ route('crops.index') }}',
-                    type: 'GET',
-                    data: function (d) {
-                        d.plot_id = $('#plots').val();
-                        d.warehouse_id   = $('#warehouseID').val();
-                    }
+                    url: '{{ route('diseaseT.index') }}',
+                    type: 'GET'
                 },
                 columns: [
                     {
@@ -308,30 +203,14 @@
                         searchable: false
                     },
                     {
-                        data: 'plantCode',
-                        name: 'plantCode'
+                        data: 'diseaseName',
+                        name: 'diseaseName'
                     },
                     {
-                        data: 'varietyID',
-                        name: 'varietyID'
+                        data: 'desc',
+                        name: 'desc'
                     },
-                    {
-                        data: 'RF_id',
-                        name: 'RF_id'
-                    },
-                    {
-                        data: 'plotID',
-                        name: 'plotID'
-                    },
-                    {
-                        data: 'year',
-                        name: 'year'
-                    },
-                    
-                    {
-                        data: 'statusTree',
-                        name: 'statusTree'
-                    },
+                   
                     {
                         data: 'status',
                         name: 'status'
@@ -342,18 +221,9 @@
                     $(row).attr('data-id', data.id);
                 }
             });
-             let t;
-            $('.search-inputs').on('input', function () {
-                clearTimeout(t);
-                const v = this.value;
-                t = setTimeout(() => dataTable.search(v).draw(), 250);
-            });
-            $('#plots, #warehouseID').on('change', function () {
-                dataTable.ajax.reload(null, true);
-            });
-            $('#select-all-crops').on('change', function() {
+            $('#select-all-diseaseT').on('change', function() {
                 var checked = $(this).prop('checked');
-                $('#crops-table tbody .form-check-input').each(function() {
+                $('#diseaseT-table tbody .form-check-input').each(function() {
                     var farmId = $(this).data('id');
                     if (checked) {
                         selectedRows.add(farmId);
@@ -366,7 +236,7 @@
 
                 console.log([...selectedRows]);
             });
-            $('#crops-table tbody').on('change', '.form-check-input', function() {
+            $('#diseaseT-table tbody').on('change', '.form-check-input', function() {
                 var farmId = $(this).data('id');
                 toggleButtons();
 
@@ -378,8 +248,8 @@
                 console.log([...selectedRows]);
             });
 
-            $('#crops-table').on('draw.dt', function() {
-                $('#crops-table tbody .form-check-input').each(function() {
+            $('#diseaseT-table').on('draw.dt', function() {
+                $('#diseaseT-table tbody .form-check-input').each(function() {
                     var farmId = $(this).data('id');
                     if (selectedRows.has(farmId)) {
                         $(this).prop('checked', true);
@@ -390,7 +260,7 @@
                 $('#confirmModal').modal('show');
                 $('#confirmUpdateBtn').on('click', function() {
                     $.ajax({
-                        url: '/crops/edit-multiple',
+                        url: '/diseaseT/edit-multiple',
                         type: 'POST',
                         data: {
                             ids: [...selectedRows], // Chuyển Set thành mảng
@@ -403,7 +273,7 @@
                                 text: 'Trạng thái đã được cập nhật.',
                                 confirmButtonText: 'OK'
                             }).then(() => {
-                                selectedRows.clear();
+                                selectedRows.clear(); // Reset danh sách đã chọn
                                 $('#confirmModal').modal('hide');
                                 // $('#buttons-container').hide();
                                 $('#edit-selected-btn').hide();
@@ -429,7 +299,7 @@
                 $('#deleteModal').modal('show');
                 $('#confirmDeleteBtn').on('click', function() {
                     $.ajax({
-                        url: '/crops/delete-multiple',
+                        url: '/diseaseT/delete-multiple',
                         type: 'POST',
                         data: {
                             ids: [...selectedRows]
@@ -471,7 +341,7 @@
             });
 
             // function toggleButtons() {
-            //     var selectedRows = $('#crops-table tbody .form-check-input:checked');
+            //     var selectedRows = $('#diseaseT-table tbody .form-check-input:checked');
 
             //     if (selectedRows.length > 0) {
             //         $('#edit-selected-btn').show();
@@ -483,13 +353,18 @@
             // }
 
             function toggleButtons() {
-                var selected = $('#crops-table tbody .form-check-input:checked').length;
+                var selected = $('#diseaseT-table tbody .form-check-input:checked').length;
+                // if (selected > 0) {
+                //     $('#buttons-container').css('visibility', 'visible');
+                // } else {
+                //     $('#buttons-container').css('visibility', 'hidden');
+                // }
                 if (selected > 0) {
-                        $('#edit-selected-btn').show();
-                        $('#delete-selected-btn').show();
-                    } else {
-                        $('#edit-selected-btn').hide();
-                        $('#delete-selected-btn').hide();
+                    $('#edit-selected-btn').show();
+                    $('#delete-selected-btn').show();
+                } else {
+                    $('#edit-selected-btn').hide();
+                    $('#delete-selected-btn').hide();
                 }
                 $('#add-selected-btn').show();
             }
@@ -511,7 +386,7 @@
 
             Swal.fire({
                 title: "Xác nhận thay đổi",
-                text: "Bạn có chắc chắn muốn thay đổi trạng thái của vườn cây này?",
+                text: "Bạn có chắc chắn muốn thay đổi trạng thái của Loại Bệnh này?",
                 icon: "warning",
                 showCancelButton: true,
                 confirmButtonColor: "#3085d6",
@@ -521,7 +396,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '{{ route('crops.status') }}',
+                        url: '{{ route('farm.status') }}',
                         type: 'POST',
                         data: {
                             _token: '{{ csrf_token() }}',
@@ -538,7 +413,7 @@
                                 }
 
                                 Swal.fire({
-                                    text: 'Trạng thái của vườn cây đã được cập nhật.',
+                                    text: 'Trạng thái của Loại Bệnh đã được cập nhật.',
                                     icon: 'success',
                                     confirmButtonText: 'OK',
                                     timer: 3000
@@ -546,7 +421,7 @@
                             } else {
                                 Swal.fire({
                                     text: response.message ||
-                                        'Không thể thay đổi trạng thái của vườn cây.',
+                                        'Không thể thay đổi trạng thái của Loại Bệnh.',
                                     icon: 'error',
                                     confirmButtonText: 'OK',
                                     timer: 3000
@@ -570,12 +445,7 @@
     .card {
         background: white;
         border-radius: 0.75rem;
-        /* box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); */
         margin-bottom: 1.5rem;
-    }
-
-    .card-header {
-        padding: 1.5rem 1.5rem 0;
     }
 
     .card-title {
@@ -588,6 +458,8 @@
         color: #64748b;
         font-size: 0.875rem;
     }
+
+
 
     @media (min-width: 1400px) {
 

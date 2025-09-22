@@ -67,9 +67,9 @@
             text-align: left !important
         }
 
-        .dt-paging {
+        /* .dt-paging {
             text-align: right !important;
-        }
+        } */
     </style>
     <style>
         .loading-wrapper {
@@ -152,7 +152,7 @@
                                 request()->is('seedgardens*') || request()->is('edit-seedgardens*') || 
                                 request()->is('crops*') || request()->is('edit-crops*') || 
                                 request()->is('ingredients*') || request()->is('farms*') || request()->is('vehicles*') || request()->is('plantingareas*') || 
-                                request()->is('add-excel*') ? 'active' : '' }}">
+                                request()->is('add-excel*') || request()->is('map-overview*') ? 'active' : '' }}">
                             <a href="#" class='sidebar-link {{ request()->is(' add-plots*') ||
                                 request()->is('edit-plots*') ||
                                 request()->is('seedgardens*') ||
@@ -166,6 +166,7 @@
                                 request()->is('edit-plantingareas*') ||
                                 request()->is('add-excel*') ||
                                 request()->is('edit-excel*') ||
+                                request()->is('map-overview*') ||
                                 request()->is('add-plantingareas*') || request()->is('add-excel*')
                                 ? 'active'
                                 : '' }}'
@@ -181,13 +182,19 @@
                                     Route::is('crops.index') || 
                                     Route::is('seedgardens.index') || Route::is('edit-seedgardens') ||
                                     Route::is('add-excel') ||
-                                    Route::is('edit-excel')
+                                    Route::is('edit-excel') ||
+                                    Route::is('map-overview')
                                         ? 'active' : '' }}">
                                 {{-- <li
                                     class="submenu-item d-flex align-items-center ms-3 {{ Route::is('farms.index') || Route::is('farms.add') || Route::is('farms.edit') ? 'active' : '' }}">
                                     <i class="fa-solid fa-tree text-green"></i>
                                     <a href="{{ route('farms.index') }}">Vườn Cây</a>
                                 </li> --}}
+                                <li
+                                    class="submenu-item d-flex align-items-center ms-3 {{ Route::is('map.overview') ? 'active' : '' }}">
+                                    <i class="fa-solid fa-map-location-dot text-green"></i>
+                                    <a href="{{ route('map.overview') }}">Bản Đồ</a>
+                                </li>
                                 <li
                                     class="submenu-item d-flex align-items-center ms-3 {{ Route::is('plots.index') || Route::is('plots.add') || Route::is('plots.edit') || Route::is('add-excel') ? 'active' : '' }}">
                                     <i class="fa-solid fa-chart-scatter text-green"></i>
@@ -254,13 +261,15 @@
                         <li class="sidebar-item has-sub {{ request()->is('works*') || request()->is('edit-works*') || request()->is('add-works*') ||
                                 request()->is('aworks*') || request()->is('edit-aworks*') ||
                                 request()->is('workps*') || request()->is('add-workps*') || request()->is('edit-workps*') ||
-                                request()->is('comments*') || request()->is('edit-comments*') ? 'active' : '' }}">
+                                request()->is('comments*') || request()->is('edit-comments*') ||
+                                request()->is('diseaseT*') || request()->is('edit-diseaseT*') ? 'active' : '' }}">
                             <a href="#" class='sidebar-link {{ request()->is(' works*') || request()->is('edit-works*')
                                 || request()->is('add-works*') ||
                                 request()->is('workps*') || request()->is('add-workps*') ||
                                 request()->is('edit-workps*') ||
                                 request()->is('aworks*') || request()->is('edit-aworks*')||
-                                request()->is('comments*') || request()->is('edit-comments*') ? 'active' : '' }}'
+                                request()->is('comments*') || request()->is('edit-comments*') ||
+                                request()->is('diseaseT*') || request()->is('edit-diseaseT*') ? 'active' : '' }}'
                                 onclick="toggleActive(this)">
                                 <img src="/imgs/spade.png" width="25px" height="25px">
                                 <span>Công Việc</span>
@@ -268,6 +277,11 @@
                             <ul
                                 class="submenu {{ request()->is('works*') || request()->is('workps*') || request()->is('comments*') ? 'active' : '' }}">
                                 @unlessrole('Công Nhân')
+                                <li
+                                    class="submenu-item d-flex d-flex align-items-center ms-3 {{ Route::is('diseaseT.index') || Route::is('diseaseT.edit') ? 'active' : '' }}">
+                                    <i class="fa-solid fa-list-check text-green"></i>
+                                    <a href="{{ route('diseaseT.index')}}">Loại Bệnh</a>
+                                </li>
                                 <li
                                     class="submenu-item d-flex d-flex align-items-center ms-3 {{ Route::is('aworks.index') || Route::is('aworks.edit') ? 'active' : '' }}">
                                     <i class="fa-solid fa-list-check text-green"></i>
@@ -652,9 +666,9 @@
             <div class="page-content">
                 <div class="page-title1">
                     <div class="row align-items-center">
-                        <a href="#" class="burger-btn d-block d-xl-none" style="margin-left: 0%">
+                        {{-- <a href="#" class="burger-btn d-block d-xl-none" style="margin-left: 0%">
                             <i class="bi bi-justify fs-3 text-dark"></i>
-                        </a>
+                        </a> --}}
                         <div class="col-12 col-md-6 order-md-1 order-last">
                             <div class="dropdown-custom">
                                 <h5 class="text-dark d-inline me-2">Xin chào,
@@ -683,12 +697,23 @@
                         </div>
 
                         <div class="col-12 col-md-6 order-md-2 order-first">
-                            <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
-                                <ol class="breadcrumb">
-                                    <li class="breadcrumb-item text-dark">Quản Lý Vườn Cây Joint stock Company</li>
-                                </ol>
-                            </nav>
+                            <div class="col-12 d-flex">
+                                <div class="col-10">
+                                    <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
+                                        <ol class="breadcrumb">
+                                            <li class="breadcrumb-item text-dark">Quản Lý Vườn Cây Joint stock Company
+                                            </li>
+                                        </ol>
+                                    </nav>
+                                </div>
+                                <div class="col-2" style="text-align: right;">
+                                    <a href="#" class="burger-btn d-block d-xl-none">
+                                        <i class="bi bi-justify fs-3 text-dark"></i>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
+
                     </div>
 
                 </div>

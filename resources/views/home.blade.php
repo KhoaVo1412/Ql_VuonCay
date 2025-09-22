@@ -21,7 +21,7 @@
                                 <i class="fas fa-tree stat-icon" style="color: #059669;padding-right: 5px;"></i>
                                 <span class="stat-title">Tổng số cây</span>
                             </div>
-                            <div class="stat-value">1,247</div>
+                            <div class="stat-value">{{ number_format($total) }}</div>
                             <div class="stat-change">+12 cây mới</div>
                         </div>
 
@@ -30,8 +30,8 @@
                                 <i class="fas fa-heart stat-icon" style="color: #22c55e;padding-right: 5px;"></i>
                                 <span class="stat-title">Cây khỏe mạnh</span>
                             </div>
-                            <div class="stat-value">1,156</div>
-                            <div class="stat-change">92.7%</div>
+                            <div class="stat-value">{{ number_format($healthy) }}</div>
+                            <div class="stat-change">{{ $healthyPercent }}%</div>
                         </div>
 
                         <div class="stat-card">
@@ -40,7 +40,7 @@
                                     style="color: #eab308;padding-right: 5px;"></i>
                                 <span class="stat-title">Cây bệnh</span>
                             </div>
-                            <div class="stat-value">67</div>
+                            <div class="stat-value">{{ number_format($sick) }}</div>
                             <div class="stat-change">+3 từ tuần trước</div>
                         </div>
 
@@ -49,7 +49,7 @@
                                 <i class="fas fa-times-circle stat-icon" style="color: #ef4444;padding-right: 5px;"></i>
                                 <span class="stat-title">Cây đổ/chết</span>
                             </div>
-                            <div class="stat-value">24</div>
+                            <div class="stat-value">{{ number_format($dead) }}</div>
                             <div class="stat-change">+1 từ tuần trước</div>
                         </div>
                     </div>
@@ -157,6 +157,259 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    <div class="page-header">
+                        <h2>Tổng Quan Sản Lượng</h2>
+                        <p>Theo dõi quá trình thu mua và khai thác</p>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <i class="fa-regular fa-warehouse-full" style="color: #059669;padding-right: 5px;"></i>
+                                <span class="stat-title">Tổng Sản Lượng Mủ Thu Mua</span>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="rubberDonut">
+                                </canvas>
+                            </div>
+                        </div>
+                        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                        <script>
+                            document.addEventListener("DOMContentLoaded", function () {
+                            const ctx = document.getElementById('rubberDonut').getContext('2d');
+                            const labels = @json($byType->pluck('product_name'));
+                            const data   = (@json($byType->pluck('total_qty'))).map(v => Number(v) || 0);
+                            const totalRubber = data.reduce((a, b) => a + b, 0);
+                            // Plugin: 2 dòng text ở giữa
+                            const centerText = {
+                                id: 'centerText',
+                                afterDraw(chart) {
+                                const {ctx, chartArea: {left, top, width, height}} = chart;
+                                const cx = left + width / 2;
+                                const cy = top + height / 2;
+
+                                ctx.save();
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'middle';
+                                // Dòng 1: tiêu đề
+                                ctx.fillStyle = '#6b7280';
+                                ctx.font = `${Math.min(width, height) / 5}px sans-serif`;
+                                // ctx.fillText('Tổng', cx, cy - 5);
+                                // Dòng 2: giá trị
+                                ctx.fillStyle = '#111827';
+                                ctx.font = `${Math.min(width, height) / 9}px sans-serif`;
+                                const formatted = new Intl.NumberFormat('vi-VN').format(totalRubber) + ' Kg';
+                                ctx.fillText(formatted, cx, cy + 9);
+                                ctx.restore();
+                                }
+                            };
+                            new Chart(ctx, {
+                                type: 'doughnut',
+                                data: {
+                                labels,
+                                datasets: [{
+                                    data,
+                                    backgroundColor: ['#059669','#22c55e','#eab308','#ef4444','#3b82f6','#8b5cf6','#ec4899','#14b8a6'],
+                                    borderWidth: 1
+                                }]
+                                },
+                                options: {
+                                responsive: true,
+                                cutout: '70%',
+                                plugins: {
+                                    legend: { position: 'right' },
+                                    tooltip: {
+                                    callbacks: {
+                                        label: function (context) {
+                                        const value = Number(context.raw) || 0;
+                                        const percent = totalRubber > 0 ? (value / totalRubber * 100).toFixed(1) : 0;
+                                        return `${context.label}: ${new Intl.NumberFormat('vi-VN').format(value)} (${percent}%)`;
+                                        }
+                                    }
+                                    }
+                                }
+                                },
+                                plugins: [centerText]
+                            });
+                            });
+                        </script>
+
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <i class="fas fa-basket-shopping stat-icon"
+                                    style="color:#059669;padding-right:5px;"></i>
+                                <span class="stat-title">Tổng Sản Lượng Khai Thác</span>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="harvestDonut"></canvas>
+                            </div>
+                        </div>
+                        <script>
+                            document.addEventListener("DOMContentLoaded", function () {
+                                const ctx = document.getElementById('harvestDonut').getContext('2d');
+                                const labels = @json($harvestByProduct->pluck('product_name'));
+                                const data   = (@json($harvestByProduct->pluck('total_qty'))).map(v => Number(v) || 0);
+                                const totalHarvest = data.reduce((a, b) => a + b, 0);
+                                const centerText = {
+                                    id: 'centerText',
+                                    afterDraw(chart) {
+                                        const {ctx, chartArea: {left, top, width, height}} = chart;
+                                        const cx = left + width / 2;
+                                        const cy = top + height / 2;
+                                        ctx.save();
+                                        ctx.textAlign = 'center';
+                                        ctx.textBaseline = 'middle';
+                                        // dòng 1
+                                        ctx.fillStyle = '#6b7280';
+                                        ctx.font = `${Math.min(width, height) / 5}px sans-serif`;
+                                        // ctx.fillText('Tổng', cx, cy - 5);
+                                        // dòng 2
+                                        ctx.fillStyle = '#111827';
+                                        ctx.font = `${Math.min(width, height) / 9}px sans-serif`;
+                                        const formatted = new Intl.NumberFormat('vi-VN').format(totalHarvest) + ' Kg';
+                                        ctx.fillText(formatted, cx, cy + 9);
+                                        ctx.restore();
+                                    }
+                                };
+                                new Chart(ctx, {
+                                    type: 'doughnut',
+                                    data: {
+                                        labels: labels,
+                                        datasets: [{
+                                            data: data,
+                                            backgroundColor: [
+                                                '#059669','#22c55e','#eab308','#ef4444',
+                                                '#3b82f6','#8b5cf6','#ec4899','#14b8a6'
+                                            ],
+                                            borderWidth: 1
+                                        }]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        cutout: '70%',
+                                        plugins: {
+                                            legend: { position: 'right' },
+                                            tooltip: {
+                                                callbacks: {
+                                                    label: function (context) {
+                                                        const value = Number(context.raw) || 0;
+                                                        const percent = totalHarvest > 0 ? (value / totalHarvest * 100).toFixed(1) : 0;
+                                                        return `${context.label}: ${new Intl.NumberFormat('vi-VN').format(value)} (${percent}%)`;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    plugins: [centerText]
+                                });
+                            });
+                        </script>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <i class="fa-regular fa-warehouse-full" style="color: #059669;padding-right: 5px;"></i>
+                                <span class="stat-title">Xu hướng sản lượng khai thác theo tháng (12 tháng gần
+                                    nhất)</span>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="harvestMonthlyLine" height="260"></canvas>
+                            </div>
+                        </div>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', () => {
+                            const ctx = document.getElementById('harvestMonthlyLine').getContext('2d');
+
+                            const labels = @json($labels);                         // ['10/2024','11/2024',...]
+                            const data   = (@json($dataMonthlyHarvest)).map(v => Number(v) || 0);
+
+                            new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                labels,
+                                datasets: [{
+                                    label: 'Khai thác',
+                                    data,
+                                    fill: false,
+                                    tension: 0.3,          // đường mượt
+                                    pointRadius: 3,
+                                    borderWidth: 2         // (không set màu -> để Chart.js tự chọn, đúng guideline)
+                                }]
+                                },
+                                options: {
+                                responsive: true,
+                                plugins: {
+                                    legend: { display: true },
+                                    tooltip: {
+                                    callbacks: {
+                                        label: (ctx) => {
+                                        const v = Number(ctx.parsed.y) || 0;
+                                        return ' ' + new Intl.NumberFormat('vi-VN').format(v);
+                                        }
+                                    }
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: (value) => new Intl.NumberFormat('vi-VN').format(value)
+                                    }
+                                    }
+                                }
+                                }
+                            });
+                            });
+                        </script>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <i class="fa-regular fa-warehouse-full" style="color: #059669;padding-right: 5px;"></i>
+                                <span class="stat-title">Bảng thu mua theo tháng (12 tháng gần nhất)</span>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="purchaseMonthlyLine" height="260"></canvas>
+                            </div>
+                        </div>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', () => {
+  const ctx = document.getElementById('purchaseMonthlyLine').getContext('2d');
+  const labels = @json($labelsPurchase);
+  const purchase = (@json($dataMonthlyPurchase)).map(v => Number(v) || 0);
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Thu mua',
+        data: purchase,
+        fill: false,
+        tension: 0.3,
+        pointRadius: 3,
+        borderWidth: 2
+        // không set màu → để Chart.js tự chọn
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: true },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => ' ' + new Intl.NumberFormat('vi-VN').format(Number(ctx.parsed.y)||0)
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { callback: v => new Intl.NumberFormat('vi-VN').format(v) }
+        }
+      }
+    }
+  });
+});
+                        </script>
                     </div>
                 </div>
 

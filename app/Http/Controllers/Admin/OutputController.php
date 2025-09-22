@@ -82,13 +82,57 @@ class OutputController extends Controller
         }
         return view('outputs.all_outputs');
     }
+    public function productsByWarehouse($warehouseId)
+    {
+        $rows = DB::table('warehouse_products as wp')
+            ->join('products as p', 'p.id', '=', 'wp.productID')
+            ->join('unit_of_measures as u', 'u.id', '=', 'wp.unitID')
+            ->where('wp.warehouseID', $warehouseId)
+            ->select('p.id as product_id', 'p.name as product_name', 'u.id as unit_id', 'u.name as unit_name')
+            ->orderBy('p.name')
+            ->get();
+
+        $grouped = $rows->groupBy('product_id')->map(function ($rows) {
+            return [
+                'id'    => $rows->first()->product_id,
+                'name'  => $rows->first()->product_name,
+                'units' => $rows->map(fn($r) => ['id' => $r->unit_id, 'name' => $r->unit_name])->values(),
+            ];
+        })->values();
+
+        return response()->json($grouped);
+    }
     public function add()
     {
-        $warehouses = WareHouse::where('id', 2)->get();
-        $warehouseIds = $warehouses->pluck('id');
+        $warehouseId = 2;
+        $pairs = InvoiceProduct::query()
+            ->where('warehouseID', $warehouseId)
+            ->with([
+                'product:id,name',
+                'unit:id,name',
+            ])
+            ->select('productID', 'unitID')
+            ->distinct()
+            ->get();
+        $productsGrouped = $pairs->groupBy('productID')->map(function ($rows) {
+            $first = $rows->first();
+            return [
+                'id'    => $first->productID,
+                'name'  => optional($first->product)->name ?? ('SP#' . $first->productID),
+                'units' => $rows->map(function ($r) {
+                    return [
+                        'id'   => $r->unitID,
+                        'name' => optional($r->unit)->name ?? ('ĐV#' . $r->unitID),
+                    ];
+                })->unique('id')->values(),
+            ];
+        })->values()->toArray();
+
+        $warehouses = WareHouse::where('id', $warehouseId)->get();
+
         $units = UnitOfMeasure::all();
-        $products = Product::all();
-        return view('outputs.add_outputs', compact('units', 'products', 'warehouses'));
+
+        return view('outputs.add_outputs', compact('warehouses', 'productsGrouped', 'units'));
     }
     public function save(Request $request)
     {
@@ -157,12 +201,35 @@ class OutputController extends Controller
     }
     public function edit($id)
     {
-        $warehouses = WareHouse::where('id', 2)->get();
-        $warehouseIds = $warehouses->pluck('id');
-        $units = UnitOfMeasure::all();
-        $products = Product::all();
-        $outputs = Invoice::with('invoice_products')->findOrFail($id);
-        return view('outputs.edit_outputs', compact('outputs', 'units', 'products', 'warehouses'));
+        $warehouseId = 2;
+        $outputs = Invoice::with(['invoice_products' => function ($q) {
+            $q->select('id', 'invoiceID', 'warehouseID', 'productID', 'unitID', 'quantity', 'quality', 'slice', 'price');
+        }])->findOrFail($id);
+        $rows = DB::table('invoice_products as ip')
+            ->join('products as p', 'p.id', '=', 'ip.productID')
+            ->join('unit_of_measures as u', 'u.id', '=', 'ip.unitID')
+            ->where('ip.warehouseID', $warehouseId)
+            ->whereNotNull('ip.productID')
+            ->whereNotNull('ip.unitID')
+            ->groupBy('p.id', 'p.name', 'u.id', 'u.name')
+            ->orderBy('p.name')
+            ->get([
+                'p.id as product_id',
+                'p.name as product_name',
+                'u.id as unit_id',
+                'u.name as unit_name',
+            ]);
+        $productsGrouped = $rows->groupBy('product_id')->map(function ($g) {
+            return [
+                'id'    => $g->first()->product_id,
+                'name'  => $g->first()->product_name,
+                'units' => $g->map(fn($r) => ['id' => $r->unit_id, 'name' => $r->unit_name])->values(),
+            ];
+        })->values()->toArray();
+
+        $warehouse = WareHouse::select('id', 'name')->findOrFail($warehouseId);
+
+        return view('outputs.edit_outputs', compact('outputs', 'warehouse', 'productsGrouped'));
     }
     public function update(Request $request, $id)
     {

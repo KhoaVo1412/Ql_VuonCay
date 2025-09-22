@@ -78,33 +78,55 @@
                             <input type="hidden" name="countCofirm" id="countCofirm" value="0" required>
                         </div>
                         <div class="col-xl-6">
-                            <label class="form-label">Hoàn Thành Không Đúng Hạn</label>
+                            <label class="form-label">Hoàn Thành Trễ</label>
+                            <input type="number" class="form-control" id="countLate_display" value="0" readonly>
+                            <!-- field mới nếu DB có cột countLate -->
+                            <input type="hidden" name="countLate" id="countLate" value="0">
+                        </div>
+                        <div class="col-xl-6">
+                            <label class="form-label">Chưa Làm</label>
                             <input type="number" class="form-control" id="countUn_display" value="0" readonly>
                             <input type="hidden" name="countUn" id="countUn" value="0" required>
                         </div>
                         <script>
-                            document.getElementById('workerID').addEventListener('change', async function () {
-                                const workerID = this.value;
-                                if (!workerID) return;
-                                try {
-                                    const res = await fetch(`/workers/${workerID}/task-stats`, {
-                                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                                    });
-                                    const data = await res.json();
-                                    document.getElementById('countWork_display').value = data.countWork ?? 0;
-                                    document.getElementById('countCofirm_display').value = data.countCofirm ?? 0;
-                                    document.getElementById('countUn_display').value = data.countUn ?? 0;
-                                    document.getElementById('countWork').value = data.countWork ?? 0;
-                                    document.getElementById('countCofirm').value = data.countCofirm ?? 0;
-                                    document.getElementById('countUn').value = data.countUn ?? 0;
-                                } catch (e) {
-                                    console.error(e);
-                                    ['countWork', 'countCofirm', 'countUn'].forEach(k => {
-                                        document.getElementById(k + '_display').value = 0;
-                                        document.getElementById(k).value = 0;
-                                    });
-                                }
-                            });
+                            const workerEl = document.getElementById('workerID');
+                            const dateEl   = document.querySelector('input[name="date_comment"]');
+
+                            async function loadStats() {
+                            const workerID = workerEl.value;
+                            if (!workerID) return;
+
+                            const asOf = dateEl?.value || '';
+                            const url  = asOf
+                                ? `/workers/${workerID}/task-stats?as_of=${encodeURIComponent(asOf)}`
+                                : `/workers/${workerID}/task-stats`;
+
+                            try {
+                                const res  = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }});
+                                const data = await res.json();
+
+                                document.getElementById('countWork_display').value   = data.countWork  ?? 0;
+                                document.getElementById('countCofirm_display').value = data.countCofirm ?? data.doneOnTime ?? 0;
+                                document.getElementById('countLate_display').value   = data.countLate ?? data.doneLate ?? 0;
+                                document.getElementById('countUn_display').value     = data.countUn ?? data.notDone ?? 0;
+
+                                document.getElementById('countWork').value   = data.countWork  ?? 0;
+                                document.getElementById('countCofirm').value = data.countCofirm ?? data.doneOnTime ?? 0;
+                                document.getElementById('countLate').value   = data.countLate ?? data.doneLate ?? 0;
+                                document.getElementById('countUn').value     = data.countUn ?? data.notDone ?? 0;
+                            } catch (e) {
+                                console.error(e);
+                                ['countWork','countCofirm','countLate','countUn'].forEach(k => {
+                                const d = document.getElementById(k + '_display');
+                                const h = document.getElementById(k);
+                                if (d) d.value = 0; if (h) h.value = 0;
+                                });
+                            }
+                            }
+
+                            workerEl?.addEventListener('change', loadStats);
+                            dateEl?.addEventListener('change', loadStats);
+                            document.getElementById('create-comments')?.addEventListener('shown.bs.modal', loadStats);
                         </script>
                         <div class="form-row">
                             <div class="form-group">

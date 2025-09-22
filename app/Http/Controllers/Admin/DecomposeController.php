@@ -16,10 +16,31 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\ValidationException;
 use Yajra\DataTables\DataTables;
 
 class DecomposeController extends Controller
 {
+    public function stockItems(Request $r)
+    {
+        $warehouseId = (int) $r->query('warehouseID', 0);
+
+        $rows = InventoryStock::with(['product:id,name', 'unit:id,name'])
+            ->when($warehouseId, fn($q) => $q->where('warehouseID', $warehouseId))
+            ->where('quantity', '>', 0)
+            ->orderBy('productID')
+            ->get(['id', 'productID', 'unitID', 'warehouseID', 'quantity'])
+            ->map(fn($s) => [
+                'stockID'     => $s->id,
+                'productID'   => $s->productID,
+                'productName' => $s->product?->name,
+                'unitID'      => $s->unitID,
+                'unitName'    => $s->unit?->name,
+                'quantity'    => (float) $s->quantity,
+            ]);
+
+        return response()->json($rows);
+    }
     public function index(Request $request)
     {
         $decomposes = Decompose::with(['warehouse', 'user'])->get();
@@ -142,7 +163,9 @@ class DecomposeController extends Controller
     public function add()
     {
         $warehouses = WareHouse::all(['id', 'name']);
-        $products = Product::all(['id', 'name']);
+        $products = Product::select('id', 'name', 'unitID')
+            ->with(['unit:id,name'])
+            ->get();
         $units = UnitOfMeasure::all(['id', 'name']);
 
         return view('decomposes.add_decomposes', compact('warehouses', 'products', 'units'));
@@ -150,121 +173,160 @@ class DecomposeController extends Controller
     public function save(Request $request)
     {
         $validated = $request->validate([
-            'code' => 'required|string',
-            'name' => 'required|string',
+            'code'        => 'required|string',
+            'name'        => 'required|string',
             'warehouseID' => 'required|integer',
-            'userID' => 'required|integer',
-            'date' => 'required|date',
-            'desc' => 'nullable|string',
-            'materials' => 'required|array', // Array of material data (including original and new product details)
-            'materials.*.productID' => 'required|integer', // Original product ID
-            'materials.*.productDecomposeID' => 'required|integer', // New product ID after decomposition
-            'materials.*.productUnitID' => 'required|integer', // Unit ID for the original product
-            'materials.*.quantityDecompose' => 'required', // Quantity to decompose
-            'materials.*.quantityProduct' => 'required', // Quantity of new product created
-            'materials.*.unitDecomposeID' => 'required', // Unit ID for the product
+            'userID'      => 'required|integer',
+            'date'        => 'required|date',
+            'desc'        => 'nullable|string',
+
+            'materials'                        => 'required|array|min:1',
+            'materials.*.oldStockID'           => 'required|integer|exists:inventory_stocks,id',
+            'materials.*.productID'            => 'required|integer',
+            'materials.*.productUnitID'        => 'required|integer',
+            'materials.*.quantityProduct'      => 'required|numeric|min:0.000001',
+
+            'materials.*.productDecomposeID'   => 'required|integer',
+            'materials.*.unitDecomposeID'      => 'required|integer',
+            'materials.*.quantityDecompose'    => 'required|numeric|min:0.000001',
         ]);
 
-        // Create a new Decompose entry
-        $decompose = Decompose::create([
-            'code' => $validated['code'],
-            'name' => $validated['name'],
-            'warehouseID' => $validated['warehouseID'],
-            'userID' => $validated['userID'],
-            'status' => 'Hoạt động', // You can adjust status dynamically based on your logic
-            'date' => $validated['date'],
-            'desc' => $validated['desc'],
-            'active' => 'Chưa Duyệt',
-        ]);
+        DB::transaction(function () use ($validated) {
 
-        foreach ($validated['materials'] as $material) {
-            ProductDecompose::create([
-                'decomposeID' => $decompose->id, // Link to the current decomposition record
-                'productID' => $material['productID'], // Original product ID
-                'productDecomposeID' => $material['productDecomposeID'], // New product ID
-                'unitDecomposeID' => $material['unitDecomposeID'], // Unit of decomposed product
-                'productUnitID' => $material['productUnitID'], // Unit of the original product
-                'quantityDecompose' => $material['quantityDecompose'], // Quantity to decompose
-                'quantityProduct' => $material['quantityProduct'], // Quantity of new product created
+            $decompose = Decompose::create([
+                'code'        => $validated['code'],
+                'name'        => $validated['name'],
+                'warehouseID' => $validated['warehouseID'],
+                'userID'      => $validated['userID'],
+                'status'      => 'Hoạt động',
+                'date'        => $validated['date'],
+                'desc'        => $validated['desc'] ?? null,
+                'active'      => 'Chưa Duyệt',
             ]);
 
-            // $oldProduct = Product::find($material['productID']);
-            // $newProduct = Product::find($material['productDecomposeID']);
+            foreach ($validated['materials'] as $idx => $m) {
+                // 1) Lấy thông tin tồn kho cũ
+                $stock = InventoryStock::findOrFail($m['oldStockID']);
+                // 2) Kiểm tra nhất quán kho / product / unit
+                if ((int)$stock->warehouseID !== (int)$validated['warehouseID']) {
+                    throw ValidationException::withMessages([
+                        "materials.$idx.oldStockID" => "Dòng " . ($idx + 1) . ": tồn kho không thuộc kho đã chọn.",
+                    ]);
+                }
+                if ((int)$stock->productID !== (int)$m['productID']) {
+                    throw ValidationException::withMessages([
+                        "materials.$idx.productID" => "Dòng " . ($idx + 1) . ": sản phẩm không khớp với tồn kho đã chọn.",
+                    ]);
+                }
+                if ((int)$stock->unitID !== (int)$m['productUnitID']) {
+                    throw ValidationException::withMessages([
+                        "materials.$idx.productUnitID" => "Dòng " . ($idx + 1) . ": đơn vị gốc không khớp với tồn kho đã chọn.",
+                    ]);
+                }
+                if ((int)$m['unitDecomposeID'] === (int)$m['productUnitID']) {
+                    throw ValidationException::withMessages([
+                        "materials.$idx.unitDecomposeID" => "Dòng " . ($idx + 1) . ": đơn vị phân rã phải khác đơn vị gốc.",
+                    ]);
+                }
+                // 3) Lưu chi tiết (chưa trừ kho)
+                ProductDecompose::create([
+                    'decomposeID'         => $decompose->id,
+                    'oldStockID'          => $stock->id,                // <-- thêm cột này vào bảng/Model nếu chưa có
+                    'productID'           => $m['productID'],           // gốc
+                    'productUnitID'       => $m['productUnitID'],       // đơn vị gốc
+                    'quantityProduct'     => $m['quantityProduct'],     // số lượng trừ
 
-            // if ($oldProduct) {
-            //     $oldProduct->quantity -= $material['quantityDecompose']; // Reduce original product's stock
-            //     $oldProduct->save();
-            // }
-
-            // if ($newProduct) {
-            //     $newProduct->quantity += $material['quantityProduct']; // Increase new product's stock
-            //     $newProduct->save();
-            // }
-        }
-
-        return redirect()->route('decomposes.index')->with('message', 'Tạo phiếu phân rã thành công.');
+                    'productDecomposeID'  => $m['productDecomposeID'],  // mới
+                    'unitDecomposeID'     => $m['unitDecomposeID'],     // đơn vị mới
+                    'quantityDecompose'   => $m['quantityDecompose'],   // số lượng cộng
+                ]);
+            }
+        });
+        return redirect()->route('decomposes.index')->with('message', 'Tạo phiếu phân rã thành công (chưa trừ tồn).');
     }
     public function edit($id)
     {
         $warehouses = WareHouse::all(['id', 'name']);
-        $products = Product::all(['id', 'name']);
-        $units = UnitOfMeasure::all(['id', 'name']);
-        $decomposes = Decompose::with('items')->findOrFail($id);
-        return view('decomposes.edit_decomposes', compact('decomposes', 'warehouses', 'products', 'units'));
+        $products   = Product::with(['unit:id,name'])
+            ->get(['id', 'name', 'unitID']);
+        $units      = UnitOfMeasure::all(['id', 'name']);
+        $decomposes = Decompose::with(['items'])->findOrFail($id);
+        return view(
+            'decomposes.edit_decomposes',
+            compact('decomposes', 'warehouses', 'products', 'units')
+        );
     }
 
     public function update(Request $request, $id)
     {
-        DB::beginTransaction();
-        try {
-            $request->validate([
-                'code' => 'required|string',
-                'name' => 'required|string',
-                'warehouseID' => 'required|integer',
-                'userID' => 'required|integer',
-                'date' => 'required|date',
-                'desc' => 'nullable|string',
-                'materials' => 'required|array',
-                'materials.*.productID' => 'required|integer',
-                'materials.*.productUnitID' => 'required|integer',
-                'materials.*.quantityProduct' => 'required|numeric',
-                'materials.*.productDecomposeID' => 'required|integer',
-                'materials.*.unitDecomposeID' => 'required|integer',
-                'materials.*.quantityDecompose' => 'required|numeric',
-            ]);
+        $validated = $request->validate([
+            'code'        => 'required|string',
+            'name'        => 'required|string',
+            'warehouseID' => 'required|integer|exists:ware_houses,id',
+            'userID'      => 'required|integer',
+            'date'        => 'required|date',
+            'desc'        => 'nullable|string',
+            'materials'                         => 'required|array|min:1',
+            // (gốc)
+            'materials.*.oldStockID'            => 'required|integer|exists:inventory_stocks,id',
+            'materials.*.productID'             => 'required|integer|exists:products,id',
+            'materials.*.productUnitID'         => 'required|integer|exists:unit_of_measures,id',
+            'materials.*.quantityProduct'       => 'required|numeric|min:0.000001',
+            // (phân rã)
+            'materials.*.productDecomposeID'    => 'required|integer|exists:products,id',
+            'materials.*.unitDecomposeID'       => 'required|integer|exists:unit_of_measures,id',
+            'materials.*.quantityDecompose'     => 'required|numeric|min:0.000001',
+        ]);
+        DB::transaction(function () use ($validated, $id) {
             $decompose = Decompose::findOrFail($id);
-            $decompose->code = $request->code;
-            $decompose->name = $request->name;
-            $decompose->warehouseID = $request->warehouseID;
-            $decompose->userID = $request->userID;
-            $decompose->date = $request->date;
-            $decompose->desc = $request->desc;
-            $decompose->save();
-
+            $decompose->fill([
+                'code'        => $validated['code'],
+                'name'        => $validated['name'],
+                'warehouseID' => $validated['warehouseID'],
+                'userID'      => $validated['userID'],
+                'date'        => $validated['date'],
+                'desc'        => $validated['desc'] ?? null,
+            ])->save();
+            // Ghi lại chi tiết
             ProductDecompose::where('decomposeID', $decompose->id)->delete();
-
-            if ($request->has('materials')) {
-                foreach ($request->materials as $material) {
-                    ProductDecompose::create([
-                        'decomposeID' => $decompose->id,
-                        'productID' => $material['productID'] ?? null,
-                        'quantityProduct' => $material['quantityProduct'] ?? 0,
-                        'productUnitID' => $material['productUnitID'] ?? null,
-                        'productDecomposeID' => $material['productDecomposeID'] ?? null,
-                        'quantityDecompose' => $material['quantityDecompose'] ?? 0,
-                        'unitDecomposeID' => $material['unitDecomposeID'] ?? null,
+            foreach ($validated['materials'] as $row => $m) {
+                $stock = InventoryStock::findOrFail($m['oldStockID']);
+                if ((int)$stock->warehouseID !== (int)$validated['warehouseID']) {
+                    throw ValidationException::withMessages([
+                        "materials.$row.oldStockID" => "Dòng " . ($row + 1) . ": tồn kho không thuộc kho đã chọn.",
                     ]);
                 }
+                if ((int)$stock->productID !== (int)$m['productID']) {
+                    throw ValidationException::withMessages([
+                        "materials.$row.productID" => "Dòng " . ($row + 1) . ": sản phẩm không khớp tồn kho.",
+                    ]);
+                }
+                if ((int)$stock->unitID !== (int)$m['productUnitID']) {
+                    throw ValidationException::withMessages([
+                        "materials.$row.productUnitID" => "Dòng " . ($row + 1) . ": đơn vị gốc không khớp tồn kho.",
+                    ]);
+                }
+                if ((int)$m['unitDecomposeID'] === (int)$m['productUnitID']) {
+                    throw ValidationException::withMessages([
+                        "materials.$row.unitDecomposeID" => "Dòng " . ($row + 1) . ": đơn vị phân rã phải khác đơn vị gốc.",
+                    ]);
+                }
+                ProductDecompose::create([
+                    'decomposeID'         => $decompose->id,
+                    // (gốc)
+                    'oldStockID'          => $stock->id,
+                    'productID'           => $m['productID'],
+                    'productUnitID'       => $m['productUnitID'],
+                    'quantityProduct'     => $m['quantityProduct'],
+                    // (phân rã)
+                    'productDecomposeID'  => $m['productDecomposeID'],
+                    'unitDecomposeID'     => $m['unitDecomposeID'],
+                    'quantityDecompose'   => $m['quantityDecompose'],
+                ]);
             }
-            // Product::where('id', $material['productID'])->decrement('quantity', $material['quantityDecompose']);
-            // Product::where('id', $material['productDecomposeID'])->increment('quantity', $material['quantityProduct']);
-
-            DB::commit();
-            return redirect()->route('decomposes.index')->with('message', 'Cập nhật phiếu phân rã thành công!');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->withErrors(['error' => 'Lỗi: ' . $e->getMessage()]);
-        }
+        });
+        return redirect()->route('decomposes.index')
+            ->with('message', 'Cập nhật phiếu phân rã thành công (chưa trừ tồn).');
     }
 
     public function destroy($id)

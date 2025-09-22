@@ -49,8 +49,11 @@ class CropController extends Controller
                 ->addColumn('varietyID', function ($row) {
                     return $row->variety ? $row->variety->varietyName : 'N/A';
                 })
-                ->addColumn('RF_id', function ($row) {
-                    return $row->RF_id;
+                ->addColumn('lng', function ($row) {
+                    return $row->lng;
+                })
+                ->addColumn('lat', function ($row) {
+                    return $row->lat;
                 })
                 ->addColumn('statusTree', function ($row) {
                     return $row->statusTree;
@@ -93,11 +96,31 @@ class CropController extends Controller
                     ';
                     return $action;
                 })
-                ->rawColumns(['check', 'stt', 'statusTree', 'plantCode', 'rfID', 'year', 'plotID', 'varietyID', 'status', 'action'])
+                ->rawColumns(['check', 'stt', 'statusTree', 'plantCode', 'lng', 'lat', 'year', 'plotID', 'varietyID', 'status', 'action'])
                 ->make(true);
         }
         return view('crops.all_crops', compact('plots', 'varieties'));
     }
+    public function byPlot(Plot $plot)
+    {
+        $plants = Plant::with(['variety:id,varietyName'])
+            ->where('plotID', $plot->id)
+            ->whereNotNull('lat')->whereNotNull('lng')
+            ->get(['id', 'plantCode', 'year', 'statusTree', 'lat', 'lng', 'varietyID'])
+            ->map(fn($p) => [
+                'id'          => $p->id,
+                'plantCode'   => $p->plantCode,
+                'year'        => $p->year,
+                'statusTree'  => $p->statusTree,
+                'lat'         => $p->lat,
+                'lng'         => $p->lng,
+                'varietyID'   => $p->varietyID,
+                'varietyName' => optional($p->variety)->varietyName,
+            ]);
+
+        return response()->json($plants);
+    }
+
     public function save(Request $request)
     {
         // dd($request->all());
@@ -130,6 +153,8 @@ class CropController extends Controller
             'RF_id' => $request->RF_id,
             'statusTree' => $request->statusTree,
             'status' => $request->status ?? 'Hoạt động',
+            'lat'        => $request->lat,
+            'lng'        => $request->lng,
         ]);
         ActionHistory::create([
             'user_id' => Auth::id(),
@@ -184,6 +209,8 @@ class CropController extends Controller
         $plants->update([
             'plantCode' => $request->plantCode,
             'varietyID' => $request->varietyID,
+            'lat' => $request->lat,
+            'lng' => $request->lng,
             'plotID' => $request->plotID,
             'year' => $request->year,
             'RF_id' => $request->RF_id,
@@ -253,5 +280,36 @@ class CropController extends Controller
         } else {
             return response()->json(['success' => false]);
         }
+    }
+    public function meta()
+    {
+        return response()->json([
+            'varieties' => Plant::whereNotNull('varietyName')
+                ->distinct()->orderBy('varietyName')->pluck('varietyName'),
+            'years' => Plant::whereNotNull('year')
+                ->distinct()->orderBy('year')->pluck('year'),
+        ]);
+    }
+
+    public function search(Request $r)
+    {
+        $q    = trim((string)$r->q);
+        $st   = $r->status;
+        $va   = $r->variety;
+        $yr   = $r->year;
+        $plot = $r->plotId;
+        $bbox = $r->bbox; // "xmin,ymin,xmax,ymax" (ở SR của view: WebMercator)
+
+        $rows = Plant::query()
+            ->select(['id', 'plot_id as plotID', 'plantCode', 'varietyName', 'year', 'statusTree', 'lat', 'lng'])
+            ->when($q,  fn($qq) => $qq->where('plantCode', 'like', "%$q%"))
+            ->when($st, fn($qq) => $qq->where('statusTree', $st))
+            ->when($va, fn($qq) => $qq->where('varietyName', $va))
+            ->when($yr, fn($qq) => $qq->where('year', $yr))
+            ->when($plot, fn($qq) => $qq->where('plot_id', $plot))
+            ->limit(1000)
+            ->get();
+
+        return response()->json($rows);
     }
 }

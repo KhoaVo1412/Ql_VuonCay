@@ -18,6 +18,8 @@ class Plant extends Model
         'year',
         'status',
         'statusTree',
+        'lat',
+        'lng',
     ];
 
     public function plot()

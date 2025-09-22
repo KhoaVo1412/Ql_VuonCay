@@ -88,7 +88,6 @@
                                                 <i class="fas fa-plus"></i>
                                             </button>
                                         </div>
-
                                         <div class="material-table-container">
                                             <table class="material-table" id="materialTable">
                                                 <thead>
@@ -103,7 +102,6 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody id="materialTableBody">
-                                                    <!-- Editable rows -->
                                                     <tr>
                                                         <td class="editable-cell">
                                                             <select name="items[0][warehouseID]"
@@ -117,30 +115,25 @@
                                                         </td>
                                                         <td class="editable-cell">
                                                             <select name="items[0][productID]" class="editable-select">
-                                                                <option value="">Chọn vật tư</option>
-                                                                @foreach($products as $product)
-                                                                <option value="{{ $product->id }}">{{ $product->name
-                                                                    }}</option>
-                                                                @endforeach
+                                                                <option value="">Chọn vật tư (theo kho)</option>
+                                                                <!-- JS sẽ fill từ tồn kho -->
                                                             </select>
                                                         </td>
+
                                                         <td class="editable-cell">
                                                             <input type="text" name="items[0][quantity]"
                                                                 class="editable-input" placeholder="Số lượng">
                                                         </td>
                                                         <td class="editable-cell">
                                                             <select name="items[0][unit]" class="editable-select">
-                                                                <option value="">Chọn đơn vị</option>
-                                                                @foreach($units as $unit)
-                                                                <option value="{{ $unit->id }}">{{ $unit->name
-                                                                    }}</option>
-                                                                @endforeach
+                                                                <option value="">Chọn đơn vị (theo tồn)</option>
+                                                                <!-- JS sẽ fill theo vật tư trong kho -->
                                                             </select>
                                                         </td>
+
                                                         <td class="editable-cell">
                                                             <input type="hidden" name="items[0][created_by]"
                                                                 value="{{ auth()->id() }}">
-
                                                             <input type="text" name="items[0][proposer_name]"
                                                                 class="editable-input"
                                                                 value="{{ auth()->user()->name }}" readonly>
@@ -158,7 +151,6 @@
                                                     </tr>
                                                 </tbody>
                                             </table>
-
                                             <!-- Empty state (hidden by default) -->
                                             <div class="empty-table" id="emptyState" style="display: none;">
                                                 <i class="fas fa-inbox" style="margin-right: 8px;"></i>
@@ -166,149 +158,259 @@
                                             </div>
                                         </div>
                                     </div>
-
-                                    <!-- Reason Section -->
-                                    {{-- <div class="reason-section">
-                                        <div class="section-title">Lý do từ chối</div>
-                                        <textarea class="reason-textarea" name="reason"
-                                            placeholder="Nhập lý do từ chối đề xuất vật tư này..."></textarea>
-                                    </div> --}}
-
                                     <!-- Action Buttons -->
                                     <div class="action-buttons">
                                         <button class="btnnn btn-approve" type="submit">
                                             <i class="fas fa-check"></i>
                                             Tạo Đề Xuất
                                         </button>
-                                        {{-- <button class="btnnn btn-approve" onclick="approveRequest()"
-                                            id="approveBtn">
-                                            <i class="fas fa-check"></i>
-                                            Duyệt
-                                        </button> --}}
-                                        {{-- <button class="btnnn btn-reject" onclick="rejectRequest()" id="rejectBtn">
-                                            <i class="fas fa-times"></i>
-                                            Từ chối
-                                        </button> --}}
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+            </form>
         </div>
-        </form>
         <script>
-            const warehouses = @json($warehouses);
-                const products = @json($products);
-                const units = @json($units);
-                const authId = {{ auth()->id() }};
-                const authName = @json(auth()->user()->name);
+            (function(){
+            const API_STOCK = (wh) => `/api/stock-items?warehouseID=${encodeURIComponent(wh||'')}`;
+            const stockCache = new Map(); // key = warehouseID -> [{stockID,warehouseID,productID,productName,unitID,unitName,quantity}, ...]
+            async function fetchStocksByWarehouse(warehouseID){
+                const key = String(warehouseID || '');
+                if (stockCache.has(key)) return stockCache.get(key);
+                if (!warehouseID) return [];
+                try{
+                const res = await fetch(API_STOCK(warehouseID));
+                const data = await res.json();
+                const list = Array.isArray(data) ? data : [];
+                stockCache.set(key, list);
+                return list;
+                }catch(e){
+                console.error('Load stock error:', e);
+                return [];
+                }
+            }
+
+            // Utils
+            const tbody = document.getElementById('materialTableBody');
+            function nf(n){ try { return new Intl.NumberFormat('vi-VN').format(+n||0); } catch { return n; } }
+            function esc(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+            function getRowEls(row){
+                return {
+                whSel:   row.querySelector('select[name^="items["][name$="[warehouseID]"]'),
+                prodSel: row.querySelector('select[name^="items["][name$="[productID]"]'),
+                unitSel: row.querySelector('select[name^="items["][name$="[unit]"], select[name^="items["][name$="[unitID]"]'),
+                qtyInp:  row.querySelector('input[name^="items["][name$="[quantity]"]'),
+                };
+            }
+
+            // Đổ danh sách sản phẩm từ stock (gộp theo productID, cộng tồn)
+            function fillProductsFromStock(row, stockList){
+                const { prodSel } = getRowEls(row);
+                if (!prodSel) return;
+
+                if (!stockList || !stockList.length){
+                prodSel.innerHTML = `<option value="">Kho chưa có tồn</option>`;
+                prodSel.disabled = true;
+                return;
+                }
+                // Gộp theo productID
+                const agg = new Map(); // productID -> {name, qty}
+                stockList.forEach(s => {
+                const k = String(s.productID);
+                const cur = agg.get(k) || { name: s.productName || '', qty: 0 };
+                cur.qty += (+s.quantity || 0);
+                cur.name = cur.name || (s.productName || '');
+                agg.set(k, cur);
+                });
+
+                let html = `<option value="">Chọn vật tư</option>`;
+                agg.forEach((v, pid) => {
+                html += `<option value="${esc(pid)}">${esc(v.name)}</option>`;
+                // html += `<option value="${esc(pid)}">${esc(v.name)} (tồn: ${esc(nf(v.qty))})</option>`;
+                });
+
+                prodSel.disabled = false;
+                prodSel.innerHTML = html;
+            }
+            function aggregateUnitsForProduct(stockList, productID){
+                const agg = new Map(); // unitID -> {unitName, qty}
+                stockList
+                .filter(s => String(s.productID) === String(productID))
+                .forEach(s => {
+                    const k = String(s.unitID);
+                    const cur = agg.get(k) || { unitName: s.unitName || '', qty: 0 };
+                    cur.qty += (+s.quantity || 0);
+                    cur.unitName = cur.unitName || (s.unitName || '');
+                    agg.set(k, cur);
+                });
+                return agg;
+            }
+            // Đổ đơn vị theo stock (cho product đã chọn)
+            function fillUnitsFromStock(row, unitAgg){
+                const { unitSel } = getRowEls(row);
+                if (!unitSel) return;
+                if (!unitAgg || unitAgg.size === 0){
+                unitSel.innerHTML = `<option value="">Không có đơn vị tồn</option>`;
+                unitSel.disabled = true;
+                unitSel.removeAttribute('data-prev');
+                return;
+                }
+                let html = `<option value="">Chọn đơn vị</option>`;
+                unitAgg.forEach((v, unitID) => {
+                html += `<option value="${esc(unitID)}" data-qty="${esc(v.qty)}">${esc(v.unitName)}</option>`;
+                // html += `<option value="${esc(unitID)}" data-qty="${esc(v.qty)}">${esc(v.unitName)} (tồn: ${esc(nf(v.qty))})</option>`;
+                });
+                unitSel.disabled = false;
+                unitSel.innerHTML = html;
+                // Giữ lựa chọn cũ nếu hợp lệ
+                const prev = unitSel.getAttribute('data-prev');
+                if (prev && unitAgg.has(prev)) unitSel.value = prev;
+                else unitSel.selectedIndex = 0;
+            }
+            // function applyQtyMaxFromUnit(row){
+            //     const { unitSel, qtyInp } = getRowEls(row);
+            //     if (!unitSel || !qtyInp) return;
+            //     const opt = unitSel.selectedOptions[0];
+            //     const maxQty = opt ? (opt.dataset.qty || '') : '';
+            //     if (maxQty) qtyInp.max = maxQty; else qtyInp.removeAttribute('max');
+            // }
+            // Làm mới 1 dòng theo kho + product
+            async function refreshRowFromStock(row){
+                const { whSel, prodSel } = getRowEls(row);
+                if (!whSel?.value){
+                if (prodSel){ prodSel.innerHTML = `<option value="">Chọn kho trước</option>`; prodSel.disabled = true; }
+                resetUnit(row, 'Chọn vật tư trước');
+                return;
+                }
+                const list = await fetchStocksByWarehouse(whSel.value);
+                fillProductsFromStock(row, list);
+                const prevProd = prodSel.getAttribute('data-prev');
+                if (prevProd) {
+                const hasPrev = list.some(s => String(s.productID) === String(prevProd));
+                prodSel.value = hasPrev ? prevProd : '';
+                }
+                await refreshUnitsForProduct(row, list);
+            }
+            async function refreshUnitsForProduct(row, stockList){
+                const { prodSel } = getRowEls(row);
+                if (!prodSel?.value){
+                resetUnit(row, 'Chọn vật tư trước');
+                return;
+                }
+                const unitAgg = aggregateUnitsForProduct(stockList, prodSel.value);
+                fillUnitsFromStock(row, unitAgg);
+                // applyQtyMaxFromUnit(row);
+            }
+            function resetUnit(row, placeholder){
+                const { unitSel, qtyInp } = getRowEls(row);
+                if (unitSel){
+                unitSel.innerHTML = `<option value="">${placeholder || 'Chọn đơn vị'}</option>`;
+                unitSel.disabled = true;
+                unitSel.removeAttribute('data-prev');
+                }
+                if (qtyInp) qtyInp.removeAttribute('max');
+            }
+            // Sự kiện: đổi kho → refresh product + unit
+            document.addEventListener('change', function(e){
+                if (e.target.matches('#materialTableBody select[name^="items["][name$="[warehouseID]"]')) {
+                const row = e.target.closest('tr');
+                const { prodSel, unitSel } = getRowEls(row);
+                if (prodSel) prodSel.setAttribute('data-prev', prodSel.value || '');
+                if (unitSel) unitSel.setAttribute('data-prev', unitSel.value || '');
+                refreshRowFromStock(row);
+                }
+            });
+            // Sự kiện: đổi sản phẩm → refresh unit
+            document.addEventListener('change', async function(e){
+                if (e.target.matches('#materialTableBody select[name^="items["][name$="[productID]"]')) {
+                const row = e.target.closest('tr');
+                const { whSel, prodSel, unitSel } = getRowEls(row);
+                if (!whSel?.value) return;
+                if (unitSel) unitSel.setAttribute('data-prev', unitSel.value || '');
+
+                const list = await fetchStocksByWarehouse(whSel.value);
+                await refreshUnitsForProduct(row, list);
+                }
+            });
+            // Sự kiện: đổi đơn vị → set max cho số lượng
+            document.addEventListener('change', function(e){
+                if (e.target.matches('#materialTableBody select[name^="items["][name$="[unit]"], #materialTableBody select[name^="items["][name$="[unitID]"]')) {
+                const row = e.target.closest('tr');
+                const sel = e.target;
+                sel.setAttribute('data-prev', sel.value || '');
+                // applyQtyMaxFromUnit(row);
+                }
+            });
+            // Thêm / Xóa dòng
+            function nextRowIndex(){
+                let max = -1;
+                tbody.querySelectorAll('select[name^="items["][name$="[productID]"]').forEach(sel=>{
+                const m = sel.name.match(/^items\[(\d+)\]\[productID\]$/);
+                if (m) max = Math.max(max, parseInt(m[1], 10));
+                });
+                return max + 1;
+            }
+            window.addMaterialRow = async function addMaterialRow(){
+                const idx = nextRowIndex();
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                <td class="editable-cell">
+                    <select name="items[${idx}][warehouseID]" class="editable-select">
+                    <option value="">Chọn kho</option>
+                    @foreach($warehouses as $w)
+                        <option value="{{ $w->id }}">{{ $w->name }}</option>
+                    @endforeach
+                    </select>
+                </td>
+                <td class="editable-cell">
+                    <select name="items[${idx}][productID]" class="editable-select" data-prev="">
+                    <option value="">Chọn vật tư (theo kho)</option>
+                    </select>
+                </td>
+                <td class="editable-cell">
+                    <input type="text" name="items[${idx}][quantity]" class="editable-input" placeholder="Số lượng">
+                </td>
+                <td class="editable-cell">
+                    <select name="items[${idx}][unit]" class="editable-select" data-prev="">
+                    <option value="">Chọn đơn vị (theo tồn)</option>
+                    </select>
+                </td>
+                <td class="editable-cell">
+                    <input type="hidden" name="items[${idx}][created_by]" value="{{ auth()->id() }}">
+                    <input type="text" name="items[${idx}][proposer_name]" class="editable-input" value="{{ auth()->user()->name }}" readonly>
+                </td>
+                <td class="editable-cell">
+                    <input type="text" name="items[${idx}][note]" class="editable-input" placeholder="Ghi chú">
+                </td>
+                <td style="text-align: center;">
+                    <button type="button" class="btn-remove-row" onclick="removeMaterialRow(this)">
+                    <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+                `;
+                tbody.appendChild(tr);
+                // chưa chọn kho thì để trống; sau khi chọn kho, JS sẽ fill
+            };
+
+            window.removeMaterialRow = function removeMaterialRow(btn){
+                if (!confirm('Bạn có chắc muốn xóa dòng này?')) return;
+                btn.closest('tr')?.remove();
+            };
+
+            // Khởi tạo cho dòng đầu: nếu người dùng chọn kho → tự fill
+            document.addEventListener('DOMContentLoaded', async function(){
+                const firstRow = tbody.querySelector('tr');
+                if (firstRow){
+                await refreshRowFromStock(firstRow); // nếu kho có sẵn value => fill luôn
+                }
+            });
+
+            })();
         </script>
-        <script>
-            let rowIndex = 1;
-                                    function addMaterialRow() {
-                                        const tableBody = document.getElementById('materialTableBody');
-                                        const newRow = document.createElement('tr');
 
-                                        newRow.innerHTML = `
-                                            <td class="editable-cell">
-                                                <select name="items[${rowIndex}][warehouseID]" class="editable-select">
-                                                    <option value="">Chọn kho</option>
-                                                    @foreach($warehouses as $w)
-                                                    <option value="{{ $w->id }}">{{ $w->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </td>
-                                            <td class="editable-cell">
-                                                <select name="items[${rowIndex}][productID]" class="editable-select">
-                                                    <option value="">Chọn vật tư</option>
-                                                    @foreach($products as $product)
-                                                    <option value="{{ $product->id }}">{{ $product->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </td>
-                                            <td class="editable-cell">
-                                                <input type="text" name="items[${rowIndex}][quantity]" class="editable-input" placeholder="Số lượng">
-                                            </td>
-                                            <td class="editable-cell">
-                                                <select name="items[${rowIndex}][unit]" class="editable-select">
-                                                    <option value="">Chọn đơn vị</option>
-                                                    @foreach($units as $unit)
-                                                    <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </td>
-                                            <td class="editable-cell">
-                                                <input type="hidden" name="items[${rowIndex}][created_by]" value="{{ auth()->id() }}">
-                                                <input type="text" name="items[${rowIndex}][proposer_name]" class="editable-input"
-                                                    value="{{ auth()->user()->name }}" readonly>
-                                            </td>
-                                            <td class="editable-cell">
-                                                <input type="text" name="items[${rowIndex}][note]" class="editable-input" placeholder="Ghi chú">
-                                            </td>
-                                            <td style="text-align: center;">
-                                                <button type="button" class="btn-remove-row" onclick="removeMaterialRow(this)">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </td>
-                                        `;
-                                        tableBody.appendChild(newRow);
-
-                                        rowIndex++;
-                                        newRow.querySelector('.editable-select').focus();
-                                        updateRemoveButtons();
-                                    }
-
-
-                                    // Remove material row
-                                    function removeMaterialRow(button) {
-                                        if (confirm('Bạn có chắc muốn xóa dòng này?')) {
-                                            button.closest('tr').remove();
-                                            updateRemoveButtons();
-                                            showMessage('success', 'Đã xóa dòng!');
-                                        }
-                                    }
-
-                                    // Update remove buttons visibility
-                                    function updateRemoveButtons() {
-                                        const rows = document.querySelectorAll('#materialTableBody tr');
-                                        rows.forEach((row, index) => {
-                                            const removeBtn = row.querySelector('.btn-remove-row');
-                                            if (removeBtn) {
-                                                // Always show remove button except for first row if it's the only row
-                                                removeBtn.style.display = rows.length > 1 ? 'inline-block' : (index === 0 ? 'none' : 'inline-block');
-                                            }
-                                        });
-                                    }
-
-                                    // Get current material data
-                                    function getCurrentMaterialData() {
-                                        const materials = [];
-                                        const rows = document.querySelectorAll('#materialTableBody tr');
-                                        
-                                        rows.forEach(row => {
-                                            const cells = row.querySelectorAll('td');
-                                            if (cells.length >= 5) {
-                                                const material = {
-                                                    name: cells[0].querySelector('select, input')?.value || cells[0].textContent.trim(),
-                                                    quantity: cells[1].querySelector('input')?.value || cells[1].textContent.trim(),
-                                                    task: cells[2].querySelector('select, input')?.value || cells[2].textContent.trim(),
-                                                    requester: cells[3].querySelector('input')?.value || cells[3].textContent.trim(),
-                                                    note: cells[4].querySelector('input')?.value || cells[4].textContent.trim()
-                                                };
-                                                
-                                                // Only add if at least name or quantity is filled
-                                                if (material.name || material.quantity) {
-                                                    materials.push(material);
-                                                }
-                                            }
-                                        });
-                                        
-                                        console.log(materials); // Hiển thị dữ liệu
-                                        return materials;
-                                    }
-        </script>
-    </div>
     </div>
 </section>
 <script>

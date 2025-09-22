@@ -8,7 +8,7 @@
                 <ol class="breadcrumb mb-0 padding">
                     <li class="breadcrumb-item"><a href="javascript:void(0);">Trang Chủ</a></li>
                     <li class="breadcrumb-item"><a href="{{ route('decomposes.index') }}">Danh sách</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Tạo Phiếu Phân Rã</li>
+                    <li class="breadcrumb-item active" aria-current="page">Sửa Phiếu Phân Rã</li>
                 </ol>
             </nav>
         </div>
@@ -71,14 +71,12 @@
                                 </div>
                                 <div class="material-section">
                                     <div class="section-title">
-                                        <div style="display: flex; align-items: center; gap: 10px;">
-                                            <i class="fas fa-exchange-alt"></i>
-                                            Phân Rã Vật Tư
+                                        <div style="display:flex;align-items:center;gap:10px;">
+                                            <i class="fas fa-exchange-alt"></i> Phân Rã Vật Tư
                                         </div>
                                         <button type="button" class="btn-add-new-material"
                                             onclick="addNewMaterialContainer()">
-                                            <i class="fas fa-plus"></i>
-                                            Thêm
+                                            <i class="fas fa-plus"></i> Thêm
                                         </button>
                                     </div>
 
@@ -91,75 +89,91 @@
                                                 onclick="removeMaterialContainer({{ $index + 1 }})">
                                                 <i class="fas fa-times"></i>
                                             </button>
+
+                                            {{-- NGUYÊN LIỆU CẦN ĐỔI --}}
                                             <div class="replacement-section">
                                                 <div class="replacement-title">Nguyên Liệu Cần Đổi</div>
                                                 <div class="material-row">
                                                     <div class="form-group">
                                                         <label class="form-label">Tên vật tư</label>
-                                                        <select class="material-select"
+                                                        <select class="material-select original-product-select"
                                                             name="materials[{{ $index }}][productID]" required>
                                                             <option value="">Chọn tên vật tư</option>
                                                             @foreach($products as $product)
-                                                            <option value="{{ $product->id }}" {{ $material->productID
-                                                                == $product->id ? 'selected' : '' }}>{{ $product->name
-                                                                }}</option>
+                                                            <option value="{{ $product->id }}"
+                                                                data-unit="{{ $product->unitID }}"
+                                                                data-unit-name="{{ $product->unit->name ?? '' }}" {{
+                                                                $material->productID == $product->id ? 'selected' : ''
+                                                                }}
+                                                                >
+                                                                {{ $product->name }}
+                                                            </option>
                                                             @endforeach
                                                         </select>
+
+                                                        {{-- NEW: lưu stockID tìm theo product + unit gốc + warehouse
+                                                        --}}
+                                                        <input type="hidden" name="materials[{{ $index }}][oldStockID]"
+                                                            value="{{ $material->oldStockID ?? '' }}">
                                                     </div>
+
                                                     <div class="form-group">
-                                                        <label class="form-label">Số lượng</label>
+                                                        <label class="form-label">Đơn vị (gốc)</label>
+                                                        {{-- JS sẽ khóa về đúng 1 option theo product --}}
+                                                        <select class="material-select original-unit-select"
+                                                            name="materials[{{ $index }}][productUnitID]" required>
+                                                            <option value="">Chọn đơn vị</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="form-group">
+                                                        <label class="form-label">Số lượng (trừ)</label>
                                                         <input type="number" class="material-input"
                                                             name="materials[{{ $index }}][quantityProduct]" min="0"
                                                             value="{{ $material->quantityProduct }}" required>
                                                     </div>
-                                                    <div class="form-group">
-                                                        <label class="form-label">Đơn vị</label>
-                                                        <select class="material-select"
-                                                            name="materials[{{ $index }}][productUnitID]" required>
-                                                            <option value="">Chọn đơn vị</option>
-                                                            @foreach($units as $unit)
-                                                            <option value="{{ $unit->id }}" {{ $material->productUnitID
-                                                                == $unit->id ? 'selected' : '' }}>{{ $unit->name }}
-                                                            </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
                                                 </div>
                                             </div>
+
                                             <div class="section-divider"></div>
+
+                                            {{-- VẬT TƯ MỚI (PHÂN RÃ) --}}
                                             <div class="replacement-section">
-                                                <div class="replacement-title">Vật Tư Mới (Thay Thế)</div>
+                                                <div class="replacement-title">Vật Tư Mới (Phân rã)</div>
                                                 <div class="material-row">
                                                     <div class="form-group">
                                                         <label class="form-label">Tên vật tư</label>
-                                                        <select class="material-select"
+                                                        <select class="material-select new-product-select"
                                                             name="materials[{{ $index }}][productDecomposeID]" required>
                                                             <option value="">Chọn tên vật tư</option>
                                                             @foreach($products as $product)
                                                             <option value="{{ $product->id }}" {{ $material->
-                                                                productDecomposeID == $product->id ? 'selected' : ''
-                                                                }}>{{ $product->name }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label class="form-label">Số lượng</label>
-                                                        <input type="number" class="material-input"
-                                                            name="materials[{{ $index }}][quantityDecompose]" min="0"
-                                                            value="{{ $material->quantityDecompose }}" required>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label class="form-label">Đơn vị</label>
-                                                        <select class="material-select"
-                                                            name="materials[{{ $index }}][unitDecomposeID]" required>
-                                                            <option value="">Chọn đơn vị</option>
-                                                            @foreach($units as $unit)
-                                                            <option value="{{ $unit->id }}" {{ $material->
-                                                                unitDecomposeID == $unit->id ? 'selected' : '' }}>{{
-                                                                $unit->name }}
+                                                                productDecomposeID == $product->id ? 'selected' : '' }}>
+                                                                {{ $product->name }}
                                                             </option>
                                                             @endforeach
                                                         </select>
+                                                    </div>
+
+                                                    <div class="form-group">
+                                                        <label class="form-label">Đơn vị mới</label>
+                                                        {{-- JS sẽ đổ mọi đơn vị trừ đơn vị gốc và preselect =
+                                                        unitDecomposeID --}}
+                                                        <select class="material-select new-unit-select"
+                                                            name="materials[{{ $index }}][unitDecomposeID]" required
+                                                            data-preselected="{{ $material->unitDecomposeID }}">
+                                                            <option value="">Chọn đơn vị</option>
+                                                            @foreach($units as $unit)
+                                                            <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="form-group">
+                                                        <label class="form-label">Số lượng (cộng)</label>
+                                                        <input type="number" class="material-input"
+                                                            name="materials[{{ $index }}][quantityDecompose]" min="0"
+                                                            value="{{ $material->quantityDecompose }}" required>
                                                     </div>
                                                 </div>
                                             </div>
@@ -167,7 +181,6 @@
                                         @endforeach
                                     </div>
                                 </div>
-
                             </div>
                         </div>
                         <div class="prism-toggle d-grid gap-2 d-md-flex">
@@ -188,310 +201,268 @@
 </script>
 
 <script>
-    let containerCounter = {{ count($decomposes->items) }}; // Lấy số dòng hiện có từ DB
-
-    function addNewMaterialContainer() {
-        containerCounter++;
-
-        const containersDiv = document.getElementById('materialContainers');
-        const newContainer = document.createElement('div');
-        newContainer.className = 'material-replacement-container';
-        newContainer.setAttribute('data-container-id', containerCounter);
-
-        newContainer.innerHTML = `
-            <div class="container-number">${containerCounter}</div>
-            <button type="button" class="btn-remove-container" onclick="removeMaterialContainer(${containerCounter})">
-                <i class="fas fa-times"></i>
-            </button>
-
-            <!-- Nguyên Liệu Cần Đổi -->
-            <div class="replacement-section">
-                <div class="replacement-title">Nguyên Liệu Cần Đổi</div>
-                <div class="material-row">
-                    <div class="form-group">
-                        <label class="form-label">Tên vật tư</label>
-                        <select class="material-select" name="materials[${containerCounter}][productID]" required>
-                            <option value="">Chọn tên vật tư</option>
-                            @foreach($products as $product)
-                            <option value="{{ $product->id }}">{{ $product->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Số lượng</label>
-                        <input type="number" class="material-input" name="materials[${containerCounter}][quantityProduct]" placeholder="0" min="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Đơn vị</label>
-                        <select class="material-select" name="materials[${containerCounter}][productUnitID]" required>
-                            <option value="">Chọn đơn vị</option>
-                            @foreach($units as $unit)
-                            <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Divider -->
-            <div class="section-divider"></div>
-
-            <!-- Vật Tư Mới -->
-            <div class="replacement-section">
-                <div class="replacement-title">Vật Tư Mới (Thay Thế)</div>
-                <div class="material-row">
-                    <div class="form-group">
-                        <label class="form-label">Tên vật tư</label>
-                        <select class="material-select" name="materials[${containerCounter}][productDecomposeID]" required>
-                            <option value="">Chọn tên vật tư</option>
-                            @foreach($products as $product)
-                            <option value="{{ $product->id }}">{{ $product->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Số lượng</label>
-                        <input type="number" class="material-input" name="materials[${containerCounter}][quantityDecompose]" placeholder="0" min="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Đơn vị</label>
-                        <select class="material-select" name="materials[${containerCounter}][unitDecomposeID]" required>
-                            <option value="">Chọn đơn vị</option>
-                            @foreach($units as $unit)
-                            <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Nút reset -->
-            <div style="text-align: center; margin-top: 15px;">
-                <button type="button" class="btn-reset-materials" onclick="resetMaterialContainer(${containerCounter})" title="Làm mới bảng này">
-                    <i class="fas fa-redo"></i>
-                </button>
-            </div>
-        `;
-
-        containersDiv.appendChild(newContainer);
-        updateRemoveButtons();
-        const firstInput = newContainer.querySelector('.material-select');
-        if (firstInput) firstInput.focus();
-
-        showMessage('success', `Đã thêm bảng vật tư mới #${containerCounter}`);
+    const __stockCache = new Map(); // key = warehouseID -> list stocks
+  function currentWarehouseId() {
+    const wh = document.querySelector('select[name="warehouseID"]');
+    return wh ? wh.value : '';
+  }
+  async function fetchStocks(warehouseID) {
+    const key = String(warehouseID || '');
+    if (__stockCache.has(key)) return __stockCache.get(key);
+    const res = await fetch(`/api/stock-items?warehouseID=${encodeURIComponent(warehouseID||'')}`);
+    const list = await res.json();
+    __stockCache.set(key, list);
+    return list;
+  }
+  function idxStocks(list) {
+    // key = `${productID}:${unitID}` -> { stockID, qty, unitName }
+    const m = new Map();
+    list.forEach(s => m.set(`${s.productID}:${s.unitID}`, { stockID: s.stockID, qty: +s.quantity || 0, unitName: s.unitName }));
+    return m;
+  }
+  function nf(n){ try { return new Intl.NumberFormat('vi-VN').format(n); } catch { return n; } }
+  // ===== Helpers UI =====
+  function showToast(type, text) {
+    if (typeof showMessage === 'function') return showMessage(type, text);
+    console[type === 'error' ? 'error' : 'log'](text);
+  }
+  function setUnitFor(scopeEl, unitFieldSuffix, unitId, unitName) {
+    const unitSelect = scopeEl.querySelector(`select[name$='[${unitFieldSuffix}]']`);
+    if (!unitSelect) return;
+    unitSelect.innerHTML = unitId
+      ? `<option value="${unitId}" selected>${unitName || 'Đơn vị'}</option>`
+      : `<option value="">Chọn đơn vị</option>`;
+  }
+  // Lấy toàn bộ units từ 1 select "new-unit-select"
+  function renderAllUnits() {
+    const first = document.querySelector('.new-unit-select');
+    return first ? Array.from(first.options).slice(1).map(o => ({ id:o.value, name:o.textContent })) : [];
+  }
+  function fillUnitsExcept(unitSelect, exceptUnitId, preselectValue = null) {
+    const all = renderAllUnits();
+    const filtered = all.filter(u => String(u.id) !== String(exceptUnitId));
+    unitSelect.innerHTML = '<option value="">Chọn đơn vị</option>' +
+      (filtered.length ? filtered.map(u => `<option value="${u.id}">${u.name}</option>`).join('')
+                       : '<option value="" disabled>Không có đơn vị khác</option>');
+    if (preselectValue && filtered.some(u => String(u.id) === String(preselectValue))) {
+      unitSelect.value = String(preselectValue);
     }
-
-        function removeMaterialContainer(containerId) {
-            const containers = document.querySelectorAll('.material-replacement-container');
-            
-            if (containers.length <= 1) {
-                showMessage('error', 'Phải có ít nhất một bảng vật tư!');
-                return;
-            }
-            
-            if (confirm('Bạn có chắc muốn xóa bảng vật tư này?')) {
-                const container = document.querySelector(`[data-container-id="${containerId}"]`);
-                if (container) {
-                    container.remove();
-                    updateContainerNumbers();
-                    updateRemoveButtons();
-                    showMessage('success', 'Đã xóa bảng vật tư!');
-                }
-            }
-        }
-
-        // Reset specific material container
-        function resetMaterialContainer(containerId) {
-            if (confirm('Bạn có chắc muốn làm mới bảng vật tư này?')) {
-                const container = document.querySelector(`[data-container-id="${containerId}"]`);
-                if (container) {
-                    // Reset all inputs in this container
-                    const inputs = container.querySelectorAll('.material-input');
-                    const selects = container.querySelectorAll('.material-select');
-                    
-                    inputs.forEach(input => input.value = '');
-                    selects.forEach(select => select.selectedIndex = 0);
-                    
-                    showMessage('success', 'Đã làm mới bảng vật tư!');
-                }
-            }
-        }
-
-        // Update container numbers after removal
-        function updateContainerNumbers() {
-            const containers = document.querySelectorAll('.material-replacement-container');
-            containers.forEach((container, index) => {
-                const numberElement = container.querySelector('.container-number');
-                const newNumber = index + 1;
-                numberElement.textContent = newNumber;
-                container.setAttribute('data-container-id', newNumber);
-                
-                // Update remove button onclick
-                const removeBtn = container.querySelector('.btn-remove-container');
-                if (removeBtn) {
-                    removeBtn.setAttribute('onclick', `removeMaterialContainer(${newNumber})`);
-                }
-                
-                // Update reset button onclick
-                const resetBtn = container.querySelector('.btn-reset-materials');
-                if (resetBtn) {
-                    resetBtn.setAttribute('onclick', `resetMaterialContainer(${newNumber})`);
-                }
-            });
-            
-            containerCounter = containers.length;
-        }
-
-        // Update remove buttons visibility
-        function updateRemoveButtons() {
-            const containers = document.querySelectorAll('.material-replacement-container');
-            containers.forEach((container, index) => {
-                const removeBtn = container.querySelector('.btn-remove-container');
-                if (removeBtn) {
-                    // Hide remove button on first container, show on others
-                    removeBtn.style.display = index === 0 ? 'none' : 'flex';
-                }
-            });
-        }
-
-        // Auto-fill material name when code is selected
-        document.addEventListener('change', function(e) {
-            if (e.target.classList.contains('material-select') && e.target.closest('.form-group').querySelector('.form-label').textContent === 'Mã vật tư') {
-                const selectedOption = e.target.options[e.target.selectedIndex];
-                const materialName = selectedOption.text.split(' - ')[1];
-                const nameInput = e.target.closest('.material-row').querySelector('input[type="text"]');
-                if (materialName && nameInput) {
-                    nameInput.value = materialName;
-                }
-            }
-        });
-
-        // Approve request
-        function approveRequest() {
-            const allMaterials = getAllMaterialsData();
-            
-            if (allMaterials.length === 0) {
-                showMessage('error', 'Vui lòng thêm ít nhất một vật tư!');
-                return;
-            }
-            
-            if (confirm('Bạn có chắc muốn duyệt đề xuất này?')) {
-                // Update status
-                const statusBadge = document.getElementById('statusBadge');
-                statusBadge.textContent = 'Đã duyệt';
-                statusBadge.className = 'status-badge status-approved';
-                
-                showMessage('success', 'Đã duyệt đề xuất vật tư thành công!');
-                
-                // Disable form
-                disableForm();
-            }
-        }
-
-        // Reject request
-        function rejectRequest() {
-            const reason = document.getElementById('rejectReason').value.trim();
-            if (!reason) {
-                showMessage('error', 'Vui lòng nhập lý do từ chối!');
-                document.getElementById('rejectReason').focus();
-                return;
-            }
-            
-            if (confirm('Bạn có chắc muốn từ chối đề xuất này?')) {
-                // Update status
-                const statusBadge = document.getElementById('statusBadge');
-                statusBadge.textContent = 'Từ chối';
-                statusBadge.className = 'status-badge status-rejected';
-                
-                showMessage('success', 'Đã từ chối đề xuất vật tư!');
-                
-                // Disable form
-                disableForm();
-            }
-        }
-
-        // Get all materials data from all containers
-        function getAllMaterialsData() {
-            const materials = [];
-            const containers = document.querySelectorAll('.material-replacement-container');
-            
-            containers.forEach((container, containerIndex) => {
-                const originalRow = container.querySelector('.replacement-section:first-child .material-row');
-                const newRow = container.querySelector('.replacement-section:last-child .material-row');
-                
-                // Get original material data
-                const originalCode = originalRow.querySelector('.material-select').value;
-                const originalName = originalRow.querySelector('input[type="text"]').value;
-                const originalQuantity = originalRow.querySelector('input[type="number"]').value;
-                const originalUnit = originalRow.querySelectorAll('.material-select')[1].value;
-                
-                // Get new material data
-                const newCode = newRow.querySelector('.material-select').value;
-                const newName = newRow.querySelector('input[type="text"]').value;
-                const newQuantity = newRow.querySelector('input[type="number"]').value;
-                const newUnit = newRow.querySelectorAll('.material-select')[1].value;
-                
-                if (originalCode && originalName && originalQuantity && originalUnit &&
-                    newCode && newName && newQuantity && newUnit) {
-                    materials.push({
-                        containerId: containerIndex + 1,
-                        original: { code: originalCode, name: originalName, quantity: originalQuantity, unit: originalUnit },
-                        replacement: { code: newCode, name: newName, quantity: newQuantity, unit: newUnit }
-                    });
-                }
-            });
-            
-            return materials;
-        }
-
-        // Disable form after approval/rejection
-        function disableForm() {
-            const inputs = document.querySelectorAll('.material-input, .material-select, .reason-textarea');
-            const buttons = document.querySelectorAll('.btn-add-material, .btn-remove-container, .btn-reset-materials, .btn-add-new-material, .btn-approve, .btn-reject');
-            
-            inputs.forEach(input => input.disabled = true);
-            buttons.forEach(button => button.disabled = true);
-        }
-
-        // Show message
-        function showMessage(type, text) {
-            const messageEl = document.getElementById(type + 'Message');
-            const textEl = document.getElementById(type + 'Text');
-            
-            textEl.textContent = text;
-            messageEl.classList.add('show');
-            
-            setTimeout(() => {
-                messageEl.classList.remove('show');
-            }, 4000);
-        }
-
-        // Auto-resize textarea
-        document.addEventListener('input', function(e) {
-            if (e.target.matches('.reason-textarea')) {
-                e.target.style.height = 'auto';
-                e.target.style.height = e.target.scrollHeight + 'px';
-            }
-        });
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                approveRequest();
-            }
-            
-            if (e.key === 'Escape') {
-                // Clear current focus
-                document.activeElement.blur();
-            }
-        });
-
-        // Initialize form
-        document.addEventListener('DOMContentLoaded', function() {
-            updateRemoveButtons();
-            showMessage('success', 'Form đã sẵn sàng để sử dụng!');
-        });
+  }
+  // Trang trí label product trái thành "Tên (tồn)"
+  function decorateOriginalProductSelect(selectEl, stockIndex) {
+    Array.from(selectEl.options).forEach((opt,i)=>{
+      if (i===0) return; // placeholder
+      const base = opt.dataset.labelBase || opt.textContent.trim();
+      if (!opt.dataset.labelBase) opt.dataset.labelBase = base;
+      const unitId = opt.dataset.unit || '';
+      const key = `${opt.value}:${unitId}`;
+      const info = stockIndex.get(key);
+      const qty = info ? info.qty : 0;
+      opt.textContent = `${base} (${nf(qty)})`;
+    });
+  }
+  function syncLeftContainer(container, stockIndex) {
+    const prodSel = container.querySelector('.original-product-select');
+    if (!prodSel) return;
+    const row = prodSel.closest('.material-row');
+    const opt = prodSel.selectedOptions[0];
+    const unitId   = opt?.dataset.unit || '';
+    const unitName = opt?.dataset.unitName || '';
+    // Chọn đơn vị gốc
+    setUnitFor(row, 'productUnitID', unitId, unitName);
+    // Gán oldStockID + max qty
+    const hiddenOld = container.querySelector('input[name$="[oldStockID]"]');
+    const qtyInput  = container.querySelector('input[name$="[quantityProduct]"]');
+    const key  = `${opt?.value || ''}:${unitId}`;
+    const info = stockIndex.get(key);
+    if (hiddenOld) hiddenOld.value = info?.stockID || '';
+    if (qtyInput)  qtyInput.max    = info ? info.qty : '';
+  }
+  // Refresh toàn form (khi đổi kho / khởi tạo)
+  async function refreshAll() {
+    const stocks = await fetchStocks(currentWarehouseId());
+    const stockIndex = idxStocks(stocks);
+    document.querySelectorAll('.original-product-select').forEach(sel => decorateOriginalProductSelect(sel, stockIndex));
+    document.querySelectorAll('.material-replacement-container').forEach(c => {
+      syncLeftContainer(c, stockIndex);
+      //filter đơn vị ≠ đơn vị gốc, và giữ preselect nếu có
+      const leftUnitId   = c.querySelector('.original-product-select')?.selectedOptions?.[0]?.dataset?.unit || '';
+      const rightUnitSel = c.querySelector('.new-unit-select');
+      const preSel = rightUnitSel?.dataset?.preselected || null;
+      if (rightUnitSel) fillUnitsExcept(rightUnitSel, leftUnitId, preSel);
+    });
+  }
+  // ===== Events =====
+  // Chọn product trái
+  document.addEventListener('change', async (e)=>{
+    if (!e.target.matches('.original-product-select')) return;
+    const container = e.target.closest('.material-replacement-container');
+    const stocks = await fetchStocks(currentWarehouseId());
+    const stockIndex = idxStocks(stocks);
+    // Cập nhật label cho chính select này
+    decorateOriginalProductSelect(e.target, stockIndex);
+    // Sync container
+    syncLeftContainer(container, stockIndex);
+    // Cập nhật đơn vị bên phải (loại trừ đơn vị gốc), giữ preselect nếu có
+    const leftUnitId   = e.target.selectedOptions?.[0]?.dataset?.unit || '';
+    const rightUnitSel = container.querySelector('.new-unit-select');
+    const preSel = rightUnitSel?.value || rightUnitSel?.dataset?.preselected || null;
+    if (rightUnitSel) fillUnitsExcept(rightUnitSel, leftUnitId, preSel);
+  });
+  // Chọn product phải → chỉ cần refilter đơn vị ≠ đơn vị gốc, giữ value hiện tại nếu hợp lệ
+  document.addEventListener('change', (e)=>{
+    if (!e.target.matches('.new-product-select')) return;
+    const container   = e.target.closest('.material-replacement-container');
+    const leftUnitId  = container.querySelector('.original-product-select')?.selectedOptions?.[0]?.dataset?.unit || '';
+    const rightUnitSel= container.querySelector('.new-unit-select');
+    const preSel      = rightUnitSel?.value || rightUnitSel?.dataset?.preselected || null;
+    if (rightUnitSel) fillUnitsExcept(rightUnitSel, leftUnitId, preSel);
+  });
+  // Đổi kho → clear cache + refreshAll
+  document.addEventListener('change', (e)=>{
+    if (!e.target.matches('select[name="warehouseID"]')) return;
+    __stockCache.clear();
+    refreshAll();
+  });
+  // ===== Thêm/Xoá/Reset dòng (giống trang add, nhưng dùng Blade để render options) =====
+  let containerCounter = {{ count($decomposes->items) }};
+  async function addNewMaterialContainer() {
+    containerCounter++;
+    const containersDiv = document.getElementById('materialContainers');
+    const div = document.createElement('div');
+    div.className = 'material-replacement-container';
+    div.setAttribute('data-container-id', containerCounter);
+    div.innerHTML = `
+      <div class="container-number">${containerCounter}</div>
+      <button type="button" class="btn-remove-container" onclick="removeMaterialContainer(${containerCounter})">
+        <i class="fas fa-times"></i>
+      </button>
+      <div class="replacement-section">
+        <div class="replacement-title">Nguyên Liệu Cần Đổi</div>
+        <div class="material-row">
+          <div class="form-group">
+            <label class="form-label">Tên vật tư</label>
+            <select class="material-select original-product-select" name="materials[${containerCounter}][productID]" required>
+              <option value="">Chọn tên vật tư</option>
+              @foreach($products as $product)
+                <option value="{{ $product->id }}" data-unit="{{ $product->unitID }}" data-unit-name="{{ $product->unit->name ?? '' }}">
+                  {{ $product->name }}
+                </option>
+              @endforeach
+            </select>
+            <input type="hidden" name="materials[${containerCounter}][oldStockID]">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Đơn vị (gốc)</label>
+            <select class="material-select original-unit-select" name="materials[${containerCounter}][productUnitID]" required>
+              <option value="">Chọn đơn vị</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Số lượng (trừ)</label>
+            <input type="number" class="material-input" name="materials[${containerCounter}][quantityProduct]" placeholder="0" min="0" required>
+          </div>
+        </div>
+      </div>
+      <div class="section-divider"></div>
+      <div class="replacement-section">
+        <div class="replacement-title">Vật Tư Mới (Phân rã)</div>
+        <div class="material-row">
+          <div class="form-group">
+            <label class="form-label">Tên vật tư</label>
+            <select class="material-select new-product-select" name="materials[${containerCounter}][productDecomposeID]" required>
+              <option value="">Chọn tên vật tư</option>
+              @foreach($products as $product)
+                <option value="{{ $product->id }}">{{ $product->name }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Đơn vị (khác đơn vị gốc)</label>
+            <select class="material-select new-unit-select" name="materials[${containerCounter}][unitDecomposeID]" required>
+              <option value="">Chọn đơn vị</option>
+              @foreach($units as $unit)
+                <option value="{{ $unit->id }}">{{ $unit->name }}</option>
+              @endforeach
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Số lượng (cộng)</label>
+            <input type="number" class="material-input" name="materials[${containerCounter}][quantityDecompose]" placeholder="0" min="0" required>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:15px;">
+        <button type="button" class="btn-reset-materials" onclick="resetMaterialContainer(${containerCounter})" title="Làm mới bảng này">
+          <i class="fas fa-redo"></i>
+        </button>
+      </div>
+    `;
+    containersDiv.appendChild(div);
+    const stocks = await fetchStocks(currentWarehouseId());
+    const stockIndex = idxStocks(stocks);
+    decorateOriginalProductSelect(div.querySelector('.original-product-select'), stockIndex);
+    syncLeftContainer(div, stockIndex);
+    updateRemoveButtons();
+    const firstInput = div.querySelector('.original-product-select');
+    if (firstInput) firstInput.focus();
+    showToast('success', `Đã thêm bảng vật tư mới #${containerCounter}`);
+  }
+  function removeMaterialContainer(containerId) {
+    const containers = document.querySelectorAll('.material-replacement-container');
+    if (containers.length <= 1) {
+      showToast('error', 'Phải có ít nhất một bảng vật tư!');
+      return;
+    }
+    if (!confirm('Bạn có chắc muốn xóa bảng vật tư này?')) return;
+    const el = document.querySelector(`.material-replacement-container[data-container-id="${containerId}"]`);
+    if (!el) return;
+    el.remove();
+    updateContainerNumbers();
+    updateRemoveButtons();
+    showToast('success', 'Đã xóa bảng vật tư!');
+  }
+  function resetMaterialContainer(containerId) {
+    if (!confirm('Bạn có chắc muốn làm mới bảng vật tư này?')) return;
+    const container = document.querySelector(`.material-replacement-container[data-container-id="${containerId}"]`);
+    if (!container) return;
+    container.querySelectorAll('.material-input').forEach(i => i.value = '');
+    container.querySelectorAll('.material-select').forEach(s => {
+      s.selectedIndex = 0;
+      if (s.classList.contains('original-unit-select') || s.classList.contains('new-unit-select')) {
+        s.innerHTML = '<option value="">Chọn đơn vị</option>';
+      }
+    });
+    const hiddenOld = container.querySelector('input[name$="[oldStockID]"]');
+    if (hiddenOld) hiddenOld.value = '';
+    refreshAll();
+    showToast('success', 'Đã làm mới bảng vật tư!');
+  }
+  function updateContainerNumbers() {
+    const containers = document.querySelectorAll('.material-replacement-container');
+    containers.forEach((c, i) => {
+      c.querySelector('.container-number').textContent = i + 1;
+      c.setAttribute('data-container-id', i + 1);
+      const removeBtn = c.querySelector('.btn-remove-container');
+      if (removeBtn) removeBtn.setAttribute('onclick', `removeMaterialContainer(${i + 1})`);
+      const resetBtn = c.querySelector('.btn-reset-materials');
+      if (resetBtn) resetBtn.setAttribute('onclick', `resetMaterialContainer(${i + 1})`);
+    });
+    containerCounter = containers.length;
+  }
+  function updateRemoveButtons() {
+    document.querySelectorAll('.material-replacement-container').forEach((c, i) => {
+      const btn = c.querySelector('.btn-remove-container');
+      if (btn) btn.style.display = (i === 0 ? 'none' : 'flex');
+    });
+  }
+  // ===== Init =====
+  document.addEventListener('DOMContentLoaded', ()=>{
+    updateRemoveButtons();
+    refreshAll(); // nạp tồn, trang trí "Tên (tồn)", khoá unit trái, set oldStockID + max, filter unit phải
+  });
 </script>
+
 <style>
     .modal-dialog {
         max-width: 90% !important;

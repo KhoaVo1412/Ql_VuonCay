@@ -54,6 +54,7 @@ use App\Http\Controllers\Admin\FactoryController;
 use App\Http\Controllers\Admin\GeojsonController;
 use App\Http\Controllers\Admin\MaterialProposalController;
 use App\Http\Controllers\Admin\PlotController;
+use App\Http\Controllers\Admin\DiesaseTController;
 use App\Http\Controllers\Admin\SeedGardenController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\TreatmentSlipController;
@@ -135,6 +136,15 @@ Route::middleware(['login'])->group(function () {
     Route::post('/teams/delete-multiple', [TeamController::class, 'deleteMultiple'])->name('teams.deleteMultiple');
     Route::post('/toggle-teams-status', [TeamController::class, 'toggleStatus'])->name('teams.status');
 
+    Route::get('/diseaseT', [DiesaseTController::class, 'index'])->name('diseaseT.index');
+    Route::post('/save-diseaseT', [DiesaseTController::class, 'save'])->name('diseaseT.save');
+    Route::get('/edit-diseaseT/{id}', [DiesaseTController::class, 'edit'])->name('diseaseT.edit');
+    Route::post('/diseaseT/update/{id}', [DiesaseTController::class, 'update'])->name('diseaseT.update');
+    Route::get('diseaseT/delete/{id}', [DiesaseTController::class, 'destroy'])->name('diseaseT.delete');
+    Route::post('/diseaseT/edit-multiple', [DiesaseTController::class, 'editMultiple'])->name('diseaseT.editMultiple');
+    Route::post('/diseaseT/delete-multiple', [DiesaseTController::class, 'deleteMultiple'])->name('diseaseT.deleteMultiple');
+    Route::post('/toggle-diseaseT-status', [DiesaseTController::class, 'toggleStatus'])->name('diseaseT.status');
+
     Route::get('/aworks', [WorkController::class, 'index1'])->name('aworks.index');
     Route::post('/save-aworks', [WorkController::class, 'save1'])->name('aworks.save');
     Route::get('/edit-aworks/{id}', [WorkController::class, 'edit1'])->name('aworks.edit');
@@ -143,6 +153,7 @@ Route::middleware(['login'])->group(function () {
     Route::post('/aworks/edit-multiple', [WorkController::class, 'editMultiple1'])->name('aworks.editMultiple');
     Route::post('/aworks/delete-multiple', [WorkController::class, 'deleteMultiple1'])->name('aworks.deleteMultiple');
     Route::post('/toggle-aworks-status', [WorkController::class, 'toggleStatus1'])->name('aworks.status');
+    Route::get('/workers/{worker}/task-stats', [WorkController::class, 'taskStats'])->name('workers.task_stats');
 
     Route::get('/duty', [DutyController::class, 'index'])->name('duty.index');
     Route::post('/save-duty', [DutyController::class, 'save'])->name('duty.save');
@@ -162,6 +173,8 @@ Route::middleware(['login'])->group(function () {
     Route::post('/plots/edit-multiple', [PlotController::class, 'editMultiple'])->name('plots.editMultiple');
     Route::post('/plots/delete-multiple', [PlotController::class, 'deleteMultiple'])->name('plots.deleteMultiple');
     Route::post('/toggle-plot-status', [PlotController::class, 'toggleStatus'])->name('plots.status');
+    Route::get('/map-overview', [PlotController::class, 'overview'])->name('map.overview');
+    Route::get('/plants/find', [PlotController::class, 'findByCode']);
 
     Route::get('/stocks', [InventoryStockController::class, 'index'])->name('stocks.index');
     Route::get('/add-stocks', [InventoryStockController::class, 'add'])->name('stocks.add');
@@ -182,6 +195,11 @@ Route::middleware(['login'])->group(function () {
     Route::post('/crops/edit-multiple', [CropController::class, 'editMultiple'])->name('crops.editMultiple');
     Route::post('/crops/delete-multiple', [CropController::class, 'deleteMultiple'])->name('crops.deleteMultiple');
     Route::post('/toggle-crop-status', [CropController::class, 'toggleStatus'])->name('crops.status');
+    Route::get('/plots/{plot}/plants', [CropController::class, 'byPlot'])->name('plots.plants');
+    Route::post('/plots/{plot}/generate-plants', [CropController::class, 'generate'])->name('plots.generatePlants');
+    Route::delete('/plots/{plot}/plants', [CropController::class, 'destroyByPlot'])->name('plots.plants.destroy');
+    Route::get('/plants/meta', [CropController::class, 'meta']);
+    Route::get('/plants/search', [CropController::class, 'search']);
 
     Route::get('/works', [WorkController::class, 'index'])->name('works.index');
     Route::get('/add-works', [WorkController::class, 'add'])->name('works.add');
@@ -232,6 +250,7 @@ Route::middleware(['login'])->group(function () {
     Route::post('/decomposes/edit-multiple', [DecomposeController::class, 'editMultiple'])->name('decomposes.editMultiple');
     Route::post('/decomposes/delete-multiple', [DecomposeController::class, 'deleteMultiple'])->name('decomposes.deleteMultiple');
     Route::post('/toggle-decomposes-status', [DecomposeController::class, 'toggleStatus'])->name('decomposes.status');
+    Route::get('/api/stock-items', [DecomposeController::class, 'stockItems']);
 
     Route::get('/pwarehouses', [PWareHouseController::class, 'index'])->name('pwarehouses.index');
     Route::get('/add-pwarehouses', [PWareHouseController::class, 'add'])->name('pwarehouses.add');
@@ -261,9 +280,10 @@ Route::middleware(['login'])->group(function () {
     Route::post('/outputs/edit-multiple', [OutputController::class, 'editMultiple'])->name('outputs.editMultiple');
     Route::post('/outputs/delete-multiple', [OutputController::class, 'deleteMultiple'])->name('outputs.deleteMultiple');
     Route::post('/toggle-outputs-status', [OutputController::class, 'toggleStatus'])->name('outputs.status');
+    Route::get('/api/warehouses/{warehouse}/products', [OutputController::class, 'productsByWarehouse']);
 
     Route::get('/workers', [WorkerController::class, 'index'])->name('workers.index');
-    Route::get('/add-workers', [WorkerController::class, 'add'])->name('aaa');
+    Route::get('/add-workers', [WorkerController::class, 'add'])->name('workers.add');
     Route::post('/save-workers', [WorkerController::class, 'save'])->name('workers.save');
     Route::get('/edit-workers/{id}', [WorkerController::class, 'edit'])->name('workers.edit');
     Route::post('/workers/update/{id}', [WorkerController::class, 'update'])->name('workers.update');
@@ -329,16 +349,16 @@ Route::middleware(['login'])->group(function () {
     Route::post('/products/delete-multiple', [ListMaterialController::class, 'deleteMultiple'])->name('products.deleteMultiple');
     Route::post('/toggle-products-status', [ListMaterialController::class, 'toggleStatus'])->name('products.status');
 
-    Route::get('/seedgardens', [SeedGardenController::class, 'index'])->name('seedgardens.index');
-    Route::post('/save-seedgardens', [SeedGardenController::class, 'save'])->name('seedgardens.save');
-    Route::get('/edit-seedgardens/{id}', [SeedGardenController::class, 'edit'])->name('seedgardens.edit');
-    Route::post('/seedgardens/update/{id}', [SeedGardenController::class, 'update'])->name('seedgardens.update');
-    Route::get('seedgardens/delete/{id}', [SeedGardenController::class, 'destroy'])->name('seedgardens.delete');
-    Route::post('/seedgardens/edit-multiple', [SeedGardenController::class, 'editMultiple'])->name('seedgardens.editMultiple');
-    Route::post('/seedgardens/delete-multiple', [SeedGardenController::class, 'deleteMultiple'])->name('seedgardens.deleteMultiple');
-    Route::post('/toggle-seedgardens-status', [SeedGardenController::class, 'toggleStatus'])->name('seedgardens.status');
-    Route::post('/seedgardens/confirm-delete-multiple', [SeedGardenController::class, 'confirmDeleteMultiple'])->name('seedgardens.confirm-delete-multiple');
-    Route::post('/seedgardens/update-status', [SeedGardenController::class, 'updateStatus']);
+    Route::get('/seedgardens', [DiesaseTController::class, 'index'])->name('seedgardens.index');
+    Route::post('/save-seedgardens', [DiesaseTController::class, 'save'])->name('seedgardens.save');
+    Route::get('/edit-seedgardens/{id}', [DiesaseTController::class, 'edit'])->name('seedgardens.edit');
+    Route::post('/seedgardens/update/{id}', [DiesaseTController::class, 'update'])->name('seedgardens.update');
+    Route::get('seedgardens/delete/{id}', [DiesaseTController::class, 'destroy'])->name('seedgardens.delete');
+    Route::post('/seedgardens/edit-multiple', [DiesaseTController::class, 'editMultiple'])->name('seedgardens.editMultiple');
+    Route::post('/seedgardens/delete-multiple', [DiesaseTController::class, 'deleteMultiple'])->name('seedgardens.deleteMultiple');
+    Route::post('/toggle-seedgardens-status', [DiesaseTController::class, 'toggleStatus'])->name('seedgardens.status');
+    Route::post('/seedgardens/confirm-delete-multiple', [DiesaseTController::class, 'confirmDeleteMultiple'])->name('seedgardens.confirm-delete-multiple');
+    Route::post('/seedgardens/update-status', [DiesaseTController::class, 'updateStatus']);
 
     Route::get('/warehouses', [WarehousesController::class, 'index'])->name('warehouses.index');
     Route::post('/save-warehouses', [WarehousesController::class, 'save'])->name('warehouses.save');
@@ -507,8 +527,7 @@ Route::middleware(['login'])->group(function () {
 
     // Thêm khu vực trồng bằng excel
     Route::get('/add-excel', [PlotImportController::class, 'add_excel'])->name('add-excel');
-    Route::post('/import-plots', [PlotImportController::class, 'importExcel'])->name('import-plots');
-    // Sửa khu vực trồng bằng excel
+    Route::post('/import-plots', [PlotImportController::class, 'importExcel'])->name('import-plots');    // Sửa khu vực trồng bằng excel
     Route::get('/edit-excel', [UpdatePlantingAreaImportController::class, 'edit_excel'])->name('edit-excel');
     Route::post('/edit-import-plantingareas', [UpdatePlantingAreaImportController::class, 'importExcel'])->name('edit-import-plantingareas');
 
@@ -590,44 +609,44 @@ Route::group(['middleware' => ['isAdmin']], function () {
     Route::delete('delete-users/{users}', [UserController::class, 'delete'])->name('delete.users');
     Route::get('filter-selects', [UserController::class, 'all_users'])->name('filter.users');
 
-    Route::middleware(['permission:Xem Chức Vụ'])->get('/duty', [DutyController::class, 'index'])->name('duty.index');
+    Route::middleware(['permission:Danh Sách Chức Vụ'])->get('/duty', [DutyController::class, 'index'])->name('duty.index');
     Route::middleware(['permission:Thêm Chức Vụ'])->post('/save-duty', [DutyController::class, 'save'])->name('duty.save');
     Route::middleware(['permission:Sửa Chức Vụ'])->get('/edit-duty/{id}', [DutyController::class, 'edit'])->name('duty.edit');
     Route::middleware(['permission:Xóa Chức Vụ'])->post('/duty/delete-multiple', [DutyController::class, 'deleteMultiple'])->name('farms.deleteMultiple');
 
-    Route::middleware(['permission:Xem Tổ'])->get('/teams', [TeamController::class, 'index'])->name('teams.index');
+    Route::middleware(['permission:Danh Sách Tổ'])->get('/teams', [TeamController::class, 'index'])->name('teams.index');
     Route::middleware(['permission:Thêm Tổ'])->post('/save-teams', [TeamController::class, 'save'])->name('teams.save');
     Route::middleware(['permission:Sửa Tổ'])->get('/edit-teams/{id}', [TeamController::class, 'edit'])->name('teams.edit');
     Route::middleware(['permission:Xóa Tổ'])->post('/teams/delete-multiple', [TeamController::class, 'deleteMultiple'])->name('teams.deleteMultiple');
 
-    Route::middleware(['permission:Xem Công Nhân'])->get('/workers', [WorkerController::class, 'index'])->name('workers.index');
+    Route::middleware(['permission:Danh Sách Công Nhân'])->get('/workers', [WorkerController::class, 'index'])->name('workers.index');
     Route::middleware(['permission:Thêm Công Nhân'])->get('/add-workers', [WorkerController::class, 'add'])->name('workers.add');
     Route::middleware(['permission:Sửa Công Nhân'])->post('/update-workers/{id}', [WorkerController::class, 'update'])->name('workers.update');
     Route::middleware(['permission:Xóa Công Nhân'])->post('/workers/delete-multiple', [WorkerController::class, 'deleteMultiple'])->name('workers.deleteMultiple');
 
-    Route::middleware(['permission:Xem Loại Công Việc'])->get('/aworks', [WorkController::class, 'index1'])->name('aworks.index');
+    Route::middleware(['permission:Danh Sách Loại Công Việc'])->get('/aworks', [WorkController::class, 'index1'])->name('aworks.index');
     Route::middleware(['permission:Thêm Loại Công Việc'])->post('/add-aworks', [WorkController::class, 'save1'])->name('aworks.add');
     Route::middleware(['permission:Sửa Loại Công Việc'])->post('/update-aworks/{id}', [WorkController::class, 'update1'])->name('aworks.update');
     Route::middleware(['permission:Xóa Loại Công Việc'])->post('/aworks/delete-multiple', [WorkController::class, 'deleteMultiple1'])->name('deletedeleteMultiple');
 
-    Route::middleware(['permission:Xem Phân Công'])->get('/works', [WorkController::class, 'index'])->name('works.index');
+    Route::middleware(['permission:Danh Sách Phân Công'])->get('/works', [WorkController::class, 'index'])->name('works.index');
     Route::middleware(['permission:Thêm Phân Công'])->get('/add-works', [WorkController::class, 'add'])->name('works.add');
     Route::middleware(['permission:Sửa Phân Công'])->get('/edit-works/{id}', [WorkController::class, 'edit'])->name('works.edit');
     Route::middleware(['permission:Xóa Phân Công'])->post('/works/delete-multiple', [WorkController::class, 'deleteMultiple'])->name('works.deleteMultiple');
 
-    Route::middleware(['permission:Xem Đề Xuất'])->get('/workps', [WorkProposalsController::class, 'index'])->name('workps.index');
+    Route::middleware(['permission:Danh Sách Đề Xuất'])->get('/workps', [WorkProposalsController::class, 'index'])->name('workps.index');
     Route::middleware(['permission:Thêm Đề Xuất'])->get('/add-workps', [WorkProposalsController::class, 'add'])->name('workps.add');
     Route::middleware(['permission:Sửa Đề Xuất'])->post('/update-workps/{id}', [WorkProposalsController::class, 'update'])->name('workps.update');
     Route::middleware(['permission:Xóa Đề Xuất'])->post('/workps/delete-multiple', [WorkProposalsController::class, 'deleteMultiple'])->name('workps.deleteMultiple');
 
-    Route::middleware(['permission:Xem Đánh Giá'])->get('/comments', [CommentController::class, 'index'])->name('comments.index');
+    Route::middleware(['permission:Danh Sách Đánh Giá'])->get('/comments', [CommentController::class, 'index'])->name('comments.index');
     Route::middleware(['permission:Thêm Đánh Giá'])->post('/save-comments', [CommentController::class, 'save'])->name('comments.save');
     Route::middleware(['permission:Sửa Đánh Giá'])->post('/update-comments/{id}', [CommentController::class, 'update'])->name('comments.update');
     Route::middleware(['permission:Xóa Đánh Giá'])->post('/comments/delete-multiple', [CommentController::class, 'deleteMultiple'])->name('comments.deleteMultiple');
 
     // MDF qlcl
-    Route::middleware(['permission:Xem Quản Lý Chất Lượng'])->get('/untested', [TestingResultController::class, 'indexUntested'])->name('untested');
-    Route::middleware(['permission:Xem Quản Lý Chất Lượng'])->resource('testing', TestingResultController::class, [
+    Route::middleware(['permission:Danh Sách Quản Lý Chất Lượng'])->get('/untested', [TestingResultController::class, 'indexUntested'])->name('untested');
+    Route::middleware(['permission:Danh Sách Quản Lý Chất Lượng'])->resource('testing', TestingResultController::class, [
         'only' => ['index'],
     ]);
     Route::middleware(['permission:Thêm Quản Lý Chất Lượng'])->resource('testing', TestingResultController::class, [
@@ -638,7 +657,7 @@ Route::group(['middleware' => ['isAdmin']], function () {
         'only' => ['destroy'],
     ]);
     // MDW Loại hợp đồng
-    Route::middleware(['permission:Xem Loại Hợp Đồng'])->resource('contract-types', ContractTypeController::class, [
+    Route::middleware(['permission:Danh Sách Loại Hợp Đồng'])->resource('contract-types', ContractTypeController::class, [
         'only' => ['index'],
     ]);
     Route::middleware(['permission:Thêm Loại Hợp Đồng'])->resource('contract-types', ContractTypeController::class, [
@@ -652,7 +671,7 @@ Route::group(['middleware' => ['isAdmin']], function () {
     ]);
 
     //Hop dong
-    Route::middleware(['permission:Xem Hợp Đồng'])->get('/cont', [ContractController::class, 'index'])->name('cont');
+    Route::middleware(['permission:Danh Sách Hợp Đồng'])->get('/cont', [ContractController::class, 'index'])->name('cont');
 
     Route::middleware(['permission:Thêm Hợp Đồng'])->resource('contracts', ContractController::class, [
         'only' => ['create'],
@@ -665,7 +684,7 @@ Route::group(['middleware' => ['isAdmin']], function () {
     Route::get('/contract-dueDiligenceStatement/{id}', [DueDiliStateController::class, 'exportExcel'])->name('duedilistate.export');
 
     //midw tài khoản
-    // Route::middleware(['permission:Xem Tài Khoản'])->get('/all-users', [UserController::class, 'all_users'])->name('all.users');
+    // Route::middleware(['permission:Danh Sách Tài Khoản'])->get('/all-users', [UserController::class, 'all_users'])->name('all.users');
     // Route::middleware(['permission:Thêm Tài Khoản'])->post('/add-users', [UserController::class, 'store'])->name('store.users');
     // Route::middleware(['permission:Sửa Tài Khoản'])->get('/edit-users/{users}', [UserController::class, 'show'])->name('show.users');
     // Route::middleware(['permission:Xóa Tài Khoản'])->delete('/delete-users/{users}', [UserController::class, 'delete'])->name('delete.users');

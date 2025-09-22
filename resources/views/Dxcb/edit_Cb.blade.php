@@ -89,9 +89,6 @@
 
                         <hr>
                         <h5>Danh sách vật tư</h5>
-                        {{-- <button type="button" class="btn-add-row" onclick="addMaterialRow()" title="Thêm dòng mới">
-                            <i class="fas fa-plus"></i>
-                        </button> --}}
                         <table class="table table-bordered">
                             <thead>
                                 <tr>
@@ -99,7 +96,6 @@
                                     <th style="width: 20%;">Tên vật tư</th>
                                     <th style="width: 10%;">Số lượng</th>
                                     <th style="width: 15%;">Đơn vị</th>
-                                    {{-- <th style="width: 20%;">Người đề xuất</th> --}}
                                     <th style="width: 20%;">Ghi chú</th>
                                     <th style="width: 10%;">Thao Tác</th>
                                 </tr>
@@ -108,7 +104,6 @@
                                 @foreach($proposal->items as $index => $item)
                                 <tr>
                                     <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
-
                                     <td>
                                         <select name="items[{{ $index }}][warehouseID]" class="form-control">
                                             @foreach($warehouses as $w)
@@ -134,7 +129,9 @@
                                             value="{{ $item->materialQuantity }}" required>
                                     </td>
                                     <td>
-                                        <select name="items[{{ $index }}][unitID]" class="form-control">
+                                        <select name="items[{{ $index }}][unitID]" class="form-control"
+                                            data-prev="{{ old(" items.$index.unitID", $item->unitID ?? $item->unit?->id)
+                                            }}">
                                             @foreach($units as $u)
                                             <option value="{{ $u->id }}" @selected(old("items.$index.unitID", $item->
                                                 unitID ?? $item->unit?->id) == $u->id)>
@@ -143,10 +140,6 @@
                                             @endforeach
                                         </select>
                                     </td>
-                                    {{-- <td>
-                                        <input type="text" name="items[{{ $index }}][proposer_name]"
-                                            class="form-control" value="{{ auth()->user()->name }}" readonly>
-                                    </td> --}}
                                     <td>
                                         <input type="text" name="items[{{ $index }}][note]" class="form-control"
                                             value="{{ $item->note }}">
@@ -165,7 +158,6 @@
                                 @endforeach
                             </tbody>
                         </table>
-
                         <div class="form-group mt-3">
                             <button type="submit" class="btn btn-success">Cập nhật</button>
                             <a href="{{ route('materialproposals.index') }}" class="btn btn-secondary">Hủy</a>
@@ -178,119 +170,216 @@
     </div>
 </section>
 <script>
-    let rowIndex = 1;
-
-    function addMaterialRow() {
-        const tableBody = document.getElementById('materialTableBody');
-        const idx = rowIndex; // giữ lại index hiện tại
-
-        const newRow = document.createElement('tr');
-        newRow.innerHTML = `
-            <td>
+    (function(){
+    const API_STOCK = (wh) => `/api/stock-items?warehouseID=${encodeURIComponent(wh||'')}`;
+    const stockCache = new Map();
+    async function fetchStocksByWarehouse(warehouseID){
+        const key = String(warehouseID || '');
+        if (stockCache.has(key)) return stockCache.get(key);
+        if (!warehouseID) return [];
+        try {
+        const res = await fetch(API_STOCK(warehouseID));
+        const data = await res.json();
+        stockCache.set(key, Array.isArray(data) ? data : []);
+        return stockCache.get(key);
+        } catch (e) {
+        console.error('Load stock error:', e);
+        return [];
+        }
+    }
+    // ============ UTILS ============
+    const tbody = document.getElementById('materialTableBody');
+    function nf(n){ try { return new Intl.NumberFormat('vi-VN').format(+n||0); } catch { return n; } }
+    function esc(s){ return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+    function getRowElems(row){
+        return {
+        whSel:   row.querySelector('select[name^="items["][name$="[warehouseID]"]'),
+        prodSel: row.querySelector('select[name^="items["][name$="[productID]"]'),
+        unitSel: row.querySelector('select[name^="items["][name$="[unitID]"], select[name^="items["][name$="[unit]"]'), // hỗ trợ cả 2 kiểu name
+        qtyInp:  row.querySelector('input[name^="items["][name$="[quantity]"]'),
+        };
+    }
+    // Gộp tồn theo unitID cho 1 product trong kho
+    function aggregateUnitsForProduct(stockList, productID){
+        const agg = new Map(); // unitID -> {unitName, qty}
+        stockList
+        .filter(s => String(s.productID) === String(productID))
+        .forEach(s => {
+            const k = String(s.unitID);
+            const cur = agg.get(k) || { unitName: s.unitName || '', qty: 0 };
+            cur.qty += (+s.quantity || 0);
+            cur.unitName = cur.unitName || (s.unitName || '');
+            agg.set(k, cur);
+        });
+        return agg;
+    }
+    function fillUnitOptionsFromStock(row, unitAggMap){
+        const { unitSel } = getRowElems(row);
+        if (!unitSel) return;
+        if (!unitAggMap || unitAggMap.size === 0){
+        unitSel.innerHTML = `<option value="">Không có tồn đơn vị trong kho</option>`;
+        unitSel.disabled = true;
+        unitSel.removeAttribute('data-prev');
+        return;
+        }
+        let html = `<option value="">Chọn đơn vị</option>`;
+        unitAggMap.forEach((v, unitID) => {
+        html += `<option value="${esc(unitID)}" data-qty="${esc(v.qty)}">${esc(v.unitName)} (tồn: ${esc(nf(v.qty))})</option>`;
+        });
+        unitSel.disabled = false;
+        unitSel.innerHTML = html;
+        // Giữ lựa chọn cũ nếu còn hợp lệ
+        const prev = unitSel.getAttribute('data-prev');
+        if (prev && unitAggMap.has(prev)) {
+        unitSel.value = prev;
+        } else {
+        unitSel.selectedIndex = 0;
+        }
+    }
+    // function applyQtyMaxFromUnit(row){
+    //     const { unitSel, qtyInp } = getRowElems(row);
+    //     if (!unitSel || !qtyInp) return;
+    //     const opt = unitSel.selectedOptions[0];
+    //     const qty = opt ? (opt.dataset.qty || '') : '';
+    //     if (qty) qtyInp.max = qty; else qtyInp.removeAttribute('max');
+    // }
+    // Nạp đơn vị từ stock cho 1 dòng (dựa vào kho + vật tư)
+    async function refreshUnitsForRow(row){
+        const { whSel, prodSel, unitSel, qtyInp } = getRowElems(row);
+        // Reset state khi thiếu kho hoặc sản phẩm
+        if (!whSel?.value) {
+        if (unitSel) {
+            unitSel.innerHTML = `<option value="">Chọn kho trước</option>`;
+            unitSel.disabled = true;
+        }
+        if (qtyInp) qtyInp.removeAttribute('max');
+        return;
+        }
+        if (!prodSel?.value) {
+        if (unitSel) {
+            unitSel.innerHTML = `<option value="">Chọn vật tư trước</option>`;
+            unitSel.disabled = true;
+        }
+        if (qtyInp) qtyInp.removeAttribute('max');
+        return;
+        }
+        const stockList = await fetchStocksByWarehouse(whSel.value);
+        const unitAgg = aggregateUnitsForProduct(stockList, prodSel.value);
+        fillUnitOptionsFromStock(row, unitAgg);
+        // applyQtyMaxFromUnit(row);
+    }
+    // ============ EVENTS ============
+    // Đổi kho / vật tư -> nạp lại đơn vị
+    document.addEventListener('change', function(e){
+        if (
+        e.target.matches('#materialTableBody select[name^="items["][name$="[warehouseID]"]') ||
+        e.target.matches('#materialTableBody select[name^="items["][name$="[productID]"]')
+        ) {
+        const row = e.target.closest('tr');
+        const { unitSel } = getRowElems(row);
+        // lưu lại lựa chọn hiện tại (nếu có) để giữ sau khi refresh
+        if (unitSel) unitSel.setAttribute('data-prev', unitSel.value || '');
+        refreshUnitsForRow(row);
+        }
+    });
+    // Đổi đơn vị -> set max số lượng + nhớ lựa chọn
+    document.addEventListener('change', function(e){
+        if (e.target.matches('#materialTableBody select[name^="items["][name$="[unitID]"], #materialTableBody select[name^="items["][name$="[unit]"]')) {
+        const row = e.target.closest('tr');
+        const sel = e.target;
+        sel.setAttribute('data-prev', sel.value || '');
+        // applyQtyMaxFromUnit(row);
+        }
+    });
+    // ============ THÊM / XÓA DÒNG ============
+    function nextRowIndex(){
+        let max = -1;
+        tbody.querySelectorAll('select[name^="items["][name$="[productID]"]').forEach(sel => {
+        const m = sel.name.match(/^items\[(\d+)\]\[productID\]$/);
+        if (m) max = Math.max(max, parseInt(m[1], 10));
+        });
+        return max + 1;
+    }
+    window.addMaterialRow = async function addMaterialRow(){
+        const idx = nextRowIndex();
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+        <input type="hidden" name="items[${idx}][id]" value="">
+        <td>
             <select name="items[${idx}][warehouseID]" class="form-control" required>
-                <option value="">Chọn kho</option>
-                @foreach($warehouses as $w)
+            <option value="">Chọn kho</option>
+            @foreach($warehouses as $w)
                 <option value="{{ $w->id }}">{{ $w->name }}</option>
-                @endforeach
+            @endforeach
             </select>
-            </td>
-
-            <td>
+        </td>
+        <td>
             <select name="items[${idx}][productID]" class="form-control" required>
-                <option value="">Chọn vật tư</option>
-                @foreach($products as $product)
+            <option value="">Chọn vật tư</option>
+            @foreach($products as $product)
                 <option value="{{ $product->id }}">{{ $product->name }}</option>
-                @endforeach
+            @endforeach
             </select>
-            </td>
-
-            <td>
-            <input type="number"
-                    name="items[${idx}][quantity]"
-                    class="form-control"
-                    placeholder="Số lượng"
-                    step="0.000001"
-                    min="0.000001"
-                    required>
-            </td>
-
-            <td>
-            <select name="items[${idx}][unitID]" class="form-control" required>
-                <option value="">Chọn đơn vị</option>
-                @foreach($units as $u)
-                <option value="{{ $u->id }}">{{ $u->name }}</option>
-                @endforeach
+        </td>
+        <td>
+            <input type="number" name="items[${idx}][quantity]" class="form-control" placeholder="Số lượng"
+                step="0.000001" min="0.000001" required>
+        </td>
+        <td>
+            <select name="items[${idx}][unitID]" class="form-control" data-prev="">
+            <option value="">Chọn đơn vị</option>
             </select>
-            </td>
-            <td>
-            <input type="text"
-                    name="items[${idx}][note]"
-                    class="form-control"
-                    placeholder="Ghi chú">
-            </td>
-
-            <td class="text-center">
-                <button type="button" class="btn btn-success btn-sm btn-add-row"
+        </td>
+        <td>
+            <input type="text" name="items[${idx}][note]" class="form-control" placeholder="Ghi chú">
+        </td>
+        <td class="text-center">
+            <button type="button" class="btn btn-success btn-sm btn-add-row"
                     onclick="addMaterialRow()" title="Thêm dòng mới">
-                    <i class="fas fa-plus"></i>
-                </button>
-                <button type="button" class="btn btn-danger btn-sm btn-remove-row" onclick="removeMaterialRow(this)">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
+            <i class="fas fa-plus"></i>
+            </button>
+            <button type="button" class="btn btn-danger btn-sm btn-remove-row"
+                    onclick="removeMaterialRow(this)">
+            <i class="fas fa-trash"></i>
+            </button>
+        </td>
         `;
+        tbody.appendChild(tr);
+        await refreshUnitsForRow(tr);
+        tr.querySelector('select[name^="items["][name$="[warehouseID]"]')?.focus();
+        updateRemoveButtons();
+    };
 
-        tableBody.appendChild(newRow);
-        rowIndex++;
-        if (typeof updateRemoveButtons === 'function') updateRemoveButtons();
-        }
+    window.removeMaterialRow = function removeMaterialRow(btn){
+        if (!confirm('Bạn có chắc muốn xóa dòng này?')) return;
+        btn.closest('tr')?.remove();
+        updateRemoveButtons();
+    };
 
-    function removeMaterialRow(button) {
-        if (confirm('Bạn có chắc muốn xóa dòng này?')) {
-            const row = button.closest('tr');
-            row.remove();
-            updateRemoveButtons();
-        }
-    }
-
-    function updateRemoveButtons() {
-        const rows = document.querySelectorAll('#materialTableBody tr');
-        rows.forEach((row, index) => {
-            const removeBtn = row.querySelector('.btn-remove-row');
-            if (removeBtn) {
-                removeBtn.style.display = rows.length > 0 ? 'inline-block' : 'none';
-            }
+    function updateRemoveButtons(){
+        const rows = tbody.querySelectorAll('tr');
+        rows.forEach((row) => {
+        const removeBtn = row.querySelector('.btn-remove-row');
+        if (removeBtn) removeBtn.style.display = (rows.length > 1 ? 'inline-block' : 'none');
         });
     }
 
-    function getCurrentMaterialData() {
-        const materials = [];
-        const rows = document.querySelectorAll('#materialTableBody tr');
+    // ============ KHỞI TẠO ============
+    document.addEventListener('DOMContentLoaded', async function(){
+        // rowIndex nên = số dòng hiện có (để tiếp tục tăng đúng)
+        window.rowIndex = {{ count($proposal->items) }};
 
-        rows.forEach(row => {
-            const productID = row.querySelector('select[name*="[productID]"]')?.value;
-            const quantity = row.querySelector('input[name*="[quantity]"]')?.value;
-            const unit = row.querySelector('select[name*="[unit]"]')?.value;
-            const proposer = row.querySelector('input[name*="[proposer_name]"]')?.value;
-            const note = row.querySelector('input[name*="[note]"]')?.value;
-
-            if (productID || quantity) {
-                materials.push({
-                    productID,
-                    quantity,
-                    unit,
-                    proposer,
-                    note
-                });
-            }
-        });
-
-        console.log(materials);
-        return materials;
-    }
-
-    // Gọi ngay khi trang load
-    document.addEventListener('DOMContentLoaded', updateRemoveButtons);
+        // Nạp lại đơn vị theo stock cho TẤT CẢ dòng đang có (giữ lựa chọn cũ nếu còn tồn)
+        const rows = tbody.querySelectorAll('tr');
+        for (const row of rows) {
+        // lưu current unit để giữ lại sau khi refresh
+        const { unitSel } = getRowElems(row);
+        if (unitSel) unitSel.setAttribute('data-prev', unitSel.value || unitSel.getAttribute('data-prev') || '');
+        await refreshUnitsForRow(row);
+        }
+        updateRemoveButtons();
+    });
+    })();
 </script>
 
 @endsection

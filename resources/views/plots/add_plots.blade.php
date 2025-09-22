@@ -44,7 +44,11 @@
                                 <input type="text" class="form-control" name="plotName" id="plotName" required
                                     placeholder="Tên lô" value="{{ old('plotName') }}">
                             </div>
-
+                            <div class="col-md-4 p-t-2">
+                                <label for="plantCount" class="form-label">Số Cây Trồng</label>
+                                <input type="number" min="0" class="form-control" name="plantCount" id="plantCount"
+                                    required placeholder="Số Lượng Cây" value="{{ old('plantCount') }}">
+                            </div>
                             <div class="col-md-4 p-t-2">
                                 <label for="find" class="form-label">Find <span style="color: red;">*</span></label>
                                 <input type="text" class="form-control" name="find" placeholder="Find" required

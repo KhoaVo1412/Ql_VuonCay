@@ -50,8 +50,8 @@
                     thì khi upload file, bạn phải chọn đúng file có tên <code>ten_file.pdf</code>.
 
                 </p> --}}
-                <div class="d-flex justify-content-between">
-                    <button type="submit" class="btn btn-primary">Tạo</button>
+                <div class="d-flex justify-content-between mb-3">
+                    <button type="submit" class="btn btn-success">Tạo</button>
                     <a href="{{ asset('files/plant_plot_template.xlsx') }}" class="btn btn-success">
                         <i class="fas fa-download"></i> Tải File Mẫu
                     </a>

@@ -83,6 +83,16 @@
                                 </select>
                             </div>
                             <div class="col-md-4">
+                                <label for="lat" class="form-label">Tọa Độ 1</label>
+                                <input type="text" class="form-control" name="lat" placeholder="Tọa độ 1"
+                                    value="{{ $crops->lat }}">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="lng" class="form-label">Tọa Độ 2</label>
+                                <input type="text" class="form-control" name="lng" placeholder="Tọa Độ 2"
+                                    value="{{ $crops->lng }}">
+                            </div>
+                            <div class="col-md-4">
                                 <label for="RF_id" class="form-label">Mã RFID</label>
                                 <input type="text" class="form-control" name="RF_id" placeholder="Mã RFID"
                                     value="{{ $crops->RF_id }}">

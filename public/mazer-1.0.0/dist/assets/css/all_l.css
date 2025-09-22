@@ -194,6 +194,13 @@
     }
 
     @media (max-width: 500px) {
+        .page-title{
+            padding: 0px 0px 0px 9px;
+        }
+
+         .search-inputs {
+            width: 80% !important;
+        }
         .form-row {
             display: flex;
             gap: 0rem;

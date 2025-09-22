@@ -20,39 +20,38 @@ class CommentController extends Controller
     public function index(Request $request)
     {
         $plots = Plot::all();
-        // $all_comments = Evaluate::with('worker')->orderBy('id', 'desc')->get();
         $user = Auth::user();
         /** @var \App\Models\User $user */
         $workers = Worker::query()
             ->when(!$user->hasRole('Admin'), fn($q) => $q->where('user_id', $user->id))
             ->get();
-        $all_comments = Evaluate::with('worker')
-            ->when($request->filled('warehouse_id'), function ($q) use ($request) {
-                $q->where('warehouseID', $request->warehouse_id);
-            })
-            ->when($request->filled('start_date'), function ($q) use ($request) {
-                $q->whereDate('date_comment', $request->start_date);
-            })
+        $all_comments = Evaluate::with(['worker'])
+            ->when($request->filled('warehouse_id'), fn($q) => $q->where('warehouseID', $request->warehouse_id))
+            ->when($request->filled('start_date'), fn($q) => $q->whereDate('date_comment', $request->start_date))
             ->when(!$user->hasRole('Admin'), fn($q) => $q->whereHas('worker', fn($w) => $w->where('user_id', $user->id)))
+            ->when($request->filled('deadline'), function ($q) use ($request) {
+                $deadline = $request->deadline;
+                $q->whereHas('task', function ($t) use ($deadline) {
+                    return match ($deadline) {
+                        'on_time'          => $t->completedOnTime(),
+                        'late'             => $t->completedLate(),
+                        'pending_ontrack'  => $t->pendingOnTrack(),
+                        'pending_overdue'  => $t->pendingOverdue(),
+                        default            => $t,
+                    };
+                });
+            })
             ->orderByDesc('id');
-        // ->get();
         foreach ($workers as $worker) {
-            $worker->countWork = GenTask::where('workerID', $worker->id)->count();
+            $base = GenTask::where('workerID', $worker->id);
 
-            $worker->countCofirm = GenTask::where('workerID', $worker->id)
-                ->where(function ($query) {
-                    $query->where('workStatus', 'Hoàn thành')
-                        ->orWhere(function ($subquery) {
-                            $subquery->where('workStatus', 'Đang chờ')
-                                ->where('dateEnd', '>=', now());
-                        });
-                })
-                ->count();
-
-            $worker->countUn = GenTask::where('workerID', $worker->id)
-                ->where('workStatus', 'Đang chờ')
-                ->where('dateEnd', '<', now())
-                ->count();
+            $worker->countWork       = (clone $base)->count();
+            $worker->doneOnTime      = (clone $base)->completedOnTime()->count();
+            $worker->doneLate        = (clone $base)->completedLate()->count();
+            $worker->pendingOnTrack  = (clone $base)->pendingOnTrack()->count();
+            $worker->pendingOverdue  = (clone $base)->pendingOverdue()->count();
+            $worker->countCofirm = $worker->doneOnTime + $worker->doneLate + $worker->pendingOnTrack;
+            $worker->countUn     = $worker->pendingOverdue;
         }
 
         // dd($all_comments);
@@ -129,153 +128,89 @@ class CommentController extends Controller
         }
         return view('comments.all_comments', compact('workers', 'plots'));
     }
-    public function store(Request $request)
+    public function save(Request $request)
     {
-        $validated = $request->validate([
+        $v = $request->validate([
             'name'            => 'required|string|max:255',
-            'workerID'        => 'required|exists:workers,id',
-            'deductionPoints' => 'required|integer|min:0',
+            'workerID'        => 'required|integer|exists:workers,id',
+            'deductionPoints' => 'required|numeric|min:0',
             'rating'          => 'required|string|max:255',
+            'date_comment'    => 'required|date',
             'note'            => 'nullable|string',
         ]);
 
-        $start = now()->startOfMonth();
-        $end   = now()->endOfMonth();
+        $asOf = Carbon::parse($v['date_comment'])->endOfDay();
 
-        $base = GenTask::where('workerID', $validated['workerID'])
-            ->whereBetween('workDate', [$start, $end]);
+        $base = GenTask::where('workerID', $v['workerID'])
+            ->where('created_at', '<=', $asOf);
 
-        $completedCol = Schema::hasColumn('gen_tasks', 'completed_at') ? 'completed_at' : 'updated_at';
+        $countWork  = (clone $base)->count();
+        $doneOnTime = (clone $base)->completedOnTime()->count(); // 'Hoàn thành'
+        $doneLate   = (clone $base)->completedLate()->count();   // 'Hoàn thành trễ'
+        $notDone    = (clone $base)->pending()->count();         // 'Đang chờ'
 
-        $validated['countWork']   = (clone $base)->count();
-        $validated['countCofirm'] = (clone $base)->where('workStatus', 'completed')
-            ->whereColumn($completedCol, '<=', 'dateEnd')->count();
-        $validated['countUn']     = (clone $base)->where('workStatus', 'completed')
-            ->whereColumn($completedCol, '>', 'dateEnd')->count();
-
-        Evaluate::create($validated);
-
-        return back()->with('success', 'Lưu đánh giá thành công (số liệu tự động).');
-    }
-    public function taskStats(Worker $worker)
-    {
-        $start = Carbon::now()->startOfMonth();
-        $end   = Carbon::now()->endOfMonth();
-
-        $base = GenTask::where('workerID', $worker->id)
-            ->whereBetween('workDate', [$start, $end]);
-
-        $countWork = (clone $base)->count();
-
-        // Nếu chưa có completed_at, tạm dùng updated_at (khuyến nghị thêm completed_at để chính xác)
-        $completedCol = Schema::hasColumn('gen_tasks', 'completed_at') ? 'completed_at' : 'updated_at';
-
-        $countCofirm = (clone $base)->where('workStatus', 'completed')
-            ->whereColumn($completedCol, '<=', 'dateEnd')
-            ->count();
-
-        $countUn     = (clone $base)->where('workStatus', 'completed')
-            ->whereColumn($completedCol, '>', 'dateEnd')
-            ->count();
-
-        return response()->json([
-            'countWork'   => $countWork,
-            'countCofirm' => $countCofirm,
-            'countUn'     => $countUn,
-            'range'       => [$start->toDateString(), $end->toDateString()],
-            'workerID'    => $worker->id,
-        ]);
-    }
-
-    public function save(Request $request)
-    {
-        $request->validate([
-            'name' => 'required',
-            'workerID' => 'required',
-            'deductionPoints' => 'nullable',
-            'rating' => 'nullable',
-            'note' => 'nullable',
-            'status' => 'nullable',
-        ]);
-
-        $existing = Evaluate::where('name', $request->name)->first();
-        if ($existing) {
-            return redirect()->back()->with('error', 'Mã đánh giá này đã tồn tại!');
-        }
-
-        // Tạo đánh giá mới
         $evaluate = Evaluate::create([
-            'name' => $request->name,
-            'date_comment' => $request->date_comment,
-            'workerID' => $request->workerID,
-            'deductionPoints' => $request->deductionPoints ?? 0,
-            'rating' => $request->rating,
-            'note' => $request->note,
-            'status' => $request->status ?? 'Hoạt động',
+            'name'            => $v['name'],
+            'workerID'        => $v['workerID'],
+            'deductionPoints' => $v['deductionPoints'],
+            'rating'          => $v['rating'],
+            'date_comment'    => $v['date_comment'],
+            'countWork'       => $countWork,
+            'countCofirm'     => $doneOnTime, // đúng hạn
+            'countLate'       => $doneLate,   // trễ (cần cột này trong bảng evaluates)
+            'countUn'         => $notDone,    // chưa làm
+            'note'            => $v['note'] ?? null,
+            'status'            => "Hoạt động",
         ]);
-
         ActionHistory::create([
             'user_id' => Auth::id(),
             'action_type' => 'create',
             'model_type' => 'Evaluate',
             'details' => "Đã tạo đánh giá cho nhân viên ID: {$evaluate->workerID} với mã: {$evaluate->name}",
         ]);
-
-        return redirect()->back()->with('message', 'Tạo đánh giá thành công.');
+        return back()->with('message', 'Đã lưu đánh giá.');
     }
-
     public function edit($id)
     {
+        $comments = Evaluate::findOrFail($id);
+        $asOf = $comments->date_comment
+            ? Carbon::parse($comments->date_comment)->endOfDay()
+            : null;
         $workers = Worker::all();
         foreach ($workers as $worker) {
-            $worker->countWork = GenTask::where('workerID', $worker->id)->count();
-
-            $worker->countCofirm = GenTask::where('workerID', $worker->id)
-                ->where(function ($query) {
-                    $query->where('workStatus', 'Hoàn thành')
-                        ->orWhere(function ($subquery) {
-                            $subquery->where('workStatus', 'Đang chờ')
-                                ->where('dateEnd', '>=', now());
-                        });
-                })
-                ->count();
-
-            $worker->countUn = GenTask::where('workerID', $worker->id)
-                ->where('workStatus', 'Đang chờ')
-                ->where('dateEnd', '<', now())
-                ->count();
+            $base = GenTask::where('workerID', $worker->id);
+            if ($asOf) {
+                $base->where('created_at', '<=', $asOf);
+            }
+            $worker->countWork   = (clone $base)->count();
+            $worker->countCofirm = (clone $base)->where('workStatus', 'Hoàn thành')->count();
+            $worker->countLate   = (clone $base)->where('workStatus', 'Hoàn thành trễ')->count();
+            $worker->countUn     = (clone $base)->where('workStatus', 'Đang chờ')->count();
         }
-        $comments = Evaluate::find($id);
         return view('comments.edit_comments', compact('comments', 'workers'));
     }
     public function update(Request $request, $id)
     {
-        $existingEvaluate = Evaluate::where('name', $request->name)->where('id', '!=', $id)->first();
-
-        $existingEvaluate = Evaluate::where(function ($query) use ($request, $id) {
-            $query->where('name', $request->name);
-        })->where('id', '!=', $id)->first();
-
-        if ($existingEvaluate) {
-
-            if ($existingEvaluate->name === $request->name) {
-                return redirect()->back()->with(['error' => 'Đánh giá này đã tồn tại!']);
-            }
-        }
         $comments = Evaluate::find($id);
         if (!$comments) {
             return redirect()->back()->with('error', 'Đánh giá không tồn tại');
         }
         $request->validate([
-            'name' => 'required',
-            'workerID' => 'required',
-            'deductionPoints' => 'nullable',
-            'rating' => 'nullable',
-            'note' => 'nullable',
-            'status' => 'nullable',
-            'date_comment' => 'nullable',
-            'opinion' => 'nullable',
+            'name'            => 'required|string|max:255',
+            'workerID'        => 'required',
+            'deductionPoints' => 'nullable|numeric|min:0',
+            'rating'          => 'nullable|string|max:255',
+            'note'            => 'nullable|string',
+            'status'          => 'nullable|string',
+            'date_comment'    => 'nullable|date',
+            'opinion'         => 'nullable|string',
         ]);
+        $exists = Evaluate::where('name', $request->name)
+            ->where('id', '!=', $id)
+            ->exists();
+        if ($exists) {
+            return back()->with(['error' => 'Đánh giá này đã tồn tại!'])->withInput();
+        }
         $originalData = $comments->only([
             'name',
             'workerID',
@@ -285,34 +220,51 @@ class CommentController extends Controller
             'status',
             'date_comment',
             'opinion',
+            'countWork',
+            'countCofirm',
+            'countLate',
+            'countUn'
         ]);
-        $comments->update([
-            'name' => $request->name,
-            'date_comment' => $request->date_comment,
-            'workerID' => $request->workerID,
+        $comments->fill([
+            'name'            => $request->name,
+            'workerID'        => $request->workerID,
             'deductionPoints' => $request->deductionPoints ?? 0,
-            'rating' => $request->rating,
-            'note' => $request->note,
-            'opinion' => $request->opinion,
-            'status' => $request->status,
+            'rating'          => $request->rating,
+            'note'            => $request->note,
+            'status'          => $request->status,
+            'date_comment'    => $request->date_comment,
+            'opinion'         => $request->opinion,
         ]);
+        $asOf = $comments->date_comment
+            ? Carbon::parse($comments->date_comment)->endOfDay()
+            : null;
+        $base = GenTask::where('workerID', $comments->workerID);
+        if ($asOf) $base->where('created_at', '<=', $asOf);
+        $countWork  = (clone $base)->count();
+        $doneOnTime = (clone $base)->where('workStatus', 'Hoàn thành')->count();
+        $doneLate   = (clone $base)->where('workStatus', 'Hoàn thành trễ')->count();
+        $notDone    = (clone $base)->where('workStatus', 'Đang chờ')->count();
+        $comments->countWork   = $countWork;
+        $comments->countCofirm = $doneOnTime;
+        $comments->countLate   = $doneLate;    // cần cột này
+        $comments->countUn     = $notDone;
+        $comments->save();
         $changedFields = [];
         foreach ($originalData as $key => $oldValue) {
             $newValue = $comments->$key;
-            if ($oldValue != $newValue) {
+            if ((string)$oldValue !== (string)$newValue) {
                 $changedFields[] = "$key: \"$oldValue\" => \"$newValue\"";
             }
         }
-
         $details = count($changedFields)
             ? "Đã cập nhật đánh giá {$comments->name}. Thay đổi: " . implode(', ', $changedFields)
             : "Cập nhật đánh giá {$comments->name} nhưng không có thay đổi dữ liệu.";
 
         ActionHistory::create([
-            'user_id' => Auth::id(),
+            'user_id'    => Auth::id(),
             'action_type' => 'update',
             'model_type' => 'Evaluate',
-            'details' => $details,
+            'details'    => $details,
         ]);
         return redirect()->route('comments.index')->with('message', 'Cập nhật đánh giá thành công');
     }

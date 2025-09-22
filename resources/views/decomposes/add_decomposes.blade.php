@@ -69,157 +69,107 @@
                                     </div>
                                 </div>
 
-                                <div class="material-section">
-                                    <div class="section-title">
-                                        <div style="display: flex; align-items: center; gap: 10px;">
-                                            <i class="fas fa-exchange-alt"></i>
-                                            Phân Rã Vật Tư
-                                        </div>
-                                        <button type="button" class="btn-add-new-material"
-                                            onclick="addNewMaterialContainer()">
-                                            <i class="fas fa-plus"></i>
-                                            Thêm
+                                <div id="materialContainers">
+                                    <div class="material-replacement-container" data-container-id="1">
+                                        <div class="container-number">1</div>
+                                        <button type="button" class="btn-remove-container"
+                                            onclick="removeMaterialContainer(1)" style="display:none">
+                                            <i class="fas fa-times"></i>
                                         </button>
-                                    </div>
 
-                                    <div id="materialContainers">
-                                        <!-- Initial Material Container -->
-                                        <div class="material-replacement-container" data-container-id="1">
-                                            <div class="container-number">1</div>
-                                            <button type="button" class="btn-remove-container"
-                                                onclick="removeMaterialContainer(1)" style="display: none;">
-                                                <i class="fas fa-times"></i>
+                                        <!-- Vật Tư Cần Đổi -->
+                                        <div class="replacement-section">
+                                            <div class="replacement-title">Vật Tư Cần Đổi</div>
+                                            <div class="material-row">
+                                                <div class="form-group">
+                                                    <label class="form-label">Tên vật tư</label>
+                                                    <select class="material-select original-product-select"
+                                                        name="materials[0][productID]" required>
+                                                        <option value="">Chọn tên vật tư</option>
+                                                        @foreach($products as $p)
+                                                        <option value="{{ $p->id }}" data-unit="{{ $p->unitID }}"
+                                                            data-unit-name="{{ $p->unit->name ?? '' }}">
+                                                            {{ $p->name }}
+                                                        </option>
+                                                        @endforeach
+                                                    </select>
+                                                    <!-- NEW: lưu stockID tìm được theo product + unit gốc + warehouse -->
+                                                    <input type="hidden" name="materials[0][oldStockID]">
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label class="form-label">Đơn vị (gốc)</label>
+                                                    <select class="material-select original-unit-select"
+                                                        name="materials[0][productUnitID]" required>
+                                                        <option value="">Chọn đơn vị</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label class="form-label">Số lượng (trừ)</label>
+                                                    <input type="number" class="material-input"
+                                                        name="materials[0][quantityProduct]" placeholder="0" min="0"
+                                                        required>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <button type="button" class="btn-add-material"
+                                                        onclick="addNewMaterialContainer()" title="Thêm bảng mới">
+                                                        <i class="fas fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="section-divider"></div>
+
+                                        <!-- Vật Tư Mới (Phân rã) -->
+                                        <div class="replacement-section">
+                                            <div class="replacement-title">Vật Tư Mới (Phân rã)</div>
+                                            <div class="material-row">
+                                                <div class="form-group">
+                                                    <label class="form-label">Tên vật tư</label>
+                                                    <select class="material-select new-product-select"
+                                                        name="materials[0][productDecomposeID]" required>
+                                                        <option value="">Chọn tên vật tư</option>
+                                                        @foreach($products as $p)
+                                                        <option value="{{ $p->id }}">{{ $p->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label class="form-label">Đơn vị (khác đơn vị gốc)</label>
+                                                    <select class="material-select new-unit-select"
+                                                        name="materials[0][unitDecomposeID]" required>
+                                                        <option value="">Chọn đơn vị</option>
+                                                        @foreach($units as $u)
+                                                        <option value="{{ $u->id }}">{{ $u->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label class="form-label">Số lượng (cộng)</label>
+                                                    <input type="number" class="material-input"
+                                                        name="materials[0][quantityDecompose]" placeholder="0" min="0"
+                                                        required>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <button type="button" class="btn-add-material"
+                                                        onclick="addNewMaterialContainer()" title="Thêm bảng mới">
+                                                        <i class="fas fa-plus"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div style="text-align:center;margin-top:15px;">
+                                            <button type="button" class="btn-reset-materials"
+                                                onclick="resetMaterialContainer(1)" title="Làm mới bảng này">
+                                                <i class="fas fa-redo"></i>
                                             </button>
-
-                                            <!-- Original Materials to Replace -->
-                                            <div class="replacement-section">
-                                                <div class="replacement-title">
-                                                    {{-- <i class="fas fa-arrow-up"></i> --}}
-                                                    Nguyên Liệu Cần Đổi
-                                                </div>
-
-                                                <div class="material-row">
-                                                    {{-- <div class="form-group">
-                                                        <label class="form-label">Mã vật tư</label>
-                                                        <select class="material-select">
-                                                            <option value="">Chọn mã vật tư</option>
-                                                            <option value="VT001">VT001 - Thuốc trừ sâu Regent</option>
-                                                            <option value="VT002">VT002 - Phân bón NPK</option>
-                                                            <option value="VT003">VT003 - Dụng cụ cắt tỉa</option>
-                                                            <option value="VT004">VT004 - Bình xịt thuốc</option>
-                                                            <option value="VT005">VT005 - Ống tưới nước</option>
-                                                            <option value="VT006">VT006 - Thuốc diệt nấm</option>
-                                                            <option value="VT007">VT007 - Phân hữu cơ</option>
-                                                        </select>
-                                                    </div> --}}
-                                                    <div class="form-group">
-                                                        <label class="form-label">Tên vật tư</label>
-                                                        <select class="material-select" name="materials[0][productID]"
-                                                            required>
-                                                            <option value="">Chọn tên vật tư</option>
-                                                            @foreach($products as $product)
-                                                            <option value="{{ $product->id }}">
-                                                                {{ $product->name }}
-                                                            </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label class="form-label">Số lượng</label>
-                                                        <input type="number" class="material-input" placeholder="0"
-                                                            min="0" name="materials[0][quantityProduct]" required>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label class="form-label">Đơn vị</label>
-                                                        <select class="material-select"
-                                                            name="materials[0][productUnitID]" required>
-                                                            <option value="">Chọn đơn vị</option>
-                                                            @foreach($units as $unit)
-                                                            <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <button type="button" class="btn-add-material"
-                                                            onclick="addNewMaterialContainer()" title="Thêm bảng mới">
-                                                            <i class="fas fa-plus"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Section Divider -->
-                                            <div class="section-divider"></div>
-
-                                            <!-- New Materials (Replacement) -->
-                                            <div class="replacement-section">
-                                                <div class="replacement-title">
-                                                    {{-- <i class="fas fa-arrow-down"></i> --}}
-                                                    Vật Tư Mới (Thay Thế)
-                                                </div>
-
-                                                <div class="material-row">
-                                                    {{-- <div class="form-group">
-                                                        <label class="form-label">Mã vật tư</label>
-                                                        <select class="material-select">
-                                                            <option value="">Chọn mã vật tư</option>
-                                                            <option value="VT001">VT001 - Thuốc trừ sâu Regent</option>
-                                                            <option value="VT002">VT002 - Phân bón NPK</option>
-                                                            <option value="VT003">VT003 - Dụng cụ cắt tỉa</option>
-                                                            <option value="VT004">VT004 - Bình xịt thuốc</option>
-                                                            <option value="VT005">VT005 - Ống tưới nước</option>
-                                                            <option value="VT006">VT006 - Thuốc diệt nấm</option>
-                                                            <option value="VT007">VT007 - Phân hữu cơ</option>
-                                                            <option value="VT008">VT008 - Thuốc trừ sâu sinh học
-                                                            </option>
-                                                            <option value="VT009">VT009 - Phân bón hữu cơ</option>
-                                                            <option value="VT010">VT010 - Dụng cụ cắt tỉa cao cấp
-                                                            </option>
-                                                        </select>
-                                                    </div> --}}
-                                                    <div class="form-group">
-                                                        <label class="form-label">Tên vật tư</label>
-                                                        <select class="material-select"
-                                                            name="materials[0][productDecomposeID]" required>
-                                                            <option value="">Chọn tên vật tư</option>
-                                                            @foreach($products as $product)
-                                                            <option value="{{ $product->id }}">
-                                                                {{ $product->name }}
-                                                            </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label class="form-label">Số lượng</label>
-                                                        <input type="number" class="material-input" placeholder="0"
-                                                            min="0" name="materials[0][quantityDecompose]" required>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label class="form-label">Đơn vị</label>
-                                                        <select class="material-select"
-                                                            name="materials[0][unitDecomposeID]" required>
-                                                            <option value="">Chọn đơn vị</option>
-                                                            @foreach($units as $unit)
-                                                            <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <button type="button" class="btn-add-material"
-                                                            onclick="addNewMaterialContainer()" title="Thêm bảng mới">
-                                                            <i class="fas fa-plus"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Reset Button -->
-                                            <div style="text-align: center; margin-top: 15px;">
-                                                <button type="button" class="btn-reset-materials"
-                                                    onclick="resetMaterialContainer(1)" title="Làm mới bảng này">
-                                                    <i class="fas fa-redo"></i>
-                                                </button>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -244,309 +194,310 @@
     }
 </script>
 <script>
-    const products = @json($products);
-    const units = @json($units);
+    // ====== Cache & helpers cho tồn kho ======
+  const __stockCache = new Map(); // key = warehouseID -> list stocks
+  function currentWarehouseId(){
+    const wh = document.querySelector('select[name="warehouseID"]');
+    return wh ? wh.value : '';
+  }
+  async function fetchStocks(warehouseID){
+    const key = String(warehouseID || '');
+    if (__stockCache.has(key)) return __stockCache.get(key);
+    const res = await fetch(`/api/stock-items?warehouseID=${encodeURIComponent(warehouseID||'')}`);
+    const list = await res.json();
+    __stockCache.set(key, list);
+    return list;
+  }
+  function formatQty(q){ try { return new Intl.NumberFormat('vi-VN').format(q); } catch { return q; } }
 
-    function renderProductOptions() {
-        return products.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
-    }
+  // Map nhanh: key = `${productID}:${unitID}` -> { stockID, quantity, unitName }
+  function indexStocks(list){
+    const idx = new Map();
+    list.forEach(s => {
+      idx.set(`${s.productID}:${s.unitID}`, { stockID: s.stockID, quantity: +s.quantity || 0, unitName: s.unitName });
+    });
+    return idx;
+  }
 
-    function renderUnitOptions() {
-        return units.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
-    }
-</script>
+  // ====== Fallback renderers (nếu chưa có) ======
+  window.renderProductOptions = window.renderProductOptions || function () {
+    const first = document.querySelector('.material-replacement-container select.original-product-select');
+    return first ? Array.from(first.options).slice(1).map(o =>
+      `<option value="${o.value}" ${o.dataset?.unit ? `data-unit="${o.dataset.unit}"` : ''} ${o.dataset?.unitName ? `data-unit-name="${o.dataset.unitName}"` : ''}>${o.textContent}</option>`
+    ).join('') : '';
+  };
+  window.renderUnitOptions = window.renderUnitOptions || function () {
+    const first = document.querySelector('.material-replacement-container select.new-unit-select');
+    return first ? Array.from(first.options).slice(1).map(o =>
+      `<option value="${o.value}">${o.textContent}</option>`
+    ).join('') : '';
+  };
 
-<script>
-    let containerCounter = 2;
+  // ====== UI helpers ======
+  function showToast(type, text){
+    if (typeof showMessage === 'function') return showMessage(type, text);
+    console[type === 'error' ? 'error' : 'log'](text);
+  }
+  function setUnitFor(scopeEl, unitFieldSuffix, unitId, unitName){
+    const unitSelect = scopeEl.querySelector(`select[name$='[${unitFieldSuffix}]']`);
+    if (!unitSelect) return;
+    unitSelect.innerHTML = unitId
+      ? `<option value="${unitId}" selected>${unitName || 'Đơn vị'}</option>`
+      : `<option value="">Chọn đơn vị</option>`;
+  }
+  // Điền đơn vị bên phải: mọi đơn vị trừ unit gốc
+  function fillUnitsExcept(unitSelect, exceptUnitId){
+    const parser = document.createElement('select');
+    parser.innerHTML = `<option value=""></option>${renderUnitOptions()}`;
+    const opts = Array.from(parser.options).slice(1);
+    const filtered = opts.filter(o => String(o.value) !== String(exceptUnitId));
+    unitSelect.innerHTML = '<option value="">Chọn đơn vị</option>' +
+      (filtered.length ? filtered.map(o => `<option value="${o.value}">${o.textContent}</option>`).join('')
+                       : '<option value="" disabled>Không có đơn vị khác</option>');
+  }
 
-    function addNewMaterialContainer() {
-        const containersDiv = document.getElementById('materialContainers');
-        const newContainer = document.createElement('div');
-        newContainer.className = 'material-replacement-container';
-        newContainer.setAttribute('data-container-id', containerCounter);
+  // ====== Trang trí TÊN VẬT TƯ bên trái thành "Tên (tồn)" ======
+  function decorateOriginalProductSelect(selectEl, stockIdx){
+    Array.from(selectEl.options).forEach((opt, i) => {
+      if (i === 0) return; // bỏ placeholder
+      const base = opt.dataset.labelBase || opt.textContent.trim();
+      if (!opt.dataset.labelBase) opt.dataset.labelBase = base;
 
-        const index = containerCounter; // mỗi container là 1 cặp nguyên liệu – vật tư mới
+      const unitId = opt.dataset.unit || ''; // đơn vị gốc của product
+      const key    = `${opt.value}:${unitId}`;
+      const info   = stockIdx.get(key);
+      const qty    = info ? info.quantity : 0;
+      opt.textContent = `${base} (${formatQty(qty)})`;
+    });
+  }
+  function decorateAllOriginalProductSelects(stockIdx){
+    document.querySelectorAll('.original-product-select').forEach(sel => decorateOriginalProductSelect(sel, stockIdx));
+  }
 
-        // Tạo HTML
-        newContainer.innerHTML = `
-            <div class="container-number">${index}</div>
-            <button type="button" class="btn-remove-container" onclick="removeMaterialContainer(${index})">
-                <i class="fas fa-times"></i>
-            </button>
+  // ====== Đồng bộ khi chọn sản phẩm bên trái ======
+  function syncLeftFromSelection(container, stockIdx){
+    const prodSel   = container.querySelector('.original-product-select');
+    const leftRow   = prodSel?.closest('.material-row');
+    const qtyInput  = container.querySelector('input[name$="[quantityProduct]"]');
+    const hiddenOld = container.querySelector('input[name$="[oldStockID]"]');
+    if (!prodSel || !leftRow || !qtyInput || !hiddenOld) return;
 
-            <!-- Nguyên Liệu Cần Đổi -->
-            <div class="replacement-section">
-                <div class="replacement-title">Nguyên Liệu Cần Đổi</div>
-                <div class="material-row">
-                    <div class="form-group">
-                        <label class="form-label">Tên vật tư</label>
-                        <select class="material-select" name="materials[${index}][productID]" required>
-                            <option value="">Chọn tên vật tư</option>
-                            ${renderProductOptions()}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Số lượng</label>
-                        <input type="number" class="material-input" name="materials[${index}][quantityProduct]" placeholder="0" min="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Đơn vị</label>
-                        <select class="material-select" name="materials[${index}][productUnitID]" required>
-                            <option value="">Chọn đơn vị</option>
-                            ${renderUnitOptions()}
-                        </select>
-                    </div>
-                </div>
-            </div>
+    const opt      = prodSel.selectedOptions[0];
+    const productId= opt?.value || '';
+    const unitId   = opt?.dataset.unit || '';
+    const unitName = opt?.dataset.unitName || '';
 
-            <div class="section-divider"></div>
+    // Khoá “Đơn vị (gốc)”
+    setUnitFor(leftRow, 'productUnitID', unitId, unitName);
 
-            <!-- Vật Tư Mới -->
-            <div class="replacement-section">
-                <div class="replacement-title">Vật Tư Mới (Thay Thế)</div>
-                <div class="material-row">
-                    <div class="form-group">
-                        <label class="form-label">Tên vật tư</label>
-                        <select class="material-select" name="materials[${index}][productDecomposeID]" required>
-                            <option value="">Chọn tên vật tư</option>
-                            ${renderProductOptions()}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Số lượng</label>
-                        <input type="number" class="material-input" name="materials[${index}][quantityDecompose]" placeholder="0" min="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Đơn vị</label>
-                        <select class="material-select" name="materials[${index}][unitDecomposeID]" required>
-                            <option value="">Chọn đơn vị</option>
-                            ${renderUnitOptions()}
-                        </select>
-                    </div>
-                </div>
-            </div>
+    // Tìm stock theo product + unit + warehouse
+    const key  = `${productId}:${unitId}`;
+    const info = stockIdx.get(key);
 
-            <div style="text-align: center; margin-top: 15px;">
-                <button type="button" class="btn-reset-materials" onclick="resetMaterialContainer(${index})" title="Làm mới bảng này">
-                    <i class="fas fa-redo"></i>
-                </button>
-            </div>
-        `;
+    hiddenOld.value = info?.stockID || '';
+    qtyInput.max    = (info?.quantity ?? 0);
+  }
 
-        containersDiv.appendChild(newContainer);
-        updateRemoveButtons();
-        containerCounter++;
-    }
+  // ====== Làm mới dữ liệu tồn + trang trí + đồng bộ mọi container ======
+  async function refreshStocksAndDecorate(){
+    const list    = await fetchStocks(currentWarehouseId());
+    const stockIdx= indexStocks(list);
 
-        // Remove material container
-        function removeMaterialContainer(containerId) {
-            const containers = document.querySelectorAll('.material-replacement-container');
-            
-            if (containers.length <= 1) {
-                showMessage('error', 'Phải có ít nhất một bảng vật tư!');
-                return;
-            }
-            
-            if (confirm('Bạn có chắc muốn xóa bảng vật tư này?')) {
-                const container = document.querySelector(`[data-container-id="${containerId}"]`);
-                if (container) {
-                    container.remove();
-                    updateContainerNumbers();
-                    updateRemoveButtons();
-                    showMessage('success', 'Đã xóa bảng vật tư!');
-                }
-            }
-        }
+    decorateAllOriginalProductSelects(stockIdx);
 
-        function resetMaterialContainer(containerId) {
-            if (confirm('Bạn có chắc muốn làm mới bảng vật tư này?')) {
-                const container = document.querySelector(`[data-container-id="${containerId}"]`);
-                if (container) {
-                    // Reset all inputs in this container
-                    const inputs = container.querySelectorAll('.material-input');
-                    const selects = container.querySelectorAll('.material-select');
-                    
-                    inputs.forEach(input => input.value = '');
-                    selects.forEach(select => select.selectedIndex = 0);
-                    
-                    showMessage('success', 'Đã làm mới bảng vật tư!');
-                }
-            }
-        }
+    document.querySelectorAll('.material-replacement-container').forEach(c => {
+      syncLeftFromSelection(c, stockIdx);
+      // cập nhật đơn vị bên phải: loại trừ unit gốc
+      const leftUnitId   = c.querySelector('.original-product-select')?.selectedOptions?.[0]?.dataset?.unit || '';
+      const rightUnitSel = c.querySelector('.new-unit-select');
+      if (rightUnitSel) fillUnitsExcept(rightUnitSel, leftUnitId);
+    });
+  }
 
-        function updateContainerNumbers() {
-            const containers = document.querySelectorAll('.material-replacement-container');
-            containers.forEach((container, index) => {
-                const numberElement = container.querySelector('.container-number');
-                const newNumber = index + 1;
-                numberElement.textContent = newNumber;
-                container.setAttribute('data-container-id', newNumber);
-                
-                // Update remove button onclick
-                const removeBtn = container.querySelector('.btn-remove-container');
-                if (removeBtn) {
-                    removeBtn.setAttribute('onclick', `removeMaterialContainer(${newNumber})`);
-                }
-                
-                // Update reset button onclick
-                const resetBtn = container.querySelector('.btn-reset-materials');
-                if (resetBtn) {
-                    resetBtn.setAttribute('onclick', `resetMaterialContainer(${newNumber})`);
-                }
-            });
-            
-            containerCounter = containers.length;
-        }
+  // ====== Event bindings ======
+  // Chọn product (trái)
+  document.addEventListener('change', async function(e){
+    if (!e.target.matches('.original-product-select')) return;
+    const container = e.target.closest('.material-replacement-container');
 
-        // Update remove buttons visibility
-        function updateRemoveButtons() {
-            const containers = document.querySelectorAll('.material-replacement-container');
-            containers.forEach((container, index) => {
-                const removeBtn = container.querySelector('.btn-remove-container');
-                if (removeBtn) {
-                    // Hide remove button on first container, show on others
-                    removeBtn.style.display = index === 0 ? 'none' : 'flex';
-                }
-            });
-        }
+    // Lấy index stock mới nhất rồi sync dòng hiện tại
+    const list     = await fetchStocks(currentWarehouseId());
+    const stockIdx = indexStocks(list);
 
-        // Auto-fill material name when code is selected
-        document.addEventListener('change', function(e) {
-            if (e.target.classList.contains('material-select') && e.target.closest('.form-group').querySelector('.form-label').textContent === 'Mã vật tư') {
-                const selectedOption = e.target.options[e.target.selectedIndex];
-                const materialName = selectedOption.text.split(' - ')[1];
-                const nameInput = e.target.closest('.material-row').querySelector('input[type="text"]');
-                if (materialName && nameInput) {
-                    nameInput.value = materialName;
-                }
-            }
-        });
+    // Trang trí lại select (đảm bảo option hiển thị số tồn)
+    decorateOriginalProductSelect(e.target, stockIdx);
 
-        // Approve request
-        function approveRequest() {
-            const allMaterials = getAllMaterialsData();
-            
-            if (allMaterials.length === 0) {
-                showMessage('error', 'Vui lòng thêm ít nhất một vật tư!');
-                return;
-            }
-            
-            if (confirm('Bạn có chắc muốn duyệt đề xuất này?')) {
-                // Update status
-                const statusBadge = document.getElementById('statusBadge');
-                statusBadge.textContent = 'Đã duyệt';
-                statusBadge.className = 'status-badge status-approved';
-                
-                showMessage('success', 'Đã duyệt đề xuất vật tư thành công!');
-                
-                // Disable form
-                disableForm();
-            }
-        }
+    // Đồng bộ đơn vị gốc + stockID + max qty
+    syncLeftFromSelection(container, stockIdx);
 
-        // Reject request
-        function rejectRequest() {
-            const reason = document.getElementById('rejectReason').value.trim();
-            if (!reason) {
-                showMessage('error', 'Vui lòng nhập lý do từ chối!');
-                document.getElementById('rejectReason').focus();
-                return;
-            }
-            
-            if (confirm('Bạn có chắc muốn từ chối đề xuất này?')) {
-                // Update status
-                const statusBadge = document.getElementById('statusBadge');
-                statusBadge.textContent = 'Từ chối';
-                statusBadge.className = 'status-badge status-rejected';
-                
-                showMessage('success', 'Đã từ chối đề xuất vật tư!');
-                
-                // Disable form
-                disableForm();
-            }
-        }
+    // Đơn vị bên phải: loại trừ đơn vị gốc
+    const leftUnitId   = e.target.selectedOptions?.[0]?.dataset?.unit || '';
+    const rightUnitSel = container.querySelector('.new-unit-select');
+    if (rightUnitSel) fillUnitsExcept(rightUnitSel, leftUnitId);
+  });
 
-        // Get all materials data from all containers
-        function getAllMaterialsData() {
-            const materials = [];
-            const containers = document.querySelectorAll('.material-replacement-container');
-            
-            containers.forEach((container, containerIndex) => {
-                const originalRow = container.querySelector('.replacement-section:first-child .material-row');
-                const newRow = container.querySelector('.replacement-section:last-child .material-row');
-                
-                // Get original material data
-                const originalCode = originalRow.querySelector('.material-select').value;
-                const originalName = originalRow.querySelector('input[type="text"]').value;
-                const originalQuantity = originalRow.querySelector('input[type="number"]').value;
-                const originalUnit = originalRow.querySelectorAll('.material-select')[1].value;
-                
-                // Get new material data
-                const newCode = newRow.querySelector('.material-select').value;
-                const newName = newRow.querySelector('input[type="text"]').value;
-                const newQuantity = newRow.querySelector('input[type="number"]').value;
-                const newUnit = newRow.querySelectorAll('.material-select')[1].value;
-                
-                if (originalCode && originalName && originalQuantity && originalUnit &&
-                    newCode && newName && newQuantity && newUnit) {
-                    materials.push({
-                        containerId: containerIndex + 1,
-                        original: { code: originalCode, name: originalName, quantity: originalQuantity, unit: originalUnit },
-                        replacement: { code: newCode, name: newName, quantity: newQuantity, unit: newUnit }
-                    });
-                }
-            });
-            
-            return materials;
-        }
+  // Chọn product (phải) → chỉ cần lọc đơn vị ≠ đơn vị gốc
+  document.addEventListener('change', function(e){
+    if (!e.target.matches('.new-product-select')) return;
+    const container   = e.target.closest('.material-replacement-container');
+    const leftUnitId  = container.querySelector('.original-product-select')?.selectedOptions?.[0]?.dataset?.unit || '';
+    const rightUnitSel= container.querySelector('.new-unit-select');
+    if (rightUnitSel) fillUnitsExcept(rightUnitSel, leftUnitId);
+  });
 
-        // Disable form after approval/rejection
-        function disableForm() {
-            const inputs = document.querySelectorAll('.material-input, .material-select, .reason-textarea');
-            const buttons = document.querySelectorAll('.btn-add-material, .btn-remove-container, .btn-reset-materials, .btn-add-new-material, .btn-approve, .btn-reject');
-            
-            inputs.forEach(input => input.disabled = true);
-            buttons.forEach(button => button.disabled = true);
-        }
+  // Đổi kho → xóa cache + refresh toàn bộ
+  document.addEventListener('change', function(e){
+    if (!e.target.matches('select[name="warehouseID"]')) return;
+    __stockCache.clear();
+    refreshStocksAndDecorate();
+  });
 
-        // Show message
-        function showMessage(type, text) {
-            const messageEl = document.getElementById(type + 'Message');
-            const textEl = document.getElementById(type + 'Text');
-            
-            textEl.textContent = text;
-            messageEl.classList.add('show');
-            
-            setTimeout(() => {
-                messageEl.classList.remove('show');
-            }, 4000);
-        }
+  // ====== Thêm / Xoá / Reset container ======
+  let nextIndex = document.querySelectorAll('.material-replacement-container').length || 1;
+  let nextId    = Math.max(0, ...Array.from(document.querySelectorAll('.material-replacement-container'))
+                          .map(c => +c.dataset.containerId || 0), 0) + 1;
 
-        // Auto-resize textarea
-        document.addEventListener('input', function(e) {
-            if (e.target.matches('.reason-textarea')) {
-                e.target.style.height = 'auto';
-                e.target.style.height = e.target.scrollHeight + 'px';
-            }
-        });
+  async function addNewMaterialContainer(){
+    const wrap = document.getElementById('materialContainers');
+    if (!wrap) { showToast('error','Thiếu #materialContainers trong DOM'); return; }
+    const index = nextIndex, id = nextId;
 
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                approveRequest();
-            }
-            
-            if (e.key === 'Escape') {
-                // Clear current focus
-                document.activeElement.blur();
-            }
-        });
+    const div = document.createElement('div');
+    div.className = 'material-replacement-container';
+    div.setAttribute('data-container-id', id);
+    div.innerHTML = `
+      <div class="container-number">${wrap.children.length + 1}</div>
+      <button type="button" class="btn-remove-container" onclick="removeMaterialContainer(${id})"><i class="fas fa-times"></i></button>
 
-        // Initialize form
-        document.addEventListener('DOMContentLoaded', function() {
-            updateRemoveButtons();
-            showMessage('success', 'Form đã sẵn sàng để sử dụng!');
-        });
+      <div class="replacement-section">
+        <div class="replacement-title">Vật Tư Cần Đổi</div>
+        <div class="material-row">
+          <div class="form-group">
+            <label class="form-label">Tên vật tư</label>
+            <select class="material-select original-product-select" name="materials[${index}][productID]" required>
+              <option value="">Chọn tên vật tư</option>
+              ${renderProductOptions()}
+            </select>
+            <input type="hidden" name="materials[${index}][oldStockID]">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Đơn vị (gốc)</label>
+            <select class="material-select original-unit-select" name="materials[${index}][productUnitID]" required>
+              <option value="">Chọn đơn vị</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Số lượng (trừ)</label>
+            <input type="number" class="material-input" name="materials[${index}][quantityProduct]" placeholder="0" min="0" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-divider"></div>
+
+      <div class="replacement-section">
+        <div class="replacement-title">Vật Tư Mới (Phân rã)</div>
+        <div class="material-row">
+          <div class="form-group">
+            <label class="form-label">Tên vật tư</label>
+            <select class="material-select new-product-select" name="materials[${index}][productDecomposeID]" required>
+              <option value="">Chọn tên vật tư</option>
+              ${renderProductOptions()}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Đơn vị (khác đơn vị gốc)</label>
+            <select class="material-select new-unit-select" name="materials[${index}][unitDecomposeID]" required>
+              <option value="">Chọn đơn vị</option>
+              ${renderUnitOptions()}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Số lượng (cộng)</label>
+            <input type="number" class="material-input" name="materials[${index}][quantityDecompose]" placeholder="0" min="0" required>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:15px;">
+        <button type="button" class="btn-reset-materials" onclick="resetMaterialContainer(${id})" title="Làm mới bảng này">
+          <i class="fas fa-redo"></i>
+        </button>
+      </div>
+    `;
+    wrap.appendChild(div);
+
+    // Trang trí tên vật tư (thêm số tồn) + sync dòng mới
+    const list     = await fetchStocks(currentWarehouseId());
+    const stockIdx = indexStocks(list);
+    decorateOriginalProductSelect(div.querySelector('.original-product-select'), stockIdx);
+    syncLeftFromSelection(div, stockIdx);
+
+    // Bên phải: loại trừ đơn vị gốc (nếu đã chọn bên trái)
+    const leftUnitId   = div.querySelector('.original-product-select')?.selectedOptions?.[0]?.dataset?.unit || '';
+    const rightUnitSel = div.querySelector('.new-unit-select');
+    if (rightUnitSel) fillUnitsExcept(rightUnitSel, leftUnitId);
+
+    updateRemoveButtons();
+    updateDisplayNumbers();
+
+    nextIndex++; nextId++;
+  }
+
+  function removeMaterialContainer(containerId){
+    const list = document.querySelectorAll('.material-replacement-container');
+    if (list.length <= 1) return showToast('error','Phải có ít nhất một bảng vật tư!');
+    const el = document.querySelector(`.material-replacement-container[data-container-id="${containerId}"]`);
+    if (!el) return;
+    if (!confirm('Bạn có chắc muốn xóa bảng vật tư này?')) return;
+    el.remove();
+    updateRemoveButtons();
+    updateDisplayNumbers();
+  }
+
+  function resetMaterialContainer(containerId){
+    const el = document.querySelector(`.material-replacement-container[data-container-id="${containerId}"]`);
+    if (!el) return;
+    if (!confirm('Bạn có chắc muốn làm mới bảng vật tư này?')) return;
+
+    // Clear inputs/selects
+    el.querySelectorAll('.material-input').forEach(i => i.value='');
+    el.querySelectorAll('.material-select').forEach(s => {
+      s.selectedIndex = 0;
+      if (s.classList.contains('original-unit-select') || s.classList.contains('new-unit-select')) {
+        s.innerHTML = '<option value="">Chọn đơn vị</option>';
+      }
+    });
+    const hiddenOld = el.querySelector('input[name$="[oldStockID]"]');
+    if (hiddenOld) hiddenOld.value = '';
+
+    // Re-sync để hiện số tồn kèm tên
+    refreshStocksAndDecorate();
+    showToast('success','Đã làm mới bảng vật tư!');
+  }
+
+  function updateRemoveButtons(){
+    document.querySelectorAll('.material-replacement-container').forEach((c,i)=>{
+      const btn = c.querySelector('.btn-remove-container');
+      if (btn) btn.style.display = (i===0?'none':'flex');
+    });
+  }
+  function updateDisplayNumbers(){
+    document.querySelectorAll('.material-replacement-container .container-number')
+      .forEach((n,i)=> n.textContent = i+1);
+  }
+
+  // Expose global
+  window.addNewMaterialContainer = addNewMaterialContainer;
+  window.removeMaterialContainer = removeMaterialContainer;
+  window.resetMaterialContainer  = resetMaterialContainer;
+
+  // Init
+  document.addEventListener('DOMContentLoaded', ()=>{
+    updateRemoveButtons();
+    updateDisplayNumbers();
+    refreshStocksAndDecorate(); // nạp tồn, trang trí "Tên (tồn)", sync max & stockID
+  });
 </script>
 <style>
     .modal-dialog {
@@ -736,8 +687,7 @@
             gap: 0.5rem;
         }
     }
-</style>
-<style>
+
     * {
         margin: 0;
         padding: 0;

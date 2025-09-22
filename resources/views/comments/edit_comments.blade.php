@@ -65,7 +65,11 @@
                                     @endforeach
                                 </select>
                             </div>
-
+                            <div class="col-md-6">
+                                <label class="form-label">Ngày Đánh Giá</label>
+                                <input type="date" name="date_comment" id="date_comment" class="form-control"
+                                    value="{{ old('date_comment', $comments->date_comment) }}">
+                            </div>
                             <!-- deductionPoints -->
                             <div class="col-md-6">
                                 <label for="deductionPoints" class="form-label">Điểm Đánh Giá</label>
@@ -79,56 +83,77 @@
                                 <input type="text" class="form-control" name="rating" value="{{ $comments->rating }}">
                             </div>
                             <div class="col-xl-6">
-                                <label class="form-label mb-1">Số Lượng Công Việc Hiện</label>
+                                <label class="form-label mb-1">Số Lượng Công Việc</label>
                                 <input type="number" class="form-control" id="countWork_display" value="0" readonly>
-                                <input type="hidden" name="countWork" id="countWork" value="0" required>
+                                <input type="hidden" name="countWork" id="countWork" value="0">
                             </div>
+
                             <div class="col-xl-6">
                                 <label class="form-label mb-1">Hoàn Thành Đúng Hạn</label>
                                 <input type="number" class="form-control" id="countCofirm_display" value="0" readonly>
-                                <input type="hidden" name="countCofirm" id="countCofirm" value="0" required>
+                                <input type="hidden" name="countCofirm" id="countCofirm" value="0">
+                            </div>
+
+                            <div class="col-xl-6">
+                                <label class="form-label mb-1">Hoàn Thành Trễ</label>
+                                <input type="number" class="form-control" id="countLate_display" value="0" readonly>
+                                <input type="hidden" name="countLate" id="countLate" value="0">
                             </div>
                             <div class="col-xl-6">
-                                <label class="form-label mb-1">Hoàn Thành Không Đúng Hạn</label>
+                                <label class="form-label mb-1">Chưa Làm</label>
                                 <input type="number" class="form-control" id="countUn_display" value="0" readonly>
-                                <input type="hidden" name="countUn" id="countUn" value="0" required>
+                                <input type="hidden" name="countUn" id="countUn" value="0">
                             </div>
                             <script>
                                 (function () {
-                                const sel = document.getElementById('workerID');
+                                    const sel  = document.getElementById('workerID');
+                                    const date = document.getElementById('date_comment');
 
-                                function number(n, d = 0) {
-                                    return Number.isFinite(n) ? Number(n) : d;
-                                }
-                                function updateFromOption(opt) {
-                                    const work   = number(+opt.dataset.countWork, 0);
-                                    const ontime = number(+opt.dataset.countCofirm, 0);
-                                    const late   = number(+opt.dataset.countUn, 0);
+                                    async function loadStats() {
+                                        const workerID = sel?.value;
+                                        if (!workerID) return;
 
-                                    // fill displays
-                                    document.getElementById('countWork_display').value   = work;
-                                    document.getElementById('countCofirm_display').value = ontime;
-                                    document.getElementById('countUn_display').value     = late;
+                                        const asOf = date?.value || '';
+                                        const url  = asOf
+                                        ? `/workers/${workerID}/task-stats?as_of=${encodeURIComponent(asOf)}`
+                                        : `/workers/${workerID}/task-stats`;
 
-                                    // hidden for submit
-                                    document.getElementById('countWork').value   = work;
-                                    document.getElementById('countCofirm').value = ontime;
-                                    document.getElementById('countUn').value     = late;
+                                        try {
+                                        const res  = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }});
+                                        const data = await res.json();
 
-                                    // on-time rate
-                                    const rate = work > 0 ? Math.round((ontime / work) * 100) : 0;
-                                    document.getElementById('onTimeRate_display').value = rate + '%';
-                                }
+                                        const work   = +data.countWork   || 0;
+                                        const ontime = +data.countCofirm || +data.doneOnTime || 0;
+                                        const late   = +data.countLate   || +data.doneLate   || 0;
+                                        const undone = +data.countUn     || +data.notDone    || 0;
 
-                                // init for selected
-                                if (sel && sel.selectedOptions.length) {
-                                    updateFromOption(sel.selectedOptions[0]);
-                                }
-                                // on change
-                                sel.addEventListener('change', function () {
-                                    if (this.selectedOptions.length) updateFromOption(this.selectedOptions[0]);
-                                });
-                            })();
+                                        // fill displays
+                                        document.getElementById('countWork_display').value   = work;
+                                        document.getElementById('countCofirm_display').value = ontime;
+                                        document.getElementById('countLate_display').value   = late;
+                                        document.getElementById('countUn_display').value     = undone;
+
+                                        // hidden
+                                        document.getElementById('countWork').value   = work;
+                                        document.getElementById('countCofirm').value = ontime;
+                                        document.getElementById('countLate').value   = late;
+                                        document.getElementById('countUn').value     = undone;
+                                        } catch (e) {
+                                        console.error(e);
+                                        ['countWork','countCofirm','countLate','countUn'].forEach(k => {
+                                            const d = document.getElementById(k + '_display');
+                                            const h = document.getElementById(k);
+                                            if (d) d.value = 0; if (h) h.value = 0;
+                                        });
+                                        }
+                                    }
+
+                                    sel?.addEventListener('change', loadStats);
+                                    date?.addEventListener('change', loadStats);
+
+                                    // nạp lần đầu
+                                    loadStats();
+                                    })();
                             </script>
                             <div class="col-md-4">
                                 <label for="status" class="form-label">Trạng Thái</label>

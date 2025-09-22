@@ -52,12 +52,39 @@
     .close-btn:hover {
         color: red;
     }
+
+    @media (max-width: 768px) {
+        #plantFilters {
+            /* display: block !important; */
+        }
+    }
 </style>
 
 <div id="map-modal" style="display:none;">
     <div class="modal-content">
         <span class="close-btn" onclick="hideMapModal()">&times;</span>
-        <div id="viewMap" style="width:100%; height:500px;"></div>
+        <div id="plantFilters" class="map-toolbar" style="width:100%;gap:.5rem;align-items:center;margin-bottom:.5rem;">
+            <input id="searchPlant" class="form-control" type="text" placeholder="Tìm mã cây…"
+                style="width:20% !important;">
+            <select id="filterStatus" class="form-select" style="width:10% !important;">
+                <option value="">Trạng Thái</option>
+                <option value="Hoạt động">Hoạt động</option>
+            </select>
+            <select id="filterVariety" class="form-select" style="width:10% !important;">
+                <option value="">Giống</option>
+            </select>
+            <select id="filterYear" class="form-select" style="width:10% !important;">
+                <option value="">Năm Trồng</option>
+            </select>
+            <button id="btnZoomVisible" class="btn btn-success" type="button" style="width:5% !important;"><i
+                    class="fa-solid fa-magnifying-glass"></i></button>
+            <button id="btnResetFilters" class="btn btn-danger" type="button" style="width:5% !important;"><i
+                    class="fa-solid fa-delete-left"></i></button>
+            <span id="filterCount" style="margin-left:.5rem;color:#555;" style="width:5% !important;"></span>
+        </div>
+        <div id="viewMap" style="height:740px"></div>
+
+        {{-- <div id="viewMap" style="width:100%; height:740px;"></div> --}}
     </div>
 </div>
 
@@ -85,180 +112,781 @@
 </script>
 <script>
     $(document).on('click', '.view-map', function () {
-    const id_plot = $(this).data('id_plot');
-    const allPlots = @json($all_plots);
-    const plot = allPlots.find(p => p.id === id_plot);
-    if (!plot) { alert("Không tìm thấy plot!"); return; }
-
-    $('#loading-message').fadeIn();
-    $('#map-modal').fadeIn();
-
-    // Xóa view cũ (nếu có) để tránh rò bộ nhớ khi mở nhiều lần
-    if (window.__arcgisView) { try { window.__arcgisView.destroy(); } catch(e){} }
-    const containerEl = document.getElementById('viewMap');
-    if (containerEl) containerEl.innerHTML = "";
-
-    require([
-      "esri/WebMap",
-      "esri/views/MapView",
-      "esri/config",
-      "esri/layers/GraphicsLayer",
-      "esri/Graphic",
-      "esri/geometry/Polygon",
-      "esri/symbols/TextSymbol",
-      "esri/geometry/Point",
-      "esri/geometry/geometryEngine",
-      "esri/geometry/support/webMercatorUtils",
-      "esri/geometry/projection"
-    ], function (
-      WebMap, MapView, esriConfig, GraphicsLayer, Graphic, Polygon, TextSymbol, Point,
-      geometryEngine, webMercatorUtils, projection
-    ) {
-
-        esriConfig.apiKey = 'AAPTxy8BH1VEsoebNVZXo8HurOadC8u-UIHoZRb-lXA-3rkDu_-XvNmTAkDyub3lRUmC8opcXCyL0s2ZXRCaabr-0W_mTQODDQjoxFA7bzeneym8cc7T6retjmqiAgVD52KNfFwO9aDBzBNwGpXLnZxmDumfBBo5NSsT3CPe8mcayFVA4-iaFGgByWubANLOFhj3AgrYBaWsfyCBJSz76VDY6OFtZElcdmA7m9bmHkvGfOo.AT1_x0a0pTBz';
-      const map = new WebMap({ portalItem: { id: "5ec8ed782e5146d1909f76e14e293059" } });
-      const view = new MapView({
-        container: "viewMap",
-        map,
-        zoom: 12,
-        center: [107.3877, 10.6695]
-      });
-      window.__arcgisView = view; // lưu để lần sau có thể destroy
-
-      // Layers
-      const otherPlotsLayer = new GraphicsLayer({ id: "otherPlotsLayer" });
-      const highlightLayer = new GraphicsLayer({ id: "highlightLayer" });
-      const treeLayer      = new GraphicsLayer({ id: "treeLayer" });
-      map.addMany([otherPlotsLayer, highlightLayer, treeLayer]);
-
-      // === Helpers: chuyển SR & tạo lưới điểm trong polygon ===
-      function projectToWebMercator(geom) {
-        if (geom.spatialReference && geom.spatialReference.isWGS84) {
-          return webMercatorUtils.geographicToWebMercator(geom);
-        }
-        if (geom.spatialReference && geom.spatialReference.isWebMercator) {
-          return geom;
-        }
-        return projection.project(geom, { wkid: 3857 });
-      }
-
-      function generateGridPointsInPolygon(polygonGeom, spacingMeters = 120, jitterRatio = 0.12) {
-        return projection.load().then(function () {
-          const polyWM = projectToWebMercator(polygonGeom);
-          const extent = polyWM.extent;
-          const step = spacingMeters; // mét trong WebMercator
-          const ptsWM = [];
-
-          for (let y = extent.ymin + step / 2; y <= extent.ymax; y += step) {
-            for (let x = extent.xmin + step / 2; x <= extent.xmax; x += step) {
-              const jx = jitterRatio ? (Math.random() - 0.5) * step * jitterRatio * 2 : 0;
-              const jy = jitterRatio ? (Math.random() - 0.5) * step * jitterRatio * 2 : 0;
-              const pt = new Point({ x: x + jx, y: y + jy, spatialReference: polyWM.spatialReference });
-              if (geometryEngine.contains(polyWM, pt)) ptsWM.push(pt);
+        const id_plot = $(this).data('id_plot');
+        const allPlots = @json($all_plots);
+        const apiKey   = @json($apikeys);
+        const firstPlot = allPlots.find(p => p.id === id_plot);
+        if (!firstPlot) { alert("Không tìm thấy plot!"); return; }
+        $('#loading-message').fadeIn();
+        $('#map-modal').fadeIn();
+        if (window.__arcgisView) { try { window.__arcgisView.destroy(); } catch(e){} }
+        const containerEl = document.getElementById('viewMap');
+        if (containerEl) containerEl.innerHTML = "";
+        require([
+            "esri/WebMap",
+            "esri/views/MapView",
+            "esri/config",
+            "esri/layers/GraphicsLayer",
+            "esri/Graphic",
+            "esri/geometry/Polygon",
+            "esri/geometry/Point"
+        ], function (WebMap, MapView, esriConfig, GraphicsLayer, Graphic, Polygon, Point) {
+            esriConfig.apiKey = apiKey;
+            ["/imgs/treemapp.png","/imgs/treemap.png","/imgs/cay_benh.png","/imgs/cay_nga.png","/imgs/tree-dead.png"]
+              .forEach(src => { const i = new Image(); i.src = src; });
+            const map = new WebMap({ portalItem: { id: "5ec8ed782e5146d1909f76e14e293059" } });
+            const view = new MapView({
+                container: "viewMap",
+                map,
+                zoom: 12,
+                center: [107.3877, 10.6695]
+            });
+            window.__arcgisView = view;
+            // ====== STATE ======
+            let currentPlotId = null;
+            const plotGfxMap = new Map();
+            const plantCountByPlot = new Map();
+            const loadedPlots = new Set();
+            let currentPlotGraphic = null;
+            // ====== Quản lý popup ======
+            view.popup.autoOpenEnabled = false;
+            map.when(() => {
+                const allow = new Set(["treeLayer","highlightLayer","otherPlotsLayer"]);
+                map.allLayers.forEach(layer => {
+                    if (!allow.has(layer.id) && "popupEnabled" in layer) layer.popupEnabled = false;
+                    if ("allSublayers" in layer && layer.allSublayers) {
+                        layer.allSublayers.forEach(sl => { if ("popupEnabled" in sl) sl.popupEnabled = false; });
+                    }
+                });
+            });
+            // ====== Layers ======
+            const otherPlotsLayer = new GraphicsLayer({ id: "otherPlotsLayer" });
+            const highlightLayer  = new GraphicsLayer({ id: "highlightLayer"  });
+            const treeLayer       = new GraphicsLayer({ id: "treeLayer"       });
+            map.addMany([otherPlotsLayer, highlightLayer, treeLayer]);
+            map.layers.reorder(otherPlotsLayer,  map.layers.length - 3);
+            map.layers.reorder(highlightLayer,   map.layers.length - 2);
+            map.layers.reorder(treeLayer,        map.layers.length - 1);
+            // ====== ICONS & helpers ======
+            const ICONS = {
+                normal:  "/imgs/treemapp.png",
+                disease: "/imgs/cay_benh.png",
+                broken:  "/imgs/cay_nga.png",
+                dead:    "/imgs/tree-dead.png",
+                default: "/imgs/treemap.png",
+            };
+            function treeSymbol(sizePx = 26, url = ICONS.default) {
+                return { type: "picture-marker", url, width: `${sizePx}px`, height: `${sizePx}px`, yoffset: `${Math.round(sizePx*0.35)}px` };
             }
-          }
+            function iconUrlByStatus(status) {
+                const s = (status || "").trim().toLowerCase();
+                const sNorm = s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
+                if (s.includes("sâu bệnh") || sNorm.includes("sau benh") || s.includes("bệnh") || sNorm.includes("benh")) {
+                    return ICONS.disease;
+                }
+                if (s.includes("gãy") || sNorm.includes("gay") || sNorm.includes("gay do") || s.includes("đổ") || sNorm === "do") {
+                    return ICONS.broken;
+                }
+                if (s.includes("chết") || sNorm.includes("chet")) {
+                    return ICONS.dead;
+                }
+                return ICONS.normal;
+            }
+            function sizeByScale(scale) {
+                if (scale > 120000) return 0;
+                if (scale >  60000) return 18;
+                if (scale >  30000) return 22;
+                return 26;
+            }
+            // --- Hợp nhất hiển thị: theo lọc & theo scale ---
+            function updateGraphicVisibility(g) {
+                const a = g.attributes || {};
+                const byFilter = a.__matchFilter !== false;
+                const byScale  = a.__matchScale  !== false;
+                g.visible = byFilter && byScale;
+            }
+            // ====== Utils plot ======
+            function buildPolygonFromMapJs(mapJs) {
+                const data = JSON.parse(mapJs);
+                if (!(data.type === "FeatureCollection" && data.features.length)) return null;
+                const f = data.features[0];
+                if (f.geometry.type === "Polygon") {
+                    return new Polygon({ rings: f.geometry.coordinates, spatialReference: { wkid: 4326 } });
+                } else if (f.geometry.type === "MultiPolygon") {
+                    return new Polygon({ rings: f.geometry.coordinates.flat(), spatialReference: { wkid: 4326 } });
+                }
+                return null;
+            }
+            function makePlotPopupTemplate() {
+                return {
+                    title: "Lô {plotCode}",
+                    content: [
+                        { type: "fields", fieldInfos: [
+                            { fieldName: "plotCode",   label: "Mã lô" },
+                            { fieldName: "plotName",   label: "Tên lô" },
+                            { fieldName: "area",       label: "Diện tích", format: { places: 2 } },
+                            { fieldName: "year",       label: "Năm trồng" },
+                            { fieldName: "status",     label: "Hiện trạng" },
+                            { fieldName: "plantCount", label: "Số cây" }
+                        ]}
+                    ]
+                };
+            }
+            function addOtherPlotGraphic(p) {
+                const geom = buildPolygonFromMapJs(p.mapJs);
+                if (!geom) return;
+                let props = {};
+                try { props = JSON.parse(p.mapJs)?.features?.[0]?.properties || {}; } catch {}
+                const g = new Graphic({
+                    geometry: geom,
+                    symbol: { type: "simple-fill", color: [255,255,255,0.08], outline: { color: [120,120,120,0.8], width: 1 } },
+                    attributes: {
+                        plotID: p.id,
+                        plotCode: p.plotCode ?? props.Ma_lo ?? "",
+                        plotName: p.plotName ?? props.Ten_lo ?? "",
+                        area: p.plotArea ?? props.Dien_tich ?? null,
+                        year: p.year ?? props.Nam_trong ?? null,
+                        status: p.status ?? props.Hien_trang ?? "",
+                        plantCount: plantCountByPlot.get(p.id) || 0
+                    },
+                    popupTemplate: makePlotPopupTemplate()
+                });
+                otherPlotsLayer.add(g);
+                plotGfxMap.set(p.id, g);
+            }
+            function renderAllOtherPlots(excludeId = null) {
+                otherPlotsLayer.removeAll();
+                plotGfxMap.clear();
+                for (const p of allPlots) {
+                    if (!p.mapJs) continue;
+                    if (excludeId && p.id === excludeId) continue;
+                    addOtherPlotGraphic(p);
+                }
+            }
 
-          // Trả về đúng SR ban đầu
-          if (polygonGeom.spatialReference && polygonGeom.spatialReference.isWGS84) {
-            return ptsWM.map(p => webMercatorUtils.webMercatorToGeographic(p));
-          }
-          if (polygonGeom.spatialReference && polygonGeom.spatialReference.isWebMercator) {
-            return ptsWM;
-          }
-          return ptsWM.map(p => projection.project(p, polygonGeom.spatialReference));
+            // ====== Highlight plot ======
+            async function setHighlightPlot(plotId, openPopupAt=null) {
+                const p = allPlots.find(x => x.id === plotId);
+                if (!p || !p.mapJs) return;
+                currentPlotId = plotId;
+                highlightLayer.removeAll();
+                const geom = buildPolygonFromMapJs(p.mapJs);
+                if (!geom) return;
+                let props = {};
+                try { props = JSON.parse(p.mapJs)?.features?.[0]?.properties || {}; } catch {}
+                currentPlotGraphic = new Graphic({
+                    geometry: geom,
+                    symbol: { type: "simple-fill", color: [255,0,0,0.25], outline: { color: [255,255,255,1], width: 2.5 } },
+                    attributes: {
+                        plotID: p.id,
+                        plotCode: p.plotCode ?? props.Ma_lo ?? "",
+                        plotName: p.plotName ?? props.Ten_lo ?? "",
+                        area: p.plotArea ?? props.Dien_tich ?? null,
+                        year: p.year ?? props.Nam_trong ?? null,
+                        status: p.status ?? props.Hien_trang ?? "",
+                        plantCount: plantCountByPlot.get(p.id) || 0
+                    },
+                    popupTemplate: makePlotPopupTemplate()
+                });
+                highlightLayer.add(currentPlotGraphic);
+                await view.goTo({ target: geom, zoom: 16 }, { duration: 300 });
+                if (openPopupAt) {
+                    view.popup.open({ features: [currentPlotGraphic], location: openPopupAt, updateLocationEnabled: true });
+                }
+                renderAllOtherPlots(plotId);
+            }
+            // ====== Load cây (mọi lô) ======
+            function addPlantGraphic(pObj, plant) {
+                const lat = +plant.lat, lng = +plant.lng;
+                if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+                const pt  = new Point({ latitude: lat, longitude: lng, spatialReference: { wkid: 4326 } });
+                const url = iconUrlByStatus(plant.statusTree);
+                const initSize = sizeByScale(view.scale) || 26;
+                const scaleOK  = sizeByScale(view.scale) > 0;
+                const g = new Graphic({
+                    geometry: pt,
+                    symbol: treeSymbol(initSize, url),
+                    attributes: {
+                        plotID: pObj.id,
+                        id: plant.id,
+                        plantCode: plant.plantCode,
+                        varietyName: plant.varietyName ?? `#${plant.varietyID}`,
+                        year: plant.year,
+                        statusTree: plant.statusTree,
+                        lat, lng,
+                        __matchFilter: true,
+                        __matchScale:  scaleOK
+                    },
+                    popupTemplate: {
+                        title: "{plantCode}",
+                        content: [
+                            { type: "fields", fieldInfos: [
+                                { fieldName: "plantCode", label: "Mã Cây" },
+                                { fieldName: "varietyName", label: "Giống" },
+                                { fieldName: "year",        label: "Năm trồng" },
+                                { fieldName: "statusTree",  label: "Trạng thái" },
+                                { fieldName: "lat",         label: "Lat" },
+                                { fieldName: "lng",         label: "Lng" },
+                            ] }
+                        ]
+                    }
+                });
+                treeLayer.add(g);
+                updateGraphicVisibility(g);
+
+                const old = plantCountByPlot.get(pObj.id) || 0;
+                plantCountByPlot.set(pObj.id, old + 1);
+            }
+            async function loadPlantsForPlot(pObj) {
+                if (loadedPlots.has(pObj.id)) return;
+                try {
+                    const res = await fetch(`/plots/${pObj.id}/plants`, { headers: { 'Accept': 'application/json' }});
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const plants = await res.json();
+                    if (Array.isArray(plants) && plants.length) {
+                        plants.forEach(pl => addPlantGraphic(pObj, pl));
+                        loadedPlots.add(pObj.id);
+
+                        if (currentPlotGraphic && currentPlotGraphic.attributes.plotID === pObj.id) {
+                            currentPlotGraphic.attributes.plantCount = plantCountByPlot.get(pObj.id);
+                        }
+                        const otherG = plotGfxMap.get(pObj.id);
+                        if (otherG) otherG.attributes.plantCount = plantCountByPlot.get(pObj.id);
+                    }
+                } catch (e) {
+                    console.warn('Load plants failed for plot', pObj.id, e);
+                }
+            }
+            // Giới hạn đồng thời khi load tất cả
+            async function preloadAllPlants(concurrency = 4) {
+                const queue = allPlots.filter(p => p.mapJs);
+                let idx = 0;
+                async function worker() {
+                    while (idx < queue.length) {
+                        const p = queue[idx++];
+                        await loadPlantsForPlot(p);
+                    }
+                }
+                const workers = Array.from({length: concurrency}, worker);
+                await Promise.all(workers);
+            }
+            // ====== Lọc / Tìm kiếm (không ghi đè trực tiếp visible) ======
+            function stripVN(s=''){ 
+                return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase();
+            }
+            function populateFilterOptionsFromLayer(){
+                const selVar = document.getElementById('filterVariety');
+                const selYear= document.getElementById('filterYear');
+                if (!selVar || !selYear) return;
+                const varieties = new Set();
+                const years = new Set();
+                treeLayer.graphics.forEach(g=>{
+                    const a = g.attributes || {};
+                    if (a.varietyName) varieties.add(a.varietyName);
+                    if (a.year!=null)  years.add(a.year);
+                });
+                selVar.innerHTML  = `<option value="">Giống</option>` + [...varieties].sort().map(v=>`<option>${v}</option>`).join('');
+                selYear.innerHTML = `<option value="">Năm trồng</option>` + [...years].sort((a,b)=>a-b).map(y=>`<option>${y}</option>`).join('');
+                const toolbar = document.getElementById('plantFilters');
+                if (toolbar) toolbar.style.display = 'flex';
+            }
+            function goToVisibleTrees(duration=400){
+                const geoms = treeLayer.graphics.filter(g=>g.visible).map(g=>g.geometry);
+                if (geoms.length) view.goTo(geoms, { duration });
+            }
+            function applyFiltersGoTo(){
+                const sQ = document.getElementById('searchPlant');
+                const sS = document.getElementById('filterStatus');
+                const sV = document.getElementById('filterVariety');
+                const sY = document.getElementById('filterYear');
+                const cL = document.getElementById('filterCount');
+                const q  = sQ ? stripVN(sQ.value.trim()) : "";
+                const st = sS ? sS.value : "";
+                const va = sV ? sV.value : "";
+                const yr = sY ? sY.value : "";
+                let visibleCount = 0;
+                treeLayer.graphics.forEach(g=>{
+                    const a = g.attributes || {};
+                    let ok = true;
+                    if (q)  ok = stripVN(a.plantCode||'').includes(q);
+                    if (ok && st) ok = (a.statusTree||'') === st;
+                    if (ok && va) ok = (a.varietyName||'') === va;
+                    if (ok && yr) ok = String(a.year||'') === String(yr);
+                    a.__matchFilter = ok;
+                    g.attributes = a;
+                    updateGraphicVisibility(g);
+                    if (g.visible) visibleCount++;
+                });
+                if (cL) cL.textContent = `${visibleCount} / ${treeLayer.graphics.length} cây`;
+                if (visibleCount > 0) goToVisibleTrees(350);
+            }
+            let filtersWired = false;
+            function wireFilterEvents(){
+                if (filtersWired) return;
+                const el = id => document.getElementById(id);
+                if (!el('searchPlant')) return;
+                let timer;
+                const debouncedRun = ()=>{ clearTimeout(timer); timer=setTimeout(applyFiltersGoTo, 180); };
+                el('searchPlant').addEventListener('input', debouncedRun);
+                el('filterStatus').addEventListener('change', applyFiltersGoTo);
+                el('filterVariety').addEventListener('change', applyFiltersGoTo);
+                el('filterYear').addEventListener('change', applyFiltersGoTo);
+                el('btnResetFilters').addEventListener('click', ()=>{
+                    el('searchPlant').value = '';
+                    el('filterStatus').value = '';
+                    el('filterVariety').value = '';
+                    el('filterYear').value = '';
+                    applyFiltersGoTo();
+                });
+                el('btnZoomVisible').addEventListener('click', ()=> goToVisibleTrees(300));
+                filtersWired = true;
+            }
+            // ====== INIT ======
+            view.when(async () => {
+                renderAllOtherPlots(firstPlot.id);
+                await setHighlightPlot(firstPlot.id);
+                await loadPlantsForPlot(firstPlot);
+                preloadAllPlants(4).then(()=>{
+                    populateFilterOptionsFromLayer();
+                    applyFiltersGoTo();
+                });
+                // Không ghi đè visible ở đây nữa – chỉ cập nhật cờ scale + size
+                view.watch("scale", () => {
+                    const size = sizeByScale(view.scale);
+                    const byScale = size > 0;
+                    treeLayer.graphics.forEach(g => {
+                        if (g.symbol?.type === "picture-marker" && byScale) {
+                            g.symbol.width  = `${size}px`;
+                            g.symbol.height = `${size}px`;
+                            g.symbol.yoffset = `${Math.round(size * 0.35)}px`;
+                        }
+                        const a = g.attributes || {};
+                        a.__matchScale = byScale;
+                        g.attributes = a;
+                        updateGraphicVisibility(g);
+                    });
+                });
+                wireFilterEvents();
+                $('#loading-message').fadeOut();
+            });
+            // ====== CLICK ======
+            view.on("immediate-click", async (event) => {
+                let { results } = await view.hitTest(event, { include: [treeLayer] });
+                if (results?.length) {
+                    const g = results[0].graphic;
+                    await view.goTo({ target: g.geometry, zoom: 18 }, { duration: 250 });
+                    view.popup.open({ features: [g], location: g.geometry, updateLocationEnabled: true });
+                    return;
+                }
+                ({ results } = await view.hitTest(event, { include: [highlightLayer] }));
+                if (results?.length) {
+                    const g = results[0].graphic;
+                    await view.goTo({ target: g.geometry, zoom: 16 }, { duration: 250 });
+                    view.popup.open({ features: [g], location: event.mapPoint, updateLocationEnabled: true });
+                    return;
+                }
+                ({ results } = await view.hitTest(event, { include: [otherPlotsLayer] }));
+                if (results?.length) {
+                    const g = results[0].graphic;
+                    const pid = g.attributes.plotID;
+                    await setHighlightPlot(pid, event.mapPoint);
+                    const pObj = allPlots.find(x => x.id === pid);
+                    if (pObj) loadPlantsForPlot(pObj);
+                    return;
+                }
+                view.popup.close();
+            });
+            // Hover: pointer
+            view.on("pointer-move", async (evt) => {
+                const t = await view.hitTest(evt, { include: [treeLayer, highlightLayer, otherPlotsLayer] });
+                view.container.style.cursor = t?.results?.length ? "pointer" : "default";
+            });
         });
-      }
-      // === Hết helpers ===
-
-      view.when(async () => {
-        otherPlotsLayer.removeAll();
-        highlightLayer.removeAll();
-        treeLayer.removeAll();
-
-        // Parse GeoJSON lô đang chọn
-        let geojson;
-        try { geojson = JSON.parse(plot.mapJs); }
-        catch (err) { console.error("Lỗi parse GeoJSON:", err); $('#loading-message').fadeOut(); return; }
-
-        // Vẽ tất cả lô khác mờ hơn
-        for (const p of allPlots) {
-          if (!p.mapJs || p.id === plot.id) continue;
-          let data;
-          try { data = JSON.parse(p.mapJs); } catch { continue; }
-          if (data.type !== "FeatureCollection" || !data.features.length) continue;
-
-          const f = data.features[0];
-          let geom;
-          if (f.geometry.type === "Polygon") {
-            geom = new Polygon({ rings: f.geometry.coordinates });
-          } else if (f.geometry.type === "MultiPolygon") {
-            geom = new Polygon({ rings: f.geometry.coordinates.flat() });
-          } else continue;
-
-          otherPlotsLayer.add(new Graphic({
-            geometry: geom,
-            symbol: {
-              type: "simple-fill",
-              color: [255, 255, 255, 0.08],
-              outline: { color: [120, 120, 120, 0.8], width: 1 }
-            }
-          }));
-        }
-
-        // Vẽ lô đang chọn + đi tới
-        if (geojson.type === "FeatureCollection" && geojson.features.length > 0) {
-          const feature = geojson.features[0];
-          let polygonGeometry;
-          if (feature.geometry.type === "Polygon") {
-            polygonGeometry = new Polygon({ rings: feature.geometry.coordinates });
-          } else if (feature.geometry.type === "MultiPolygon") {
-            polygonGeometry = new Polygon({ rings: feature.geometry.coordinates.flat() });
-          } else {
-            alert("GeoJSON không phải Polygon/MultiPolygon"); $('#loading-message').fadeOut(); return;
-          }
-
-          // Nền đỏ mờ + viền trắng dày cho nổi bật
-          highlightLayer.add(new Graphic({
-            geometry: polygonGeometry,
-            symbol: {
-              type: "simple-fill",
-              color: [255, 0, 0, 0.3],
-              outline: { color: [255, 255, 255, 1], width: 3 }
-            }
-          }));
-
-          await view.goTo({ target: polygonGeometry, zoom: 16 }, { duration: 400 });
-
-          const TREE_SPACING_M = 60;  
-          const JITTER = 0.12;     
-          const points = await generateGridPointsInPolygon(polygonGeometry, TREE_SPACING_M, JITTER);
-
-          for (const pt of points) {
-            treeLayer.add(new Graphic({
-              geometry: pt,
-              symbol: {
-                type: "simple-marker",
-                style: "circle",
-                size: 6,
-                color: [0, 128, 0, 1],                  // xanh lá
-                outline: { color: [255, 255, 255, 1], width: 0.5 }
-              }
-              // Muốn icon PNG:
-              // symbol: { type: "picture-marker", url: "/images/tree-icon.png", width: "16px", height: "16px" }
-            }));
-          }
-
-          // Ẩn cây khi zoom quá xa để đỡ rối/nặng
-          view.watch("scale", s => { treeLayer.visible = s < 30000; });
-        } else {
-          alert("Plot chưa có dữ liệu GeoJSON hợp lệ!");
-        }
-
-        $('#loading-message').fadeOut();
-      });
     });
-  });
 </script>
+
+{{-- <script>
+    $(document).on('click', '.view-map', function () {
+        const id_plot = $(this).data('id_plot');
+        const allPlots = @json($all_plots);
+        const apiKey   = @json($apikeys);
+        const firstPlot = allPlots.find(p => p.id === id_plot);
+        if (!firstPlot) { alert("Không tìm thấy plot!"); return; }
+        $('#loading-message').fadeIn();
+        $('#map-modal').fadeIn();
+        if (window.__arcgisView) { try { window.__arcgisView.destroy(); } catch(e){} }
+        const containerEl = document.getElementById('viewMap');
+        if (containerEl) containerEl.innerHTML = "";
+        require([
+            "esri/WebMap",
+            "esri/views/MapView",
+            "esri/config",
+            "esri/layers/GraphicsLayer",
+            "esri/Graphic",
+            "esri/geometry/Polygon",
+            "esri/geometry/Point"
+        ], function (WebMap, MapView, esriConfig, GraphicsLayer, Graphic, Polygon, Point) {
+            esriConfig.apiKey = apiKey;
+            // === (NEW) Preload icons để tránh nháy ===
+            ["/imgs/treemap.png","/imgs/tree-spray.png","/imgs/tree-broken.png","/imgs/tree-dead.png"]
+              .forEach(src => { const i = new Image(); i.src = src; });
+            const map = new WebMap({ portalItem: { id: "5ec8ed782e5146d1909f76e14e293059" } });
+            const view = new MapView({
+                container: "viewMap",
+                map,
+                zoom: 12,
+                center: [107.3877, 10.6695]
+            });
+            window.__arcgisView = view;
+            // ====== STATE ======
+            let currentPlotId = null;
+            const plotGfxMap = new Map();
+            const plantCountByPlot = new Map(); 
+            const loadedPlots = new Set();
+            let currentPlotGraphic = null;
+            // ====== Quản lý popup ======
+            view.popup.autoOpenEnabled = false;
+            map.when(() => {
+                const allow = new Set(["treeLayer","highlightLayer","otherPlotsLayer"]);
+                map.allLayers.forEach(layer => {
+                    if (!allow.has(layer.id) && "popupEnabled" in layer) layer.popupEnabled = false;
+                    if ("allSublayers" in layer && layer.allSublayers) {
+                        layer.allSublayers.forEach(sl => { if ("popupEnabled" in sl) sl.popupEnabled = false; });
+                    }
+                });
+            });
+            // ====== Layers ======
+            const otherPlotsLayer = new GraphicsLayer({ id: "otherPlotsLayer" }); // lô khác
+            const highlightLayer  = new GraphicsLayer({ id: "highlightLayer"  }); // lô đang chọn
+            const treeLayer       = new GraphicsLayer({ id: "treeLayer"       }); // tất cả cây (mọi lô)
+            map.addMany([otherPlotsLayer, highlightLayer, treeLayer]);
+            map.layers.reorder(otherPlotsLayer,  map.layers.length - 3);
+            map.layers.reorder(highlightLayer,   map.layers.length - 2);
+            map.layers.reorder(treeLayer,        map.layers.length - 1);
+            const ICONS = {
+                normal:  "/imgs/treemapp.png",  // tốt
+                disease: "/imgs/cay_benh.png",  // sâu bệnh / bệnh -> icon bình phun
+                broken:  "/imgs/cay_nga.png",   // gãy đổ
+                default: "/imgs/treemap.png",
+            };
+            function treeSymbol(sizePx = 25, url = ICONS.default) {
+                return { type: "picture-marker", url, width: `${sizePx}px`, height: `${sizePx}px`, yoffset: `${Math.round(sizePx*0.35)}px` };
+            }
+            // (UPDATED) Ánh xạ trạng thái → icon
+            function iconUrlByStatus(status) {
+                const s = (status || "").trim().toLowerCase();
+                // bản không dấu để bắt các cách gõ
+                const sNorm = s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');
+                // sâu bệnh / bệnh
+                if (s.includes("sâu bệnh") || sNorm.includes("sau benh") || s.includes("bệnh") || sNorm.includes("benh")) {
+                    return ICONS.disease;
+                }
+                // gãy đổ (bắt "gãy", "gay", "gay do", "đổ", "do")
+                if (s.includes("gãy") || sNorm.includes("gay") || sNorm.includes("gay do") || s.includes("đổ") || sNorm === "do") {
+                    return ICONS.broken;
+                }
+                return ICONS.normal;
+            }
+            function sizeByScale(scale) {
+                if (scale > 120000) return 0;
+                if (scale >  60000) return 14;
+                if (scale >  30000) return 18;
+                return 22;
+            }
+            // ====== Utils plot ======
+            function buildPolygonFromMapJs(mapJs) {
+                const data = JSON.parse(mapJs);
+                if (!(data.type === "FeatureCollection" && data.features.length)) return null;
+                const f = data.features[0];
+                if (f.geometry.type === "Polygon") {
+                    return new Polygon({ rings: f.geometry.coordinates, spatialReference: { wkid: 4326 } });
+                } else if (f.geometry.type === "MultiPolygon") {
+                    return new Polygon({ rings: f.geometry.coordinates.flat(), spatialReference: { wkid: 4326 } });
+                }
+                return null;
+            }
+            function makePlotPopupTemplate() {
+                return {
+                    title: "Lô {plotCode}",
+                    content: [
+                        { type: "fields", fieldInfos: [
+                            { fieldName: "plotName",   label: "Tên lô" },
+                            { fieldName: "area",       label: "Diện tích", format: { places: 2 } },
+                            { fieldName: "year",       label: "Năm trồng" },
+                            { fieldName: "status",     label: "Hiện trạng" },
+                            { fieldName: "plantCount", label: "Số cây" }
+                        ]}
+                    ]
+                };
+            }
+            function addOtherPlotGraphic(p) {
+                const geom = buildPolygonFromMapJs(p.mapJs);
+                if (!geom) return;
+                let props = {};
+                try { props = JSON.parse(p.mapJs)?.features?.[0]?.properties || {}; } catch {}
+                const g = new Graphic({
+                    geometry: geom,
+                    symbol: { type: "simple-fill", color: [255,255,255,0.08], outline: { color: [120,120,120,0.8], width: 1 } },
+                    attributes: {
+                        plotID: p.id,
+                        plotCode: p.plotCode ?? props.Ten_lo ?? "",
+                        plotName: p.plotName ?? props.Ten_lo ?? "",
+                        area: p.plotArea ?? props.Dien_tich ?? null,
+                        year: p.year ?? props.Nam_trong ?? null,
+                        status: p.status ?? props.Hien_trang ?? "",
+                        plantCount: plantCountByPlot.get(p.id) || 0
+                    },
+                    popupTemplate: makePlotPopupTemplate()
+                });
+                otherPlotsLayer.add(g);
+                plotGfxMap.set(p.id, g);
+            }
+            function renderAllOtherPlots(excludeId = null) {
+                otherPlotsLayer.removeAll();
+                plotGfxMap.clear();
+                for (const p of allPlots) {
+                    if (!p.mapJs) continue;
+                    if (excludeId && p.id === excludeId) continue;
+                    addOtherPlotGraphic(p);
+                }
+            }
+            // ====== Highlight plot ======
+            async function setHighlightPlot(plotId, openPopupAt=null) {
+                const p = allPlots.find(x => x.id === plotId);
+                if (!p || !p.mapJs) return;
+                currentPlotId = plotId;
+                highlightLayer.removeAll();
+                const geom = buildPolygonFromMapJs(p.mapJs);
+                if (!geom) return;
+
+                let props = {};
+                try { props = JSON.parse(p.mapJs)?.features?.[0]?.properties || {}; } catch {}
+                currentPlotGraphic = new Graphic({
+                    geometry: geom,
+                    symbol: { type: "simple-fill", color: [255,0,0,0.25], outline: { color: [255,255,255,1], width: 2.5 } },
+                    attributes: {
+                        plotID: p.id,
+                        plotCode: p.plotCode ?? props.Ten_lo ?? "",
+                        plotName: p.plotName ?? props.Ten_lo ?? "",
+                        area: p.plotArea ?? props.Dien_tich ?? null,
+                        year: p.year ?? props.Nam_trong ?? null,
+                        status: p.status ?? props.Hien_trang ?? "",
+                        plantCount: plantCountByPlot.get(p.id) || 0
+                    },
+                    popupTemplate: makePlotPopupTemplate()
+                });
+                highlightLayer.add(currentPlotGraphic);// di chuyển đến lô
+                await view.goTo({ target: geom, zoom: 16 }, { duration: 300 });
+
+                if (openPopupAt) {
+                    view.popup.open({ features: [currentPlotGraphic], location: openPopupAt, updateLocationEnabled: true });
+                }
+                renderAllOtherPlots(plotId);// loại lô đang chọn khỏi lớp "khác"
+            }
+            // ====== Load cây (mọi lô) ======
+            function addPlantGraphic(pObj, plant) {
+                const lat = +plant.lat, lng = +plant.lng;
+                if (Number.isNaN(lat) || Number.isNaN(lng)) return;
+                const pt  = new Point({ latitude: lat, longitude: lng, spatialReference: { wkid: 4326 } });
+                const url = iconUrlByStatus(plant.statusTree);
+                const initSize = sizeByScale(view.scale) || 18;
+                const g = new Graphic({
+                    geometry: pt,
+                    symbol: treeSymbol(initSize, url),
+                    attributes: {
+                        plotID: pObj.id,
+                        id: plant.id,
+                        plantCode: plant.plantCode,
+                        varietyName: plant.varietyName ?? `#${plant.varietyID}`,
+                        year: plant.year,
+                        statusTree: plant.statusTree,
+                        lat, lng
+                    },
+                    popupTemplate: {
+                        title: "{plantCode}",
+                        content: [
+                            { type: "fields", fieldInfos: [
+                                { fieldName: "varietyName", label: "Giống" },
+                                { fieldName: "year",        label: "Năm trồng" },
+                                { fieldName: "statusTree",  label: "Trạng thái" },
+                                { fieldName: "lat",         label: "Lat" },
+                                { fieldName: "lng",         label: "Lng" },
+                            ] }
+                        ]
+                    }
+                });
+                treeLayer.add(g);
+                const old = plantCountByPlot.get(pObj.id) || 0;
+                plantCountByPlot.set(pObj.id, old + 1);
+            }
+            async function loadPlantsForPlot(pObj) {
+                if (loadedPlots.has(pObj.id)) return;
+                try {
+                    const res = await fetch(`/plots/${pObj.id}/plants`, { headers: { 'Accept': 'application/json' }});
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    const plants = await res.json();
+                    if (Array.isArray(plants) && plants.length) {
+                        plants.forEach(pl => addPlantGraphic(pObj, pl));
+                        loadedPlots.add(pObj.id);
+                        // cập nhật count cho popup lô đang chọn (nếu trùng)
+                        if (currentPlotGraphic && currentPlotGraphic.attributes.plotID === pObj.id) {
+                            currentPlotGraphic.attributes.plantCount = plantCountByPlot.get(pObj.id);
+                        }
+                        // cập nhật count cho graphic ở otherPlotsLayer (nếu có)
+                        const otherG = plotGfxMap.get(pObj.id);
+                        if (otherG) otherG.attributes.plantCount = plantCountByPlot.get(pObj.id);
+                    }
+                } catch (e) {
+                    console.warn('Load plants failed for plot', pObj.id, e);
+                }
+            }
+            // Giới hạn đồng thời khi load tất cả
+            async function preloadAllPlants(concurrency = 4) {
+                const queue = allPlots.filter(p => p.mapJs);
+                let idx = 0;
+                async function worker() {
+                    while (idx < queue.length) {
+                        const p = queue[idx++];
+                        await loadPlantsForPlot(p);
+                    }
+                }
+                const workers = Array.from({length: concurrency}, worker);
+                await Promise.all(workers);
+            }
+            // ====== Lọc / Tìm kiếm (goTo tới kết quả) ======
+            function stripVN(s=''){ 
+                return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase();
+            }
+            function populateFilterOptionsFromLayer(){
+                const selVar = document.getElementById('filterVariety');
+                const selYear= document.getElementById('filterYear');
+                if (!selVar || !selYear) return;
+                const varieties = new Set();
+                const years = new Set();
+                treeLayer.graphics.forEach(g=>{
+                    const a = g.attributes || {};
+                    if (a.varietyName) varieties.add(a.varietyName);
+                    if (a.year!=null)  years.add(a.year);
+                });
+                selVar.innerHTML  = `<option value="">Giống (tất cả)</option>` + [...varieties].sort().map(v=>`<option>${v}</option>`).join('');
+                selYear.innerHTML = `<option value="">Năm trồng (tất cả)</option>` + [...years].sort((a,b)=>a-b).map(y=>`<option>${y}</option>`).join('');
+                const toolbar = document.getElementById('plantFilters');
+                if (toolbar) toolbar.style.display = 'flex';
+            }
+            function goToVisibleTrees(duration=400){
+                const geoms = treeLayer.graphics.filter(g=>g.visible).map(g=>g.geometry);
+                if (geoms.length) view.goTo(geoms, { duration });
+            }
+            function applyFiltersGoTo(){
+                const sQ = document.getElementById('searchPlant');
+                const sS = document.getElementById('filterStatus');
+                const sV = document.getElementById('filterVariety');
+                const sY = document.getElementById('filterYear');
+                const cL = document.getElementById('filterCount');
+                const q  = sQ ? stripVN(sQ.value.trim()) : "";
+                const st = sS ? sS.value : "";
+                const va = sV ? sV.value : "";
+                const yr = sY ? sY.value : "";
+                let visibleCount = 0;
+                treeLayer.graphics.forEach(g=>{
+                    const a = g.attributes || {};
+                    let ok = true;
+                    if (q)  ok = stripVN(a.plantCode||'').includes(q);
+                    if (ok && st) ok = (a.statusTree||'') === st;        // so sánh chính xác chuỗi
+                    if (ok && va) ok = (a.varietyName||'') === va;
+                    if (ok && yr) ok = String(a.year||'') === String(yr);
+
+                    g.visible = ok;
+                    if (ok) visibleCount++;
+                });
+                if (cL) cL.textContent = `${visibleCount} / ${treeLayer.graphics.length} cây`;
+                if (visibleCount > 0) goToVisibleTrees(350);
+            }
+            let filtersWired = false;
+            function wireFilterEvents(){
+                if (filtersWired) return;
+                const el = id => document.getElementById(id);
+                if (!el('searchPlant')) return;
+                let timer;
+                const debouncedRun = ()=>{ clearTimeout(timer); timer=setTimeout(applyFiltersGoTo, 180); };
+                el('searchPlant').addEventListener('input', debouncedRun);
+                el('filterStatus').addEventListener('change', applyFiltersGoTo);
+                el('filterVariety').addEventListener('change', applyFiltersGoTo);
+                el('filterYear').addEventListener('change', applyFiltersGoTo);
+                el('btnResetFilters').addEventListener('click', ()=>{
+                    el('searchPlant').value = '';
+                    el('filterStatus').value = '';
+                    el('filterVariety').value = '';
+                    el('filterYear').value = '';
+                    applyFiltersGoTo();
+                });
+                el('btnZoomVisible').addEventListener('click', ()=> goToVisibleTrees(300));
+                filtersWired = true;
+            }
+            // ====== INIT ======
+            view.when(async () => {
+                renderAllOtherPlots(firstPlot.id);// vẽ tất cả lô (trừ lô đầu tiên sẽ làm highlight)
+                await setHighlightPlot(firstPlot.id);// highlight lô đầu và bay tới
+                await loadPlantsForPlot(firstPlot);// load cây cho lô đầu ngay
+                // preload TẤT CẢ cây (mọi lô) với giới hạn đồng thời
+                preloadAllPlants(4).then(()=>{
+                    populateFilterOptionsFromLayer();  // cập nhật options Giống/Năm
+                    applyFiltersGoTo();                // chạy lọc (mặc định là "tất cả") + goTo extent cây
+                });
+                // co giãn icon theo zoom
+                view.watch("scale", () => {
+                    const size = sizeByScale(view.scale);
+                    treeLayer.graphics.forEach(g => {
+                        if (g.symbol?.type !== "picture-marker") return;
+                        g.visible = size > 0;
+                        if (size > 0) {
+                            g.symbol.width  = `${size}px`;
+                            g.symbol.height = `${size}px`;
+                            g.symbol.yoffset = `${Math.round(size * 0.35)}px`;
+                        }
+                    });
+                });
+                wireFilterEvents();
+                $('#loading-message').fadeOut();
+            });
+            // ====== CLICK: cây → (goTo cây & popup) | lô (goTo lô & popup) ======
+            view.on("immediate-click", async (event) => {
+                // 1) cây
+                let { results } = await view.hitTest(event, { include: [treeLayer] });
+                if (results?.length) {
+                    const g = results[0].graphic;
+                    // bay tới cây & mở popup
+                    await view.goTo({ target: g.geometry, zoom: 18 }, { duration: 250 });
+                    view.popup.open({ features: [g], location: g.geometry, updateLocationEnabled: true });
+                    return;
+                }
+                // 2) lô đang chọn
+                ({ results } = await view.hitTest(event, { include: [highlightLayer] }));
+                if (results?.length) {
+                    const g = results[0].graphic;
+                    await view.goTo({ target: g.geometry, zoom: 16 }, { duration: 250 });
+                    view.popup.open({ features: [g], location: event.mapPoint, updateLocationEnabled: true });
+                    return;
+                }
+                // 3) lô khác → set highlight + bay tới + (nếu chưa load) load cây
+                ({ results } = await view.hitTest(event, { include: [otherPlotsLayer] }));
+                if (results?.length) {
+                    const g = results[0].graphic;
+                    const pid = g.attributes.plotID;
+                    await setHighlightPlot(pid, event.mapPoint);
+                    const pObj = allPlots.find(x => x.id === pid);
+                    if (pObj) loadPlantsForPlot(pObj); // nếu chưa load thì load; cây sẽ hiện luôn trong layer chung
+                    return;
+                }
+                view.popup.close();
+            });
+            view.on("pointer-move", async (evt) => {
+                const t = await view.hitTest(evt, { include: [treeLayer, highlightLayer, otherPlotsLayer] });
+                view.container.style.cursor = t?.results?.length ? "pointer" : "default";
+            });
+        });
+    });
+</script> --}}
 
 <!-- Add plots Modal -->
 <form id="plots-form" action="{{ route('plots.save') }}" method="POST" enctype="multipart/form-data">

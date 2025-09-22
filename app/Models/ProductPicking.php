@@ -19,11 +19,11 @@ class ProductPicking extends Model
 
     public function product()
     {
-        return $this->belongsTo(Product::class, 'productID');
+        return $this->belongsTo(Product::class, 'productID', 'id');
     }
 
     public function picking()
     {
-        return $this->belongsTo(Picking::class, 'pickingID');
+        return $this->belongsTo(Picking::class, 'pickingID', 'id');
     }
 }

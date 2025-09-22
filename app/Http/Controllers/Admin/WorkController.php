@@ -20,12 +20,44 @@ use App\Models\Worker;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Yajra\DataTables\DataTables;
 
 class WorkController extends Controller
 {
+    public function taskStats($workerId, Request $request)
+    {
+        $asOf = $request->filled('as_of')
+            ? Carbon::parse($request->as_of)->endOfDay()
+            : null;
+        $base = GenTask::where('workerID', $workerId);
+        if ($asOf) {
+            $base->where('created_at', '<=', $asOf);
+        }
+        $countWork  = (clone $base)->count();                         // tổng task
+        $doneOnTime = (clone $base)->completedOnTime()->count();      // Hoàn thành
+        $doneLate   = (clone $base)->completedLate()->count();        // Hoàn thành trễ
+        $notDone    = (clone $base)->pending()->count();              // Đang chờ
+        // (Tuỳ chọn) Tách đang chờ — đúng hạn vs quá hạn
+        $pendingOnTrack = (clone $base)->pendingOnTrack()->count();
+        $pendingOverdue = (clone $base)->pendingOverdue()->count();
+        return response()->json([
+            'success'         => true,
+            'countWork'       => $countWork,
+            'doneOnTime'      => $doneOnTime,
+            'doneLate'        => $doneLate,
+            'notDone'         => $notDone,
+            'countCofirm'     => $doneOnTime,
+            'countLate'       => $doneLate,
+            'countUn'         => $notDone,
+            'pendingOnTrack'  => $pendingOnTrack,
+            'pendingOverdue'  => $pendingOverdue,
+        ]);
+    }
+
     public function index(Request $request)
     {
         $works = Work::all();
@@ -220,10 +252,10 @@ class WorkController extends Controller
 
             if ($work->workType === 'Khai thác') {
                 $rules = array_merge($rules, [
-                    'materials'            => 'required|array|min:1',
-                    'materials.*.productID' => 'required',
-                    'materials.*.quantity'  => 'required|numeric',
-                    'materials.*.unitID'    => 'required',
+                    'materials'            => 'nullable',
+                    'materials.*.productID' => 'nullable',
+                    'materials.*.quantity'  => 'nullable|numeric',
+                    'materials.*.unitID'    => 'nullable',
                 ]);
                 $messages = array_merge($messages, [
                     'materials.required'               => 'Cần chọn ít nhất 1 vật tư.',
@@ -276,6 +308,7 @@ class WorkController extends Controller
 
             if ($work->workType === 'Khai thác') {
                 $picking = Picking::create([
+                    'taskID'      => $task->id,
                     'code'        => $request->code,
                     'name'        => $request->name,
                     'type'        => 'Khai thác',
@@ -290,8 +323,8 @@ class WorkController extends Controller
                 foreach ($request->materials ?? [] as $material) {
                     ProductPicking::create([
                         'pickingID' => $picking->id,
-                        'productID' => $material['productID'],
-                        'quantity'  => $material['quantity'],
+                        'productID' => $material['productID'] ?? null,
+                        'quantity'  => $material['quantity'] ?? 0,
                     ]);
                 }
             }
@@ -321,80 +354,169 @@ class WorkController extends Controller
         $gardens = Garden::all();
         $workers = Worker::all();
         $plots = Plot::all();
-
-        $gentasks = GenTask::with('plants.variety', 'taskProductProposals.proposalProducts.product', 'taskProductProposals.proposalProducts.unit')->findOrFail($id);
+        $warehouses = WareHouse::where('id', 2)->get();
+        $categories = Category::orderBy('name')->get();
+        $units     = UnitOfMeasure::orderBy('name')->get();
+        $gentasks = GenTask::with('plants.variety', 'taskProductProposals.proposalProducts.product', 'taskProductProposals.proposalProducts.unit', 'pickings.productPickings.product.unit')->findOrFail($id);
         $plants = Plant::with('variety')->get();
-        return view('works.edit_work', compact('gardens', 'workers', 'works', 'plots', 'gentasks', 'plants'));
+        return view('works.edit_work', compact('gardens', 'workers', 'works', 'plots', 'gentasks', 'plants', 'warehouses', 'categories', 'units'));
     }
     public function update(Request $request, $id)
     {
         // dd($request->all());
-        $existingGenTask = GenTask::where('code', $request->code)->where('id', '!=', $id)->first();
+        $existingGenTask = GenTask::where(function ($query) use ($request, $id) {
+            $query->where('code', $request->code);
+        })->where('id', '!=', $id)->first();
 
-        // $existingGenTask = GenTask::where(function ($query) use ($request, $id) {
-        //     $query->where('code', $request->code);
-        // })->where('id', '!=', $id)->first();
+        if ($existingGenTask && $existingGenTask->code === $request->code) {
+            return redirect()->back()->with(['error' => 'Mã công việc này đã tồn tại!']);
+        }
 
-        // if ($existingGenTask) {
-
-        // if ($existingGenTask->code === $request->code) {
-        //     return redirect()->back()->with(['error' => 'Mã công việc này đã tồn tại!']);
-        // }
-        // }
         try {
-            $gentasks = GenTask::find($id);
+            $gentasks = GenTask::with(['pickings.productPickings'])->find($id);
             if (!$gentasks) {
                 return redirect()->back()->with('error', 'Công việc không tồn tại');
             }
             $request->validate([
-                'workID' => 'required',
-                'workerID' => 'required',
-                'workDate' => 'required',
-                'dateEnd' => 'required|after_or_equal:workDate',
-                'plotID' => 'required',
-                'type' => 'required',
-                'priority' => 'required',
-                'description' => 'nullable',
+                'workID'      => 'required|exists:works,id',
+                'workerID'    => 'required|exists:workers,id',
+                'workName'    => 'required|string|max:255',
+                'workDate'    => 'required|date',
+                'dateEnd'     => 'required|date|after_or_equal:workDate',
+                'plotID'      => 'required|exists:plots,id',
+                'type'        => 'required|in:0,1',
+                'priority'    => 'required|in:Thấp,Trung bình,Cao,Khẩn cấp',
+                'description' => 'nullable|string',
+                'plantIDs'    => 'required|array|min:1',
+                'plantIDs.*'  => 'integer|exists:plants,id',
+
+                'pickings'    => 'sometimes|array',
+                'pickings.*.warehouseID'           => 'sometimes|exists:ware_houses,id',
+                'pickings.*.createDate'            => 'sometimes|date',
+                'pickings.*.desc'                  => 'sometimes|nullable|string',
+                'pickings.*.type'                  => 'sometimes|string',
+
+                'pickings.*.materials'             => 'sometimes|array',
+                'pickings.*.materials.*.id'        => 'sometimes|integer|exists:product_pickings,id',
+                'pickings.*.materials.*.productID' => 'sometimes|exists:products,id',
+                'pickings.*.materials.*.quantity'  => 'sometimes|numeric|min:0',
             ], [
-                'dateEnd.after_or_equal'    => 'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.',
+                'dateEnd.after_or_equal' => 'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu.',
             ]);
-            if ($gentasks->workID != $request->workID || $gentasks->workerID != $request->workerID) {
-                $taskSlug = Str::slug($request->workID, '_');
-                $taskSlug1 = Str::slug($request->workerID);
-                $prefix = '#' . $taskSlug . '_' . $taskSlug1;
-                do {
-                    $randomCode = $prefix . rand(100, 999);
-                } while (GenTask::where('code', $randomCode)->exists());
-                $gentasks->code = $randomCode;
+            //  Ràng buộc cây thuộc lô
+            $invalidPlants = Plant::whereIn('id', $request->plantIDs)
+                ->where('plotID', '!=', $request->plotID)
+                ->count();
+            if ($invalidPlants > 0) {
+                return back()->withErrors(['plantIDs' => 'Một hoặc nhiều cây không thuộc lô đã chọn'])->withInput();
+            }
+            //(Khuyến nghị) Bổ sung check thủ công: dòng mới (không id) thì bắt buộc có productID + quantity
+            $pickingsInput = $request->input('pickings', []);
+            $manualErrors = [];
+            foreach ($pickingsInput as $pid => $payload) {
+                if (!empty($payload['materials']) && is_array($payload['materials'])) {
+                    foreach ($payload['materials'] as $i => $row) {
+                        $hasId = !empty($row['id']);
+                        if (!$hasId) {
+                            if (empty($row['productID'])) {
+                                $manualErrors["pickings.$pid.materials.$i.productID"] = 'Bắt buộc khi thêm dòng mới.';
+                            }
+                            if ($row['quantity'] === null || $row['quantity'] === '') {
+                                $manualErrors["pickings.$pid.materials.$i.quantity"] = 'Bắt buộc khi thêm dòng mới.';
+                            }
+                        }
+                    }
+                }
+            }
+            if (!empty($manualErrors)) {
+                throw ValidationException::withMessages($manualErrors);
             }
 
-            $gentasks->update([
-                'workID' => $request->workID,
-                'workName' => $request->workName,
-                'workerID' => $request->workerID,
-                'workDate' => $request->workDate,
-                'plotID' => $request->plotID,
-                'type' => $request->type,
-                'workDate' => $request->workDate,
-                'priority' => $request->priority,
-                'description' => $request->description,
-                'workStatus' => $request->workStatus,
-            ]);
-            $gentasks->plants()->sync($request->plantIDs);
+            DB::transaction(function () use ($request, $gentasks, $pickingsInput) {
+                if ($gentasks->workID != $request->workID || $gentasks->workerID != $request->workerID) {
+                    $taskSlug  = Str::slug($request->workID, '_');
+                    $taskSlug1 = Str::slug($request->workerID);
+                    $prefix    = '#' . $taskSlug . '_' . $taskSlug1;
+                    do {
+                        $randomCode = $prefix . rand(100, 999);
+                    } while (GenTask::where('code', $randomCode)->exists());
+                    $gentasks->code = $randomCode;
+                }
+                $gentasks->update([
+                    'workID'      => $request->workID,
+                    'workName'    => $request->workName,
+                    'workerID'    => $request->workerID,
+                    'workDate'    => $request->workDate,
+                    'dateEnd'     => $request->dateEnd,
+                    'plotID'      => $request->plotID,
+                    'type'        => $request->type,
+                    'priority'    => $request->priority,
+                    'description' => $request->description,
+                    'workStatus'  => $request->workStatus ?? $gentasks->workStatus,
+                ]);
+                $gentasks->plants()->sync($request->plantIDs);
 
-            ActionHistory::create([
-                'user_id' => Auth::id(),
-                'action_type' => 'update',
-                'model_type' => 'GenTask',
-                'details' => "Đã cập nhật công việc: " . $gentasks->workName . " với mã: " . $gentasks->code,
-            ]);
-            return redirect()->route('works.index')->with('message', 'Cập nhật công việc thành công');
+                if (is_array($pickingsInput)) {
+                    $existingPickings = $gentasks->pickings->keyBy('id');
+
+                    foreach ($pickingsInput as $pickingId => $payload) {
+                        $pickingId = (int)$pickingId;
+                        /** @var \App\Models\Picking|null $picking */
+                        $picking = $existingPickings->get($pickingId);
+                        if (!$picking) {
+                            continue;
+                        }
+                        $toUpdate = [];
+                        if (array_key_exists('warehouseID', $payload)) $toUpdate['warehouseID'] = $payload['warehouseID'];
+                        if (array_key_exists('createDate',  $payload)) $toUpdate['createDate']  = $payload['createDate'];
+                        if (array_key_exists('desc',        $payload)) $toUpdate['desc']        = $payload['desc'];
+                        if (array_key_exists('type',        $payload)) $toUpdate['type']        = $payload['type'];
+
+                        if (!empty($toUpdate)) {
+                            $picking->update($toUpdate);
+                        }
+
+                        if (!empty($payload['materials']) && is_array($payload['materials'])) {
+                            $ppMap = $picking->productPickings->keyBy('id');
+
+                            foreach ($payload['materials'] as $row) {
+                                $rowId = isset($row['id']) ? (int)$row['id'] : null;
+
+                                if ($rowId && $ppMap->has($rowId)) {
+                                    // UPDATE dòng cũ
+                                    $ppUpdate = [];
+                                    if (array_key_exists('productID', $row)) $ppUpdate['productID'] = $row['productID'];
+                                    if (array_key_exists('quantity',  $row)) $ppUpdate['quantity']  = $row['quantity'];
+
+                                    if (!empty($ppUpdate)) {
+                                        $ppMap->get($rowId)->update($ppUpdate);
+                                    }
+                                } else {
+                                    if (!empty($row['productID']) && $row['quantity'] !== null && $row['quantity'] !== '') {
+                                        $picking->productPickings()->create([
+                                            'productID' => (int)$row['productID'],
+                                            'quantity'  => $row['quantity'],
+                                        ]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                ActionHistory::create([
+                    'user_id'     => Auth::id(),
+                    'action_type' => 'update',
+                    'model_type'  => 'GenTask',
+                    'details'     => "Đã cập nhật công việc: {$gentasks->workName} với mã: {$gentasks->code}",
+                ]);
+            });
+
+            return redirect()->route('works.index')->with('message', 'Cập nhật công việc & sản lượng thành công');
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             return back()->withErrors($e->getMessage())->withInput();
-
-            // return redirect()->back()
-            //     ->withErrors(['error' => 'Có lỗi xảy ra khi tạo công việc: ' . $e->getMessage()])
-            //     ->withInput();
         }
     }
     public function destroy($id)
@@ -444,14 +566,52 @@ class WorkController extends Controller
     }
     public function toggleStatus(Request $request)
     {
-        $gen = GenTask::find($request->id);
-        if ($gen) {
-            $gen->workStatus = $gen->workStatus == 'Hoàn thành' ? 'Đang chờ' : 'Hoàn thành';
-            $gen->save();
-            return response()->json(['success' => true, 'workStatus' => $gen->workStatus]);
-        } else {
-            return response()->json(['success' => false]);
+        $request->validate([
+            'id' => ['required', 'integer', 'exists:gen_tasks,id'],
+        ]);
+        $t = GenTask::findOrFail($request->id);
+        if (in_array($t->workStatus, ['Hoàn thành', 'Hoàn thành trễ'], true)) {
+            $t->workStatus   = 'Đang chờ';
+            $t->completed_at = null;
+            $t->save();
+            return response()->json([
+                'success'  => true,
+                'status'   => $t->workStatus,   // 'Đang chờ'
+                'deadline' => 'pending',
+                'message'  => 'Đã chuyển về trạng thái Đang chờ.',
+            ]);
         }
+        $t->completed_at = $t->completed_at ?? now();
+        $deadlineAt = $t->dateEnd ? \Carbon\Carbon::parse($t->dateEnd)->endOfDay() : null;
+        $completedAt = $t->completed_at;
+        $deadline  = 'no_deadline';
+        $label     = 'Đúng hạn';
+        $lateDays  = 0;
+        if ($deadlineAt && $completedAt->gt($deadlineAt)) {
+            $t->workStatus = 'Hoàn thành trễ';
+            $deadline      = 'late';
+            $label         = 'Trễ';
+            $lateDays      = $deadlineAt->diffInDays($completedAt);
+            $tooltip       = "Hoàn thành TRỄ {$lateDays} ngày (hoàn thành: " . $completedAt->format('d/m/Y H:i') . ", hạn: " . $deadlineAt->format('d/m/Y H:i') . ")";
+        } else {
+            $t->workStatus = 'Hoàn thành';
+            $deadline      = $deadlineAt ? 'on_time' : 'no_deadline';
+            $tooltip       = $deadlineAt
+                ? "Hoàn thành ĐÚNG HẠN (hoàn thành: " . $completedAt->format('d/m/Y H:i') . ", hạn: " . $deadlineAt->format('d/m/Y H:i') . ")"
+                : "Hoàn thành (không có hạn)";
+        }
+        $t->save();
+        return response()->json([
+            'success'      => true,
+            'status'       => $t->workStatus, // 'Hoàn thành' | 'Hoàn thành trễ'
+            'deadline'     => $deadline, // on_time | late | no_deadline
+            'label'        => $label,
+            'late_days'    => $lateDays,
+            'completed_at' => $t->completed_at?->toIso8601String(),
+            'dateEnd'      => $deadlineAt?->toIso8601String(),
+            'tooltip'      => $tooltip ?? null,
+            'message'      => 'Cập nhật trạng thái thành công.',
+        ]);
     }
 
     public function index1(Request $request)

@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\ValidationException;
 use Yajra\DataTables\DataTables;
 
 class MaterialProposalController extends Controller
@@ -89,58 +90,86 @@ class MaterialProposalController extends Controller
     }
     public function add(Request $request)
     {
-        $warehouses = WareHouse::where('id', 1)->get();
-        $units = UnitOfMeasure::all();
-        $products = Product::all();
-        $works = Work::all();
+        $warehouses = WareHouse::where('id', 1)->get(['id', 'name']);
+        $products   = Product::with(['unit:id,name'])
+            ->get(['id', 'name', 'unitID']);
+        $units      = UnitOfMeasure::all(['id', 'name']);
+        $works      = Work::all();
         $diseaseplant = DiseasePlant::all();
         return view('Dxcb.add_Cb', compact('warehouses', 'units', 'products', 'works', 'diseaseplant'));
     }
     public function save(Request $request)
     {
-        $request->validate([
-            'proposaName'  => 'required|string|max:255',
-            'proposalDate' => 'nullable',
-            'approvalDate' => 'nullable',
-            'diseaseplantID'  => 'nullable|integer',
-            'status'       => 'nullable|string',
-            'reason'       => 'nullable|string',
+        $validated = $request->validate([
+            'proposaName'    => 'required|string|max:255',
+            'proposalDate'   => 'nullable|date',
+            'approvalDate'   => 'nullable|date',
+            'diseaseplantID' => 'nullable|integer',
+            'status'         => 'nullable|string',
+            'reason'         => 'nullable|string',
 
             'items'               => 'required|array|min:1',
             'items.*.id'          => 'nullable|integer',
             'items.*.productID'   => 'required|integer|exists:products,id',
             'items.*.warehouseID' => 'required|integer|exists:ware_houses,id',
-            'items.*.unitID'      => 'required',
+            'items.*.unit'        => 'required|integer|exists:unit_of_measures,id',
             'items.*.quantity'    => 'required|numeric|min:0.000001',
             'items.*.note'        => 'nullable|string',
         ]);
-        $proposal = MaterialProposal::create([
-            'proposaName' => $request->proposaName,
-            'proposalDate' => $request->proposalDate,
-            'approvalDate' => $request->approvalDate,
-            'diseaseplantID' => $request->diseaseplantID,
-            'status' => $request->status ?? 'Chờ duyệt',
-            'created_by' => Auth::id(),
-            'reason' => $request->reason,
-        ]);
-        foreach ($request->items as $item) {
-            MaterialProposalItem::create([
-                'material_proposal_id' => $proposal->id,
-                'warehouseID' => $item['warehouseID'],
-                'productID' => $item['productID'],
-                'materialQuantity' => $item['quantity'],
-                'unitID' => $item['unit'],
-                'note' => $item['note'],
-                'status' => 'Chờ duyệt',
-            ]);
+        foreach ($validated['items'] as $i => $it) {
+            $exists = InventoryStock::where('warehouseID', $it['warehouseID'])
+                ->where('productID',   $it['productID'])
+                ->where('unitID',      $it['unit'])
+                ->exists();
+
+            if (!$exists) {
+                throw ValidationException::withMessages([
+                    "items.$i.unit" => "Dòng " . ($i + 1) . ": Đơn vị không tồn tại trong tồn kho của vật tư/kho đã chọn.",
+                ]);
+            }
         }
-        ActionHistory::create([
-            'user_id' => Auth::id(),
-            'action_type' => 'create',
-            'model_type' => 'MaterialProposal',
-            'details' => "Đã tạo đề xuất: " . $request->proposaName,
-        ]);
-        return redirect()->route('materialproposals.index')->with('message', 'Tạo đề xuất thành công');
+        DB::transaction(function () use ($validated) {
+            $proposal = MaterialProposal::create([
+                'proposaName'   => $validated['proposaName'],
+                'proposalDate'  => $validated['proposalDate'] ?? null,
+                'approvalDate'  => $validated['approvalDate'] ?? null,
+                'diseaseplantID' => $validated['diseaseplantID'] ?? null,
+                'status'        => $validated['status'] ?? 'Chờ duyệt',
+                'created_by'    => Auth::id(),
+                'reason'        => $validated['reason'] ?? null,
+            ]);
+            $logDetails = "Đã tạo đề xuất: {$validated['proposaName']}<br>";
+            foreach ($validated['items'] as $item) {
+                MaterialProposalItem::create([
+                    'material_proposal_id' => $proposal->id,
+                    'warehouseID'          => $item['warehouseID'],
+                    'productID'            => $item['productID'],
+                    'materialQuantity'     => $item['quantity'],
+                    'unitID'               => $item['unit'],
+                    'note'                 => $item['note'] ?? null,
+                    'status'               => 'Chờ duyệt',
+                ]);
+                $product  = Product::find($item['productID']);
+                $warehouse = WareHouse::find($item['warehouseID']);
+                $unit      = UnitOfMeasure::find($item['unit']);
+
+                $logDetails .= "- {$product->name} ({$item['quantity']} {$unit->name}) tại kho {$warehouse->name}";
+                if (!empty($item['note'])) {
+                    $logDetails .= " | Ghi chú: {$item['note']}";
+                }
+                $logDetails .= "<br>";
+            }
+
+            ActionHistory::create([
+                'user_id'     => Auth::id(),
+                'action_type' => 'create',
+                'model_type'  => 'MaterialProposal',
+                'details'     => $logDetails,
+            ]);
+        });
+        return redirect()
+            ->route('materialproposals.index')
+            ->with('message', 'Tạo đề xuất thành công');
     }
     public function edit($id)
     {
@@ -155,7 +184,6 @@ class MaterialProposalController extends Controller
     }
     public function update(Request $request, $id)
     {
-        // validate
         $request->validate([
             'proposaName'  => 'required|string|max:255',
             'proposalDate' => 'nullable',

@@ -28,7 +28,7 @@ class Picking extends Model
 
     public function warehouse()
     {
-        return $this->belongsTo(WareHouse::class, 'warehouseID');
+        return $this->belongsTo(WareHouse::class, 'warehouseID', 'id');
     }
     public function decompose()
     {
@@ -42,15 +42,15 @@ class Picking extends Model
 
     public function task()
     {
-        return $this->belongsTo(GenTask::class, 'taskID');
+        return $this->belongsTo(GenTask::class, 'taskID', 'id');
     }
 
     public function productPickings()
     {
-        return $this->hasMany(ProductPicking::class, 'pickingID');
+        return $this->hasMany(ProductPicking::class, 'pickingID', 'id');
     }
     public function productProposalPickings()
     {
-        return $this->hasMany(ProductProposalPicking::class, 'pickingID');
+        return $this->hasMany(ProductProposalPicking::class, 'pickingID', 'id');
     }
 }

@@ -79,78 +79,72 @@
 
                                 <!-- Treatment Plan Section -->
                                 <div style="border-top: 1px solid #e5e7eb; padding-top: 1.5rem; margin-top: 1.5rem;">
+                                    <script>
+                                        const PRODUCTS_DATA = @json($productsGrouped);
+                                    </script>
                                     <div id="treatmentSteps" style="margin-top: 1rem;">
                                         <div class="treatment-step"
-                                            style="display: flex; gap: 1rem; margin-bottom: 1rem; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; background-color: #D4F7D1;">
-                                            <div
-                                                style="display: flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; background-color: #3b82f6; color: white; border-radius: 50%; font-weight: bold;">
+                                            style="display:flex; gap:1rem; margin-bottom:1rem; padding:1rem; border:1px solid #e5e7eb; border-radius:.5rem; background-color:#D4F7D1;">
+                                            <div class="step-number"
+                                                style="display:flex; align-items:center; justify-content:center; width:2rem; height:2rem; background:#3b82f6; color:#fff; border-radius:50%; font-weight:bold;">
                                                 1</div>
-                                            <div style="flex: 1;">
-                                                <div class="form-row" style="margin-bottom: 0.5rem;">
+
+                                            <div style="flex:1;">
+                                                <div class="form-row" style="margin-bottom:.5rem;">
                                                     <div class="form-group">
                                                         <label class="form-label">Kho</label>
                                                         <select class="form-select"
-                                                            name="invoice_products[0][warehouseID]">
+                                                            name="invoice_products[0][warehouseID]" required>
                                                             @foreach($warehouses as $w)
-                                                            <option value="{{ $w->id }}" {{
-                                                                old('invoice_products.0.warehouseID')==$w->id ?
-                                                                'selected' : '' }}>{{ $w->name }}</option>
+                                                            <option value="{{ $w->id }}">{{ $w->name }}</option>
                                                             @endforeach
                                                         </select>
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Tên Vật Tư</label>
                                                         <select class="form-select"
-                                                            name="invoice_products[0][productID]">
+                                                            name="invoice_products[0][productID]" required>
                                                             <option value="">-- Chọn vật tư --</option>
-                                                            @foreach($products as $p)
-                                                            <option value="{{ $p->id }}" {{
-                                                                old('invoice_products.0.productID')==$p->id ? 'selected'
-                                                                : '' }}>{{ $p->name }}</option>
+                                                            @foreach($productsGrouped as $p)
+                                                            <option value="{{ $p['id'] }}"
+                                                                data-units='@json($p["units"])'>{{ $p['name'] }}
+                                                            </option>
                                                             @endforeach
                                                         </select>
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Số Lượng</label>
-                                                        <input type="number" class="form-input"
-                                                            name="invoice_products[0][quantity]"
-                                                            value="{{ old('invoice_products.0.quantity') }}">
+                                                        <input type="number" step="any" class="form-input"
+                                                            name="invoice_products[0][quantity]" value="">
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Đơn Vị</label>
-                                                        <select class="form-select" name="invoice_products[0][unitID]">
+                                                        <select class="form-select" name="invoice_products[0][unitID]"
+                                                            required>
                                                             <option value="">-- Chọn đơn vị --</option>
-                                                            @foreach($units as $u)
-                                                            <option value="{{ $u->id }}" {{
-                                                                old('invoice_products.0.unitID')==$u->id ? 'selected' :
-                                                                '' }}>{{ $u->name }}</option>
-                                                            @endforeach
                                                         </select>
                                                     </div>
                                                 </div>
-                                                <div class="form-row" style="margin-bottom: 0;">
+                                                <div class="form-row" style="margin-bottom:0;">
                                                     <div class="form-group">
                                                         <label class="form-label">Chất Lượng</label>
                                                         <input type="text" class="form-input"
-                                                            name="invoice_products[0][quality]" placeholder=""
-                                                            value="{{ old('invoice_products.0.quality') }}">
+                                                            name="invoice_products[0][quality]" value="">
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Số Lát Dao</label>
                                                         <input type="number" class="form-input"
-                                                            name="invoice_products[0][slice]"
-                                                            value="{{ old('invoice_products.0.slice') }}">
+                                                            name="invoice_products[0][slice]" value="">
                                                     </div>
                                                     <div class="form-group">
                                                         <label class="form-label">Thành Tiền</label>
                                                         <input type="text" class="form-input"
-                                                            name="invoice_products[0][price]"
-                                                            value="{{ old('invoice_products.0.price') }}">
+                                                            name="invoice_products[0][price]" value="">
                                                     </div>
                                                 </div>
                                             </div>
                                             <button type="button" class="remove-btn btn-danger"
-                                                onclick="removeTreatmentStep(this)" style="align-self: flex-start;">
+                                                onclick="removeTreatmentStep(this)" style="align-self:flex-start;">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
@@ -183,116 +177,129 @@
     }
 </script>
 <script>
-    const warehousesData = @json($warehouses);
-    const productsData = @json($products);
-    const unitsData = @json($units);
-</script>
-<script>
-    let treatmentIndex = 1;
+    let treatmentIndex = 1; // đang có 1 step (index 0)
+
+    function buildProductOptions() {
+        let html = '<option value="">-- Chọn vật tư --</option>';
+        PRODUCTS_DATA.forEach(p => {
+        html += `<option value="${p.id}" data-units='${JSON.stringify(p.units)}'>${p.name}</option>`;
+        });
+        return html;
+    }
+
+    function fillUnitsForProduct(stepEl) {
+        const productSel = stepEl.querySelector('select[name$="[productID]"]');
+        const unitSel    = stepEl.querySelector('select[name$="[unitID]"]');
+        if (!productSel || !unitSel) return;
+
+        const opt   = productSel.selectedOptions[0];
+        const units = opt ? (JSON.parse(opt.dataset.units || '[]')) : [];
+        unitSel.innerHTML = '<option value="">-- Chọn đơn vị --</option>';
+        units.forEach(u => unitSel.insertAdjacentHTML('beforeend', `<option value="${u.id}">${u.name}</option>`));
+    }
+
+    function createStepElement(index) {
+        const wrap = document.createElement('div');
+        wrap.className = 'treatment-step';
+        wrap.style.cssText = 'display:flex; gap:1rem; margin-bottom:1rem; padding:1rem; border:1px solid #e5e7eb; border-radius:.5rem; background-color:#D4F7D1;';
+
+        wrap.innerHTML = `
+        <div class="step-number"
+            style="display:flex; align-items:center; justify-content:center; width:2rem; height:2rem; background:#3b82f6; color:#fff; border-radius:50%; font-weight:bold;">${index+1}</div>
+
+        <div style="flex:1;">
+            <div class="form-row" style="margin-bottom:.5rem;">
+            <div class="form-group">
+                <label class="form-label">Kho</label>
+                <select class="form-select" name="invoice_products[${index}][warehouseID]" required>
+                @foreach($warehouses as $w)
+                    <option value="{{ $w->id }}">{{ $w->name }}</option>
+                @endforeach
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Tên Vật Tư</label>
+                <select class="form-select" name="invoice_products[${index}][productID]" required>
+                ${buildProductOptions()}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Số Lượng</label>
+                <input type="number" step="any" class="form-input" name="invoice_products[${index}][quantity]" value="">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Đơn Vị</label>
+                <select class="form-select" name="invoice_products[${index}][unitID]" required>
+                <option value="">-- Chọn đơn vị --</option>
+                </select>
+            </div>
+            </div>
+
+            <div class="form-row" style="margin-bottom:0;">
+            <div class="form-group">
+                <label class="form-label">Chất Lượng</label>
+                <input type="text" class="form-input" name="invoice_products[${index}][quality]" value="">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Số Lát Dao</label>
+                <input type="number" class="form-input" name="invoice_products[${index}][slice]" value="">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Thành Tiền</label>
+                <input type="text" class="form-input" name="invoice_products[${index}][price]" value="">
+            </div>
+            </div>
+        </div>
+
+        <button type="button" class="remove-btn btn-danger" onclick="removeTreatmentStep(this)" style="align-self:flex-start;">
+            <i class="fas fa-trash"></i>
+        </button>
+        `;
+        return wrap;
+    }
 
     function addTreatmentStep() {
-        treatmentIndex++;
         const container = document.getElementById('treatmentSteps');
-        const newStep = document.createElement('div');
-        newStep.className = 'treatment-step';
-        newStep.style.cssText = 'display: flex; gap: 1rem; margin-bottom: 1rem; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 0.5rem; background-color: #D4F7D1;';
-        
-        newStep.innerHTML = `
-            <div style="display: flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; background-color: #3b82f6; color: white; border-radius: 50%; font-weight: bold;">${treatmentIndex}</div>
-            <div style="flex: 1;">
-                <div class="form-row" style="margin-bottom: 0.5rem;">
-                    <div class="form-group">
-                         <label class="form-label">Kho</label>
-                        <select class="form-select" name="invoice_products[${treatmentIndex}][warehouseID]" required>
-                            @foreach($warehouses as $warehouse)
-                                <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Tên Vật Tư</label>
-                        <select class="form-select" name="invoice_products[${treatmentIndex}][productID]" required>
-                            <option value="">-- Chọn vật tư --</option>
-                            @foreach($products as $p)
-                                <option value="{{ $p->id }}">{{ $p->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Số Lượng</label>
-                        <input type="number" class="form-input" name="invoice_products[${treatmentIndex}][quantity]">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Đơn Vị</label>
-                        <select class="form-select" name="invoice_products[${treatmentIndex}][unitID]">
-                            <option value="">-- Chọn đơn vị --</option>
-                            @foreach($units as $unit)
-                                <option value="{{ $unit->id }}">{{ $unit->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row" style="flex:1">
-                    <div class="form-group">
-                        <label class="form-label">Chất Lượng</label>
-                        <input type="text" class="form-input" name="invoice_products[${treatmentIndex}][quality]" placeholder="">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Số Lát Dao</label>
-                       <input type="number" class="form-input" name="invoice_products[${treatmentIndex}][slice]">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Thành Tiền</label>
-                        <input type="text" class="form-input" name="invoice_products[${treatmentIndex}][price]">    
-                    </div>
-                </div>
-            </div>
-            <button type="button" class="remove-btn" onclick="removeTreatmentStep(this)" style="align-self: flex-start;">
-                <i class="fas fa-trash"></i>
-            </button>
-        `;
-        
-        container.appendChild(newStep);
+        const newIndex = container.querySelectorAll('.treatment-step').length;
+        const stepEl = createStepElement(newIndex);
+        container.appendChild(stepEl);
+        treatmentIndex = newIndex + 1;
     }
 
-    function removeTreatmentStep(button) {
-        button.closest('.treatment-step').remove();
-        updateTreatmentStepNumbers();
-    }
-
-    function updateTreatmentStepNumbers() {
-        const steps = document.querySelectorAll('.treatment-step');
-        steps.forEach((step, index) => {
-            const numberElement = step.querySelector('div:first-child');
-            numberElement.textContent = index + 1;
+    function reindexTreatmentSteps() {
+        const steps = document.querySelectorAll('#treatmentSteps .treatment-step');
+        steps.forEach((step, i) => {
+        const numEl = step.querySelector('.step-number');
+        if (numEl) numEl.textContent = i + 1;
+        step.querySelectorAll('input[name], select[name]').forEach(el => {
+            el.name = el.name.replace(/invoice_products\[\d+\]/, `invoice_products[${i}]`);
+        });
         });
         treatmentIndex = steps.length;
     }
 
-    // Initialize treatment form
-    function initializeTreatmentForm() {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('recordDate').value = today;
-        document.getElementById('startDate').value = today;
-        
-        // Set end date default to 7 days later
-        const nextWeek = new Date();
-        nextWeek.setDate(nextWeek.getDate() + 7);
-        document.getElementById('endDate').value = nextWeek.toISOString().split('T')[0];
+    function removeTreatmentStep(btn) {
+        const step = btn.closest('.treatment-step');
+        if (!step) return;
+        step.remove();
+        reindexTreatmentSteps();
     }
 
-    // Treatment form submission
-    document.addEventListener('DOMContentLoaded', function() {
-        const treatmentForm = document.getElementById('treatmentForm');
-        if (treatmentForm) {
-            treatmentForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                alert('Đã tạo phiếu điều trị thành công!');
-                this.reset();
-                initializeTreatmentForm();
-            });
-        }        
-        setTimeout(initializeTreatmentForm, 100);
+    // Đổi product -> đổ lại đơn vị hợp lệ
+    document.addEventListener('change', function (e) {
+        if (e.target.matches('select[name^="invoice_products"][name$="[productID]"]')) {
+        const step = e.target.closest('.treatment-step');
+        fillUnitsForProduct(step);
+        }
+    });
+
+    // Init: nếu step đầu có old value product, gọi fillUnitsForProduct để hiện đơn vị
+    document.addEventListener('DOMContentLoaded', function () {
+        const firstStep = document.querySelector('#treatmentSteps .treatment-step');
+        if (firstStep) fillUnitsForProduct(firstStep);
     });
 </script>
 <style>

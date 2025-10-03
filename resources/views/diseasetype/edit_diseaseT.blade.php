@@ -69,7 +69,7 @@
                                 </select>
                             </div>
                             <div class="p-t-10 col-sm-12" style="margin-top: 10px">
-                                <button type="submit" class="btn btn-primary">Lưu Thay Đổi</button>
+                                <button type="submit" class="btn btn-success">Lưu Thay Đổi</button>
                             </div>
                         </div>
                     </div>

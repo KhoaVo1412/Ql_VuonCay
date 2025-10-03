@@ -140,12 +140,13 @@
                                                             placeholder="Ghi chú">
                                                     </td>
                                                     <td class="d-flex grap-2">
-                                                        <button type="button" class="btn btn-success btn-sm btn-add-row"
+                                                        <button type="button"
+                                                            class="btnT btn-success btn-sm btn-add-row"
                                                             onclick="addMaterialRow()" title="Thêm dòng mới">
                                                             <i class="fas fa-plus"></i>
                                                         </button>
                                                         <button type="button"
-                                                            class="btn btn-danger btn-sm btn-remove-row"
+                                                            class="btnT btn-danger btn-sm btn-remove-row"
                                                             onclick="removeMaterialRow(this)">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
@@ -694,7 +695,7 @@
             gap: 10px;
         }
 
-        .btn {
+        .btnT {
             width: 100%;
         }
 
@@ -803,11 +804,6 @@
         border-bottom: 2px solid #e5e7eb;
     }
 
-    /* Editable table cells */
-    .editable-cell {
-        position: relative;
-    }
-
     .editable-input,
     .editable-select {
         width: 100%;
@@ -839,6 +835,83 @@
 
     .btn-remove-row:hover {
         background: #dc2626;
+    }
+
+    @media (max-width:500px) {
+        .form-row {
+            display: block;
+        }
+
+        .form-input {
+            width: 100%;
+        }
+
+        . .material-table-container {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .material-table {
+            min-width: 720px;
+        }
+
+        .material-table {
+            min-width: 0;
+            width: 100%;
+        }
+
+        /* .material-table thead {
+            display: none;
+        } */
+
+        .material-table,
+        .material-table tbody,
+        .material-table tr,
+        .material-table td {
+            display: block;
+            width: 100%;
+        }
+
+        .material-table tr {
+            border: 1px solid #eee;
+            border-radius: 10px;
+            /* padding: 8px; */
+            /* margin-bottom: 10px; */
+            box-shadow: 0 1px 4px rgba(0, 0, 0, .05);
+        }
+
+        .material-table td {
+            /* display: flex; */
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            border: none;
+        }
+
+        .material-table td::before {
+            content: attr(data-label);
+            flex: 0 0 110px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        /* kích thước control để không “bé tí” trên mobile */
+        .editable-input,
+        .editable-select,
+        .form-control,
+        .form-select {
+            width: 100%;
+            min-width: 0;
+            font-size: 16px;
+            height: 42px;
+            /* line-height: 42px; */
+            padding: 6px 8px;
+        }
+
+        .content-section {
+            padding: 0px;
+        }
     }
 </style>
 <script>

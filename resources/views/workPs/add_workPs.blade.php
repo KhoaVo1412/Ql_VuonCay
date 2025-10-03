@@ -44,7 +44,7 @@
                     <div class="card-body">
                         <div id="batch-container">
                             <div class="row gy-2">
-                                <div class="container">
+                                <div class="container pt-3">
                                     <div class="form-row">
                                         <div class="form-group">
                                             <label class="form-label">Mã Công Việc</label>
@@ -462,8 +462,7 @@
         border-color: #ced4da;
         color: #495057;
     }
-</style>
-<style>
+
     .status-title {
         font-size: 1.1rem;
         font-weight: 600;
@@ -514,13 +513,13 @@
     }
 
     /* Content Section */
-    .content-section {
+    /* .content-section {
         padding: 30px;
-    }
+    } */
 
     /* Material Request Section */
     .material-section {
-        margin-bottom: 30px;
+        margin-bottom: 10px;
     }
 
     .section-title {
@@ -757,7 +756,7 @@
             gap: 10px;
         }
 
-        .btn {
+        .btnT {
             width: 100%;
         }
 
@@ -931,6 +930,30 @@
 
     .btn-remove-row:hover {
         background: #dc2626;
+    }
+
+    @media (max-width: 500px) {
+        .material-table-container {
+            width: 100%;
+            overflow-x: auto;
+            /* cho phép kéo ngang trên mobile */
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .material-table {
+            min-width: 640px;
+        }
+
+        .material-table th,
+        .material-table td {
+            padding: 6px 8px;
+        }
+
+        .editable-select,
+        .editable-input {
+            width: 100%;
+            min-width: 0;
+        }
     }
 </style>
 <script>

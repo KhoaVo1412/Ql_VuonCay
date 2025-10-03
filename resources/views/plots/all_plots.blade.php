@@ -13,74 +13,27 @@
         </div>
     </div>
 </div>
-<style>
-    #map-modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 9999;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    #map-modal .modal-content {
-        position: relative;
-        background: #fff;
-        padding: 10px;
-        border-radius: 8px;
-        max-width: 90%;
-        max-height: 90%;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-    }
-
-    .close-btn {
-        position: absolute;
-        top: 8px;
-        top: -15px;
-        right: 10px;
-        font-size: 40px;
-        color: #ff0000;
-        z-index: 10000;
-        font-weight: bold;
-    }
-
-    .close-btn:hover {
-        color: red;
-    }
-
-    @media (max-width: 768px) {
-        #plantFilters {
-            /* display: block !important; */
-        }
-    }
-</style>
 
 <div id="map-modal" style="display:none;">
     <div class="modal-content">
         <span class="close-btn" onclick="hideMapModal()">&times;</span>
         <div id="plantFilters" class="map-toolbar" style="width:100%;gap:.5rem;align-items:center;margin-bottom:.5rem;">
-            <input id="searchPlant" class="form-control" type="text" placeholder="Tìm mã cây…"
-                style="width:20% !important;">
-            <select id="filterStatus" class="form-select" style="width:10% !important;">
+            <input id="searchPlant" class="form-control" type="text" placeholder="Tìm mã cây…" style="width:20% ">
+            <select id="filterStatus" class="form-select" style="width:10% ">
                 <option value="">Trạng Thái</option>
                 <option value="Hoạt động">Hoạt động</option>
             </select>
-            <select id="filterVariety" class="form-select" style="width:10% !important;">
+            <select id="filterVariety" class="form-select" style="width:10% ">
                 <option value="">Giống</option>
             </select>
-            <select id="filterYear" class="form-select" style="width:10% !important;">
+            <select id="filterYear" class="form-select" style="width:10% ">
                 <option value="">Năm Trồng</option>
             </select>
-            <button id="btnZoomVisible" class="btn btn-success" type="button" style="width:5% !important;"><i
+            <button id="btnZoomVisible" class="btn btn-success" type="button" style="width:5% "><i
                     class="fa-solid fa-magnifying-glass"></i></button>
-            <button id="btnResetFilters" class="btn btn-danger" type="button" style="width:5% !important;"><i
+            <button id="btnResetFilters" class="btn btn-danger" type="button" style="width:5% "><i
                     class="fa-solid fa-delete-left"></i></button>
-            <span id="filterCount" style="margin-left:.5rem;color:#555;" style="width:5% !important;"></span>
+            <span id="filterCount" style="margin-left:.5rem;color:#555;" style="width:5% "></span>
         </div>
         <div id="viewMap" style="height:740px"></div>
 
@@ -1426,6 +1379,83 @@
 
         .container {
             max-width: 900px !important;
+        }
+    }
+
+    #map-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #map-modal .modal-content {
+        position: relative;
+        background: #fff;
+        padding: 10px;
+        border-radius: 8px;
+        max-width: 90%;
+        max-height: 90%;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .close-btn {
+        position: absolute;
+        top: 8px;
+        top: -15px;
+        right: 10px;
+        font-size: 40px;
+        color: #ff0000;
+        z-index: 10000;
+        font-weight: bold;
+    }
+
+    .close-btn:hover {
+        color: red;
+    }
+
+    @media (max-width: 768px) {
+        #plantFilters {
+            /* display: block !important; */
+        }
+    }
+
+    @media (max-width: 500px) {
+        .map-toolbar {
+            display: block !important;
+        }
+
+        .form-control {
+            width: 90% !important;
+        }
+
+        #filterStatus {
+            margin: 3px 0px 3px 0px;
+            width: 90% !important;
+        }
+
+        #filterVariety {
+            width: 90% !important;
+            margin-bottom: 3px;
+        }
+
+        #filterYear {
+            width: 90% !important;
+        }
+
+        #btnZoomVisible {
+            width: 20% !important;
+        }
+
+        #btnResetFilters {
+            width: 20% !important;
         }
     }
 </style>

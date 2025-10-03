@@ -55,6 +55,7 @@ Route::middleware('apitoken')->group(function () {
     Route::get('all-workps', [WorkControllerApi::class, 'workps']);
     Route::get('detail-workps/{id}', [WorkControllerApi::class, 'detailW']);
     Route::get('all-evaluate', [WorkControllerApi::class, 'evaluate']);
+    Route::post('/works/gentask', [WorkControllerApi::class, 'store']);
 
     Route::get('all-diseaseplants', [DiseaseControllerApi::class, 'diseasePlants']);
     Route::get('detail-diseaseplants/{id}', [DiseaseControllerApi::class, 'detailD']);

@@ -129,7 +129,7 @@
                             <div class="form-group">
                                 <label class="form-label">Loại Công Việc</label>
                                 <select class="form-select" id="typeWork">
-                                    <option value="">-- Tất cả --</option>
+                                    <option value="">Tất cả</option>
                                     @foreach($works as $w)
                                     <option value="{{ $w->id }}">{{ $w->workType }}</option>
                                     @endforeach
@@ -139,7 +139,7 @@
                             <div class="form-group">
                                 <label class="form-label">Lô</label>
                                 <select class="form-select" id="plotID">
-                                    <option value="">-- Tất cả --</option>
+                                    <option value="">Tất cả</option>
                                     @foreach($plots as $p)
                                     <option value="{{ $p->id }}">{{ $p->plotName }}</option>
                                     @endforeach

@@ -64,10 +64,12 @@ use App\Http\Controllers\Admin\UnitsController;
 use App\Http\Controllers\Admin\WorkController;
 use App\Http\Controllers\Admin\PWareHouseController;
 use App\Http\Controllers\Admin\DecomposeController;
+use App\Http\Controllers\Admin\InventoryHistoryController;
 use App\Http\Controllers\Admin\WorkerController;
 use App\Http\Controllers\Admin\WorkProposalsController;
 use App\Http\Controllers\Import\UpdatePlantingAreaImportController;
 use App\Http\Controllers\ChartController;
+use App\Http\Controllers\Export\InventoryExportController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InventoryStockController;
 use App\Models\GenTask;
@@ -82,6 +84,11 @@ Route::post('/select-redirect', [LoginController::class, 'selectRedirect'])->nam
 
 Route::middleware(['login'])->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('admin.dashboard');
+    // JSON cho từng bảng
+    Route::get('/dashboard/summary/purchase', [AdminController::class, 'purchaseSummary'])
+        ->name('dashboard.purchaseSummary');
+    Route::get('/dashboard/summary/harvest', [AdminController::class, 'harvestSummary'])
+        ->name('dashboard.harvestSummary');
     // Route::get('/tx', [HomeController::class, 'index'])->name('tx');
     // Route::get('/api/contracts', [HomeController::class, 'fetchContracts']);
     // Route::get('/api/contracts/detail/{id}', [HomeController::class, 'getContractDetails']);
@@ -177,6 +184,7 @@ Route::middleware(['login'])->group(function () {
     Route::get('/plants/find', [PlotController::class, 'findByCode']);
 
     Route::get('/stocks', [InventoryStockController::class, 'index'])->name('stocks.index');
+    Route::get('/stocks-history', [InventoryStockController::class, 'indexhts'])->name('stocks.indexhts');
     Route::get('/add-stocks', [InventoryStockController::class, 'add'])->name('stocks.add');
     Route::post('/save-stocks', [InventoryStockController::class, 'save'])->name('stocks.save');
     Route::get('/edit-stocks/{id}', [InventoryStockController::class, 'edit'])->name('stocks.edit');
@@ -186,6 +194,12 @@ Route::middleware(['login'])->group(function () {
     Route::post('/stocks/delete-multiple', [InventoryStockController::class, 'deleteMultiple'])->name('stocks.deleteMultiple');
     Route::post('/toggle-stocks-status', [InventoryStockController::class, 'toggleStatus'])->name('stocks.status');
     Route::post('/toggle-stocks-actives', [InventoryStockController::class, 'toggleActives'])->name('stocks.actives');
+    Route::get('/reports/inventory/history', [InventoryHistoryController::class, 'index'])
+        ->name('inv.history');
+    Route::get('/reports/inventory/history/data', [InventoryHistoryController::class, 'data'])
+        ->name('inv.history.data');
+    Route::get('/inventory/export-excel', [InventoryExportController::class, 'exportExcel'])
+        ->name('inventory.export');
 
     Route::get('/crops', [CropController::class, 'index'])->name('crops.index');
     Route::post('/save-crops', [CropController::class, 'save'])->name('crops.save');

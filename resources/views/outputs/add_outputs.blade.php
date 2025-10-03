@@ -150,7 +150,8 @@
                                         </div>
                                     </div>
 
-                                    <div class="add-material" onclick="addTreatmentStep()" style="margin-top: 1rem;">
+                                    <div class="add-material" onclick="addTreatmentStep()"
+                                        style="margin-top: 1rem;margin-bottom: 1rem;">
                                         <i class="fas fa-plus"></i> Thêm Dòng
                                     </div>
                                 </div>
@@ -488,6 +489,17 @@
         .material-item {
             display: block;
             gap: 0.5rem;
+        }
+    }
+
+    @media (max-width: 500px) {
+        .treatment-step {
+            display: block !important;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100% !important;
         }
     }
 </style>

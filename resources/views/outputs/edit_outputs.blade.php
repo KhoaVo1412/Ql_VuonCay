@@ -122,7 +122,7 @@
                                                         name="invoice_products[{{ $index }}][warehouseID]"
                                                         value="{{ $warehouse->id }}">
 
-                                                    <div class="form-group" style="min-width:240px;">
+                                                    <div class="form-group">
                                                         <label class="form-label">Tên Vật Tư</label>
                                                         <select class="form-select"
                                                             name="invoice_products[{{ $index }}][productID]" required>
@@ -249,7 +249,7 @@
           <div class="form-row" style="margin-bottom:.5rem;">
             <input type="hidden" name="invoice_products[${index}][warehouseID]" value="{{ $warehouse->id }}">
 
-            <div class="form-group" style="min-width:240px;">
+            <div class="form-group" >
               <label class="form-label">Tên Vật Tư</label>
               <select class="form-select" name="invoice_products[${index}][productID]" required>
                 ${buildProductOptions()}
@@ -518,6 +518,17 @@
         .material-item {
             display: block;
             gap: 0.5rem;
+        }
+    }
+
+    @media (max-width: 500px) {
+        .treatment-step {
+            display: block !important;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100% !important;
         }
     }
 </style>

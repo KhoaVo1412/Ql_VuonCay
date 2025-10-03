@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\ActionHistory;
 use App\Models\InventoryStock;
+use App\Models\InventoryTransaction;
+use App\Models\Picking;
 use App\Models\Product;
 use App\Models\WareHouse;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
@@ -13,13 +16,130 @@ use Yajra\DataTables\DataTables;
 
 class InventoryStockController extends Controller
 {
+    public function indexhts(Request $request)
+    {
+        $warehouses = WareHouse::all();
+        $products = Product::all();
+
+        if ($request->ajax()) {
+            $mode = $request->input('mode');
+            $from = $request->input('from');
+            $to   = $request->input('to');
+            $all_stock_hts = InventoryTransaction::query()
+                ->with([
+                    'warehouse',
+                    'product',
+                    'reference' => fn($q) => $q->select('id', 'type', 'code')
+                ])
+                ->when($request->filled('warehouse_id'), fn($q) => $q->where('warehouseID', $request->warehouse_id))
+                ->when($request->filled('product_id'),   fn($q) => $q->where('productID',   $request->product_id))
+
+                ->when($request->filled('date_id'), fn($q) => $q->where('date', $request->date_id))
+                ->when($from, fn($q) => $q->where('date', '>=', Carbon::parse($from)->startOfDay()))
+                ->when($to,   fn($q) => $q->where('date', '<=', Carbon::parse($to)->endOfDay()))
+                ->when($mode === 'xuat', fn($q) => $q->where('type', 'export'))
+                ->when($mode === 'nhap', function ($q) {
+                    $q->where('type', 'import')
+                        ->where(function ($sub) {
+                            // import nhưng KHÔNG phải phiếu Picking kiểu 'Khai thác'
+                            $sub->whereDoesntHaveMorph('reference', [Picking::class])
+                                ->orWhereHasMorph('reference', [Picking::class], fn($p) => $p->where('type', '!=', 'Khai thác'));
+                        });
+                })
+
+                ->when($mode === 'khaithac', function ($q) {
+                    $q->where('type', 'import')
+                        ->whereHasMorph('reference', [Picking::class], fn($p) => $p->where('type', 'Khai thác'));
+                })
+
+                ->orderByDesc('id');
+            return DataTables::of($all_stock_hts)
+                ->addColumn('check', function ($row) {
+                    return '<input class="form-check-input" type="checkbox" id="check-' . $row->id . '" data-id="' . $row->id . '">';
+                })
+                ->addColumn('stt', function ($row) {
+                    static $stt = 0;
+                    $stt++;
+                    return $stt;
+                })
+                ->addColumn('code', function ($row) {
+                    return $row->code ?? 'N/A';
+                })
+                ->addColumn('date', function ($row) {
+                    return Carbon::parse($row->date)->format('d/m/Y');
+                })
+                ->addColumn('productID', function ($row) {
+                    return $row->product ? $row->product->name : 'N/A';
+                })
+                ->addColumn('category', function ($row) {
+                    return $row->product->category ? $row->product->category->name : 'N/A';
+                })
+                ->addColumn('unit', function ($row) {
+                    return $row->unit ? $row->unit->name : 'N/A';
+                })
+                ->addColumn('warehouseID', function ($row) {
+                    return $row->warehouse ? $row->warehouse->name : 'N/A';
+                })
+                ->addColumn('quantity_changed', function ($row) {
+                    return number_format((float)$row->quantity_changed, 2, '.', '');
+                })
+                ->addColumn('balance_after', function ($row) {
+                    return number_format((float)$row->balance_after, 2, '.', '');
+                })
+                ->editColumn('type', fn($row) => $row->display_type)
+
+                // ->editColumn('status', function ($row) {
+                //     $statusClass = $row->status == 'Hoạt động' ? 'success' : 'danger';
+                //     $statusText = $row->status == 'Hoạt động' ? 'Hoạt động' : 'Không hoạt động';
+                //     return '<button class="badge bg-' . $statusClass . ' toggle-status" data-id="' . $row->id . '">' . $statusText . '</button>';
+                // })
+                ->addColumn('action', function ($row) {
+                    $action = '
+                        <div class="d-flex gap-1">
+                            <a href="/edit-stocks/' . $row->id . '" class="btn btn-sm btn-primary">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal' . $row->id . '">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </div>
+                        <div class="modal fade" id="deleteModal' . $row->id . '" tabindex="-1" aria-labelledby="deleteModalLabel' . $row->id . '" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteModalLabel' . $row->id . '">Xác Nhận Xóa</h5>
+                                        <button type="button" class="btn btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Bạn có chắc chắn có muốn xóa thông tin <span style="color: red;">' . ($row->farm_name ?? 'N/A') . '</span>?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                        <a href="/stocks/delete/' . $row->id . '" class="btn btn-primary">Xóa</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ';
+                    return $action;
+                })
+                ->rawColumns(['check', 'date', 'type', 'code', 'quantity_changed', 'balance_after',  'category', 'stt', 'quantity', 'warehouseID', 'productID', 'status', 'action'])
+                ->make(true);
+        }
+        return view('stock.all_stock_hts', compact('products', 'warehouses'));
+    }
     public function index(Request $request)
     {
         $warehouses = WareHouse::all();
         $products = Product::all();
-        $all_stock = InventoryStock::with('warehouse', 'product')->orderBy('id', 'desc')->get();
+        // $all_stock = InventoryStock::with('warehouse', 'product')->orderBy('id', 'desc')->get();
         // dd($all_stock);
         if ($request->ajax()) {
+            $all_stock = InventoryStock::with('warehouse', 'product')
+                ->when($request->filled('warehouse_id'), function ($q) use ($request) {
+                    $q->where('warehouseID', $request->warehouse_id); // hoặc warehouse_id nếu cột snake
+                })
+                ->orderByDesc('id');
             return DataTables::of($all_stock)
                 ->addColumn('check', function ($row) {
                     return '<input class="form-check-input" type="checkbox" id="check-' . $row->id . '" data-id="' . $row->id . '">';

@@ -89,75 +89,79 @@
 
                         <hr>
                         <h5>Danh sách vật tư</h5>
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th style="width: 20%;">Kho</th>
-                                    <th style="width: 20%;">Tên vật tư</th>
-                                    <th style="width: 10%;">Số lượng</th>
-                                    <th style="width: 15%;">Đơn vị</th>
-                                    <th style="width: 20%;">Ghi chú</th>
-                                    <th style="width: 10%;">Thao Tác</th>
-                                </tr>
-                            </thead>
-                            <tbody id="materialTableBody">
-                                @foreach($proposal->items as $index => $item)
-                                <tr>
-                                    <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
-                                    <td>
-                                        <select name="items[{{ $index }}][warehouseID]" class="form-control">
-                                            @foreach($warehouses as $w)
-                                            <option value="{{ $w->id }}" {{ $w->id == $item->warehouseID ?
-                                                'selected' : '' }}>
-                                                {{ $w->name }}
-                                            </option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="items[{{ $index }}][productID]" class="form-control">
-                                            @foreach($products as $product)
-                                            <option value="{{ $product->id }}" {{ $product->id == $item->productID ?
-                                                'selected' : '' }}>
-                                                {{ $product->name }}
-                                            </option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input type="number" name="items[{{ $index }}][quantity]" class="form-control"
-                                            value="{{ $item->materialQuantity }}" required>
-                                    </td>
-                                    <td>
-                                        <select name="items[{{ $index }}][unitID]" class="form-control"
-                                            data-prev="{{ old(" items.$index.unitID", $item->unitID ?? $item->unit?->id)
-                                            }}">
-                                            @foreach($units as $u)
-                                            <option value="{{ $u->id }}" @selected(old("items.$index.unitID", $item->
-                                                unitID ?? $item->unit?->id) == $u->id)>
-                                                {{ $u->name }}
-                                            </option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input type="text" name="items[{{ $index }}][note]" class="form-control"
-                                            value="{{ $item->note }}">
-                                    </td>
-                                    <td>
-                                        <button type="button" class="btn btn-success btn-sm btn-add-row"
-                                            onclick="addMaterialRow()" title="Thêm dòng mới">
-                                            <i class="fas fa-plus"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-danger btn-sm btn-remove-row"
-                                            onclick="removeMaterialRow(this)">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                        <div class="table-responsive materials-wrap">
+                            <table class="table table-bordered" id="materialsTable">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 20%;">Kho</th>
+                                        <th style="width: 20%;">Tên vật tư</th>
+                                        <th style="width: 10%;">Số lượng</th>
+                                        <th style="width: 15%;">Đơn vị</th>
+                                        <th style="width: 20%;">Ghi chú</th>
+                                        <th style="width: 10%;">Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="materialTableBody">
+                                    @foreach($proposal->items as $index => $item)
+                                    <tr>
+                                        <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
+                                        <td>
+                                            <select name="items[{{ $index }}][warehouseID]" class="form-control">
+                                                @foreach($warehouses as $w)
+                                                <option value="{{ $w->id }}" {{ $w->id == $item->warehouseID ?
+                                                    'selected' : '' }}>
+                                                    {{ $w->name }}
+                                                </option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select name="items[{{ $index }}][productID]" class="form-control">
+                                                @foreach($products as $product)
+                                                <option value="{{ $product->id }}" {{ $product->id == $item->productID ?
+                                                    'selected' : '' }}>
+                                                    {{ $product->name }}
+                                                </option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="number" name="items[{{ $index }}][quantity]"
+                                                class="form-control" value="{{ $item->materialQuantity }}" required>
+                                        </td>
+                                        <td>
+                                            <select name="items[{{ $index }}][unitID]" class="form-control"
+                                                data-prev="{{ old(" items.$index.unitID", $item->unitID ??
+                                                $item->unit?->id)
+                                                }}">
+                                                @foreach($units as $u)
+                                                <option value="{{ $u->id }}" @selected(old("items.$index.unitID",
+                                                    $item->
+                                                    unitID ?? $item->unit?->id) == $u->id)>
+                                                    {{ $u->name }}
+                                                </option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="items[{{ $index }}][note]" class="form-control"
+                                                value="{{ $item->note }}">
+                                        </td>
+                                        <td class="d-flex">
+                                            <button type="button" class="btn btn-success btn-sm btn-add-row"
+                                                onclick="addMaterialRow()" title="Thêm dòng mới">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-danger btn-sm btn-remove-row"
+                                                onclick="removeMaterialRow(this)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                         <div class="form-group mt-3">
                             <button type="submit" class="btn btn-success">Cập nhật</button>
                             <a href="{{ route('materialproposals.index') }}" class="btn btn-secondary">Hủy</a>
@@ -333,7 +337,7 @@
         <td>
             <input type="text" name="items[${idx}][note]" class="form-control" placeholder="Ghi chú">
         </td>
-        <td class="text-center">
+        <td class="d-flex">
             <button type="button" class="btn btn-success btn-sm btn-add-row"
                     onclick="addMaterialRow()" title="Thêm dòng mới">
             <i class="fas fa-plus"></i>
@@ -381,5 +385,53 @@
     });
     })();
 </script>
+<style>
+    .materials-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
 
+    @media (max-width: 500px) {
+        .form-row {
+            display: block;
+        }
+
+        #materialsTable {
+            min-width: 680px;
+        }
+
+        #materialsTable thead th {
+            font-size: 14px;
+            padding: 10px 8px;
+            white-space: nowrap;
+        }
+
+        #materialsTable td {
+            padding: 8px 8px;
+        }
+
+        #materialsTable .form-control,
+        #materialsTable .form-select {
+            font-size: 14px;
+            height: 44px;
+            /* line-height: 44px; */
+            padding: 6px 10px;
+            min-width: 0;
+        }
+
+        #materialsTable .btn-sm {
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            font-size: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #materialsTable .btn-sm i {
+            font-size: 16px;
+        }
+    }
+</style>
 @endsection

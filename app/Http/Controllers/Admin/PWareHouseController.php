@@ -13,6 +13,7 @@ use App\Models\UnitOfMeasure;
 use App\Models\User;
 use App\Models\WareHouse;
 use App\Models\Worker;
+use App\Services\InventoryService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -48,7 +49,7 @@ class PWareHouseController extends Controller
                     return $stt;
                 })
                 ->editColumn('code', function ($row) {
-                    return $row->code;
+                    return $row->code ?? 'Chờ kiểm tra';
                 })
                 ->editColumn('warehouseID', function ($row) {
                     return $row->warehouse->name;
@@ -108,63 +109,125 @@ class PWareHouseController extends Controller
         }
         return view('pwarehouses.all_pwarehouses', compact('warehouses'));
     }
-    // public function toggleActive(Request $request, $id)
-    // {
-    //     $picking = Picking::with('productPickings')->findOrFail($id);
-    //     if ($picking->status !== 'Hoạt động') {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Chỉ phiếu đang Hoạt động mới được phép thay đổi trạng thái.',
-    //         ]);
-    //     }
-    //     if ($picking->active === 'Hoàn thành') {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Phiếu đã được duyệt trước đó. Không thể cập nhật tồn kho.'
-    //         ]);
-    //     }
+    public function toggleActive(Request $request, $id, InventoryService $inventory)
+    {
+        $picking = Picking::with(['productPickings', 'warehouse'])->findOrFail($id);
 
-    //     $isActivating = $picking->active == 'Chưa hoàn thành';
-    //     $picking->active = $isActivating ? 'Hoàn thành' : 'Chưa hoàn thành';
+        if ($picking->status !== 'Hoạt động') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Chỉ phiếu đang Hoạt động mới được phép thay đổi trạng thái.',
+            ]);
+        }
 
-    //     if ($isActivating) {
-    //         foreach ($picking->productPickings as $item) {
-    //             $productID = $item->productID;
-    //             $warehouseID = $picking->warehouseID;
-    //             $quantity = $item->quantity;
-    //             $product = Product::find($productID);
+        if ($picking->active === 'Hoàn thành') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Phiếu đã được duyệt trước đó. Không thể cập nhật tồn kho.',
+            ]);
+        }
 
-    //             $stock = InventoryStock::firstOrCreate(
-    //                 ['productID' => $productID, 'warehouseID' => $warehouseID, 'unitID' => $product->unitID],
-    //                 ['status' => 'Hoạt động', 'quantity' => 0]
-    //             );
-    //             $stock->status = 'Hoạt động';
-    //             if ($picking->type === 'Nhập') {
-    //                 $stock->quantity += $quantity;
-    //             } elseif ($picking->type === 'Xuất') {
-    //                 if ($stock->quantity < $quantity) {
-    //                     $picking->active = 'Chưa hoàn thành';
-    //                     return response()->json([
-    //                         'success' => false,
-    //                         'message' => "Không đủ tồn kho để xuất sản phẩm: $productID.",
-    //                     ]);
-    //                 }
-    //                 $stock->quantity -= $quantity;
-    //             }
+        $isActivating = $picking->active == 'Chưa hoàn thành';
+        if (!$isActivating) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể huỷ duyệt phiếu đã hoàn thành.',
+            ]);
+        }
 
-    //             $stock->save();
-    //         }
-    //     }
+        $typeMap = [
+            'Nhập'      => 'import',
+            'Xuất'      => 'export',
+            'Khai thác' => 'import',
+        ];
+        $stdType = $typeMap[$picking->type] ?? null;
+        if (!$stdType) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Loại phiếu không hợp lệ.',
+            ]);
+        }
 
-    //     $picking->save();
+        $productionWarehouseId = 2;
 
-    //     return response()->json([
-    //         'success' => true,
-    //         'status' => $picking->active == 'Hoàn thành' ? 'Hoàn thành' : 'Chưa hoàn thành',
-    //         'message' => 'Cập nhật phiếu thành công.',
-    //     ]);
-    // }
-    public function toggleActive(Request $request, $id)
+        DB::beginTransaction();
+        try {
+            // 1) Nếu là Xuất
+            if ($stdType === 'export') {
+                $warehouseID = (int) $picking->warehouseID;
+                $need = [];
+                foreach ($picking->productPickings as $item) {
+                    $need[$item->productID] = ($need[$item->productID] ?? 0) + (float)$item->quantity;
+                }
+                // lock trước khi check
+                $stocks = InventoryStock::where('warehouseID', $warehouseID)
+                    ->whereIn('productID', array_keys($need))
+                    ->lockForUpdate()
+                    ->get()
+                    ->keyBy('productID');
+                foreach ($need as $pid => $qtyNeed) {
+                    $available = (float)($stocks[$pid]->quantity ?? 0);
+                    if ($available < $qtyNeed) {
+                        DB::rollBack();
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Không đủ tồn kho để xuất. Sản phẩm ID $pid còn $available, cần $qtyNeed.",
+                        ]);
+                    }
+                }
+            }
+            // 2) Ghi giao dịch vào kho theo từng dòng chi tiết
+            foreach ($picking->productPickings as $line) {
+                $productID   = $line->productID;
+                $quantity    = (float)$line->quantity;
+                $warehouseID = (int)$picking->warehouseID;
+                $unitID      = optional(Product::find($productID))->unitID;
+
+                if ($picking->type === 'Khai thác') {
+                    // Nhập vào kho sản xuất, KHÔNG gọi record($stdType) nữa
+                    $inventory->record('import', [
+                        'productID'   => $productID,
+                        'warehouseID' => (int)$productionWarehouseId,
+                        'unitID'      => $unitID,
+                        'quantity'    => $quantity,
+                        'reference'   => $picking,
+                        'code'        => $picking->code,
+                        'note'        => "Khai thác #{$picking->code}",
+                        'date'  => $picking->createDate,
+                    ]);
+                    continue;
+                }
+
+                // Nhập / Xuất
+                $inventory->record($stdType, [
+                    'productID'   => $productID,
+                    'warehouseID' => $warehouseID,
+                    'unitID'      => $unitID,
+                    'quantity'    => $quantity,
+                    'reference'   => $picking,
+                    'code'        => $picking->code,
+                    'note'        => "Phiếu {$picking->type} #{$picking->code}",
+                    'date'  => $picking->createDate,
+                ]);
+            }
+            // 4) Đổi trạng thái phiếu
+            $picking->active = 'Hoàn thành';
+            $picking->save();
+            DB::commit();
+            return response()->json([
+                'success' => true,
+                'status'  => 'Hoàn thành',
+                'message' => 'Đã duyệt phiếu và cập nhật tồn kho thành công.',
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi duyệt phiếu: ' . $e->getMessage(),
+            ], 422);
+        }
+    }
+    public function toggleActiveOld(Request $request, $id)
     {
         $picking = Picking::with('productPickings')->findOrFail($id);
 

@@ -121,7 +121,7 @@ class WorkController extends Controller
                     return $stt;
                 })
                 ->editColumn('code', function ($row) {
-                    return $row->code;
+                    return $row->code ?? 'Chờ kiểm duyệt';
                 })
                 ->addColumn('workName', function ($row) {
                     return $row->workName ?? 'Không rõ';

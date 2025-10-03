@@ -75,71 +75,75 @@
 
                         <hr>
                         <h5>Danh sách vật tư</h5>
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th style="width: 15%;">Kho</th>
-                                    <th style="width: 15%;">Tên vật tư</th>
-                                    <th style="width: 10%;">Số lượng</th>
-                                    <th style="width: 15%;">Đơn vị</th>
-                                    <th style="width: 20%;">Người đề xuất</th>
-                                    <th style="width: 15%;">Ghi chú</th>
-                                    <th style="width: 5%;"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="materialTableBody">
-                                @foreach($proposal->proposalProducts as $index => $item)
-                                <tr>
-                                    <input type="hidden" name="proposalProducts[{{ $index }}][id]"
-                                        value="{{ $item->id }}">
-                                    <td>
-                                        <select name="proposalProducts[{{ $index }}][warehouseID]" class="form-control">
-                                            @foreach($warehouses as $w)
-                                            <option value="{{ $w->id }}" {{ $w->id == $item->warehouseID ?
-                                                'selected' : '' }}>
-                                                {{ $w->name }}
-                                            </option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="proposalProducts[{{ $index }}][productID]" class="form-control"
-                                            data-prev="{{ $item->productID ?? '' }}">
-                                            <option value="">Chọn vật tư (theo kho)</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input type="number" name="proposalProducts[{{ $index }}][quantity]"
-                                            class="form-control" value="{{ $item->materialQuantity }}" required>
-                                    </td>
-                                    <td>
-                                        <select name="proposalProducts[{{ $index }}][unitID]" class="form-control"
-                                            data-prev="{{ $item->unitID ?? $item->unit?->id ?? '' }}">
-                                            <option value="">Chọn đơn vị (theo tồn)</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input type="text" name="proposalProducts[{{ $index }}][proposer_name]"
-                                            class="form-control" value="{{ auth()->user()->name }}" readonly>
-                                    </td>
-                                    <td>
-                                        <input type="text" name="proposalProducts[{{ $index }}][note]"
-                                            class="form-control" value="{{ $item->note }}">
-                                    </td>
-                                    <td class="text-center d-flex justify-content-center align-items-center">
-                                        <button type="button" class="btn btn-success btn-sm btn-add-row"
-                                            style="margin: 0 2px 0 0" onclick="addMaterialRow()" title="Thêm dòng mới">
-                                            <i class="fas fa-plus"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-danger btn-sm btn-remove-row"
-                                            onclick="removeMaterialRow(this)">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 15%;">Kho</th>
+                                        <th style="width: 15%;">Tên vật tư</th>
+                                        <th style="width: 10%;">Số lượng</th>
+                                        <th style="width: 15%;">Đơn vị</th>
+                                        <th style="width: 20%;">Người đề xuất</th>
+                                        <th style="width: 15%;">Ghi chú</th>
+                                        <th style="width: 5%;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="materialTableBody">
+                                    @foreach($proposal->proposalProducts as $index => $item)
+                                    <tr>
+                                        <input type="hidden" name="proposalProducts[{{ $index }}][id]"
+                                            value="{{ $item->id }}">
+                                        <td>
+                                            <select name="proposalProducts[{{ $index }}][warehouseID]"
+                                                class="form-control">
+                                                @foreach($warehouses as $w)
+                                                <option value="{{ $w->id }}" {{ $w->id == $item->warehouseID ?
+                                                    'selected' : '' }}>
+                                                    {{ $w->name }}
+                                                </option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select name="proposalProducts[{{ $index }}][productID]"
+                                                class="form-control" data-prev="{{ $item->productID ?? '' }}">
+                                                <option value="">Chọn vật tư (theo kho)</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="number" name="proposalProducts[{{ $index }}][quantity]"
+                                                class="form-control" value="{{ $item->materialQuantity }}" required>
+                                        </td>
+                                        <td>
+                                            <select name="proposalProducts[{{ $index }}][unitID]" class="form-control"
+                                                data-prev="{{ $item->unitID ?? $item->unit?->id ?? '' }}">
+                                                <option value="">Chọn đơn vị (theo tồn)</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="proposalProducts[{{ $index }}][proposer_name]"
+                                                class="form-control" value="{{ auth()->user()->name }}" readonly>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="proposalProducts[{{ $index }}][note]"
+                                                class="form-control" value="{{ $item->note }}">
+                                        </td>
+                                        <td class="text-center d-flex justify-content-center align-items-center">
+                                            <button type="button" class="btn btn-success btn-sm btn-add-row"
+                                                style="margin: 0 2px 0 0" onclick="addMaterialRow()"
+                                                title="Thêm dòng mới">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-danger btn-sm btn-remove-row"
+                                                onclick="removeMaterialRow(this)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                         <div class="form-group mt-3">
                             <button type="submit" class="btn btn-success">Cập nhật</button>
                             <a href="{{ route('workps.index') }}" class="btn btn-secondary">Hủy</a>
@@ -376,5 +380,45 @@
         });
         })();
 </script>
+<style>
+    @media (max-width: 500px) {
+        .table thead th {
+            font-size: 14px;
+            padding: 8px 6px;
+        }
 
+        .table td {
+            padding: 6px;
+        }
+
+        .table .form-control,
+        .table .form-select,
+        .table .editable-input,
+        .table .editable-select {
+            font-size: 14px;
+            height: 42px;
+            padding: 0px 0px;
+            min-width: 0;
+        }
+
+        .table input[readonly] {
+            background: #f8f9fa;
+        }
+
+        .table .btn-sm {
+            padding: 6px 10px;
+            font-size: 14px;
+            line-height: 1.2;
+        }
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .table-responsive .table {
+        min-width: 680px;
+    }
+</style>
 @endsection

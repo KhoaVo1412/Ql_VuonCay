@@ -70,8 +70,6 @@
         /* .dt-paging {
             text-align: right !important;
         } */
-    </style>
-    <style>
         .loading-wrapper {
             position: fixed;
             background-color: rgb(248, 248, 248);
@@ -372,6 +370,7 @@
                             || request()->is('pwarehouses*') || request()->is('add-pwarehouses*') || request()->is('edit-pwarehouses*') 
                             || request()->is('outputs*') || request()->is('add-outputs*') || request()->is('edit-outputs*') 
                             || request()->is('stocks*') || request()->is('add-stocks*') || request()->is('edit-stocks*')
+                            || request()->is('stocks-history*') || request()->is('reports/inventory/history*')
                             ? 'active' : '' }}">
                             <a href="#" class='sidebar-link {{ request()->is(' units*') || request()->is('edit-units*')
                                 || request()->is('warehouses*') || request()->is('edit-warehouses*')
@@ -384,7 +383,9 @@
                                 || request()->is('stocks*') || request()->is('add-stocks*') ||
                                 request()->is('edit-stocks*') || request()->is('outputs*')
                                 || request()->is('outputs*') || request()->is('add-outputs*') ||
-                                request()->is('edit-outputs*') ? 'active' : '' }} '
+                                request()->is('edit-outputs*') || request()->is('stocks-history*')
+                                || request()->is('reports/inventory/history*')
+                                ? 'active' : '' }} '
                                 onclick="toggleActive(this)">
                                 <i class="fa-solid fa-warehouse-full"></i>
                                 <span>Quản Lý Kho</span>
@@ -428,9 +429,14 @@
                                     <a href="{{route('outputs.index')}}">Thu Mua Sản Lượng</a>
                                 </li>
                                 <li
-                                    class="submenu-item d-flex align-items-center ms-3 {{ Route::is('stocks.index') || Route::is('stocks.add') ? 'active' : '' }}">
+                                    class="submenu-item d-flex align-items-center ms-3 {{ Route::is('stocks.index') || Route::is('stocks.indexhts') || Route::is('stocks.edit') ? 'active' : '' }}">
                                     <i class="fa-regular fa-garage-car text-green"></i>
                                     <a href="{{route('stocks.index')}}">Tồn Kho</a>
+                                </li>
+                                <li
+                                    class="submenu-item d-flex align-items-center ms-3 {{ Route::is('inv.history') ? 'active' : '' }}">
+                                    <i class="fa-regular fa-file-chart-pie text-green"></i>
+                                    <a href="{{route('inv.history')}}">Báo Cáo Tồn Kho</a>
                                 </li>
                             </ul>
                         </li>
@@ -828,8 +834,7 @@
     .swal-footer {
         text-align: center !important;
     }
-</style>
-<style>
+
     .datepicker-wrapper {
         position: relative;
         display: inline-block;
@@ -861,10 +866,8 @@
         font-size: 1.2rem;
         font-weight: bold;
     }
-</style>
 
-{{-- Responsive datatable --}}
-<style>
+    /* Responsive datatable */
     table.dataTable td,
     table.dataTable th {
         white-space: normal !important;
@@ -907,17 +910,14 @@
         box-shadow: 0 0 .2em #444 !important;
         font-size: 13px !important;
     }
-</style>
 
-{{-- button-container --}}
-<style>
+    /* button-container  */
     #buttons-container {
         /* visibility: hidden; */
         padding-bottom: 4px;
     }
-</style>
-{{-- custom input type file --}}
-<style>
+
+    /* custom input type file  */
     .avatar-img {
         width: 30px;
         height: 30px;

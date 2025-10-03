@@ -7,55 +7,12 @@
             <nav>
                 <ol class="breadcrumb mb-0 padding">
                     <li class="breadcrumb-item"><a href="javascript:void(0);">Trang Chủ</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Danh Sách Tồn Kho</li>
+                    <li class="breadcrumb-item active" aria-current="page">Lịch Sử Cập Nhật Tồn Kho</li>
                 </ol>
             </nav>
         </div>
     </div>
 </div>
-
-<!-- Add stocks Modal -->
-{{-- <form id="stocks-form" action="{{ route('stocks.save') }}" method="POST" enctype="multipart/form-data">
-    {{ csrf_field() }}
-    <div class="modal fade" id="create-stocks" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h6 class="modal-title">Tạo Tồn Kho</h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body px-4">
-                    <div class="row gy-2">
-                        <!-- Vườn (gardenID) -->
-
-                        <!-- Tên Tồn Kho -->
-                        <div class="col-xl-12">
-                            <label for="plotName" class="form-label">Tên Tồn Kho</label>
-                            <input type="text" class="form-control" name="plotName" id="plotName" required
-                                placeholder="Tên Tồn Kho">
-                        </div>
-                        <!-- Diện tích Tồn Kho -->
-                        <div class="col-xl-12">
-                            <label for="plotArea" class="form-label">Diện Tích (m2)</label>
-                            <input type="number" min="0" step="0.01" class="form-control" name="plotArea" id="plotArea"
-                                required placeholder="Diện tích">
-                        </div>
-                        <!-- Số lượng cây -->
-                        <div class="col-xl-12">
-                            <label for="plantCount" class="form-label">Số Lượng Cây</label>
-                            <input type="number" min="0" step="1" class="form-control" name="plantCount" id="plantCount"
-                                required placeholder="Số lượng cây">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                    <button type="submit" class="btn btn-success" id="submit-btn-stocks">Lưu</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</form> --}}
 
 <!-- stocks List -->
 <div class="row">
@@ -84,22 +41,29 @@
                                     @endforeach
                                 </select>
                             </div>
+
+                            <div class="form-group">
+                                {{-- <label class="form-label">Từ Ngày</label>
+                                <input type="date" class="form-input" id="date"> --}}
+                            </div>
+                            <div class="form-group">
+                                {{-- <label class="form-label">Đến Ngày</label>
+                                <input type="date" name="to" class="form-input" id="to"> --}}
+                            </div>
                             {{-- <div class="form-group"> --}}
-                                {{-- <label class="form-label">Ngày Tạo</label>
-                                <input type="date" class="form-input" id="taskStartDate"> --}}
+                                {{-- <label class="form-label">Lịch Sử Nhập Kho</label>
+
+                                <button class="btn btn-success btn-w" style="height: 38px;">
+                                    <i class="fa-solid fa-clock-rotate-left"></i>
+
+                                </button> --}}
                                 {{--
                             </div> --}}
-                            <div class="form-group">
-                                <label class="form-label">Lịch Sử Nhập Kho</label>
-                                <a href="{{ route('stocks.indexhts') }}" style="color: white;">
-                                    <button class="btn btn-success btn-w" style="height: 38px;">
-
-                                        <i class="fa-solid fa-clock-rotate-left"></i>
-                                    </button>
-                                </a>
-                            </div>
                         </div>
+
+
                     </div>
+
                 </div>
             </div>
             <div class="card-body">
@@ -112,10 +76,6 @@
                             style="border-radius: 30px; display: none;">
                             Xóa
                         </button>
-                        {{-- <button id="add-selected-btn" class="btn btn-success" style="border-radius: 7px;">
-                            <a href="{{route('stocks.add')}}" class="text-white">
-                                <i class="fa fa-plus"></i>Tạo Tồn Kho</a>
-                        </button> --}}
                     </div>
                     <thead>
                         <tr>
@@ -128,9 +88,10 @@
                             <th scope="col">Danh Mục</th>
                             <th scope="col">Tên Sản Phẩm</th>
                             <th scope="col">Số Lượng </th>
+                            <th scope="col"> Tồn Khi Cập Nhật</th>
                             <th scope="col">Đơn Vị </th>
-                            <th scope="col">Trạng Thái</th>
-                            <th scope="col">Thao Tác</th>
+                            <th scope="col">Loại Phiếu </th>
+                            <th scope="col">Ngày </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -139,14 +100,18 @@
                     <tfoot>
                         <tr>
                             <th></th>
-                            <th></th>
+                            <th>
+                                <input class="form-check-input check-all" type="checkbox" id="select-all-stocks"
+                                    value="" aria-label="...">
+                            </th>
                             <th scope="col">Kho</th>
                             <th scope="col">Danh Mục</th>
                             <th scope="col">Tên Sản Phẩm</th>
                             <th scope="col">Số Lượng </th>
+                            <th scope="col"> Tồn Khi Cập Nhật</th>
                             <th scope="col">Đơn Vị </th>
-                            <th scope="col">Trạng Thái</th>
-                            <th scope="col">Thao Tác</th>
+                            <th scope="col">Loại Phiếu </th>
+                            <th scope="col">Ngày </th>
                         </tr>
                     </tfoot>
                 </table>
@@ -228,11 +193,13 @@
                     }
                 },
                 ajax: {
-                    url: '{{ route('stocks.index') }}',
+                    url: '{{ route('stocks.indexhts') }}',
                     type: 'GET',
                     data: function (d) {
                         // d.start_date = $('#taskStartDate').val();
                         d.warehouse_id   = $('#warehouseID').val() || '';
+                        d.date_id   = $('#date').val() || '';
+                        d.to   = $('#to').val() || '';
                     }
                 },
                 columns: [
@@ -266,18 +233,25 @@
                     },
                   
                     {
-                        data: 'quantity',
-                        name: 'quantity'
+                        data: 'quantity_changed',
+                        name: 'quantity_changed'
+                    },
+                    {
+                        data: 'balance_after',
+                        name: 'balance_after'
                     },
                       {
                         data: 'unit',
                         name: 'unit'
                     },
                     {
-                        data: 'status',
-                        name: 'status'
+                        data: 'type',
+                        name: 'type'
                     },
-                    { data: 'action', name: 'action', orderable: false, searchable: false }
+                    {
+                        data: 'date',
+                        name: 'date'
+                    },
                 ],
                 rowCallback: function(row, data) {
                     $(row).attr('data-id', data.id);
@@ -289,7 +263,7 @@
                 const v = this.value;
                 t = setTimeout(() => dataTable.search(v).draw(), 250);
             });
-            $('#warehouseID').on('change', function () {
+            $('#warehouseID','#date','#to').on('change', function () {
                 dataTable.ajax.reload(null, true);
             });
             $('#select-all-stocks').on('change', function() {

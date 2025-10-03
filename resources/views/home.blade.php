@@ -10,7 +10,7 @@
                 <!-- Dashboard View -->
                 <div id="dashboard-view" class="view">
                     <div class="page-header">
-                        <h2>Tổng quan vườn cây</h2>
+                        <h3>Tổng Quan Vườn Cây</h3>
                         <p>Theo dõi tình trạng tổng thể của vườn cây</p>
                     </div>
 
@@ -159,81 +159,11 @@
                         </div>
                     </div>
                     <div class="page-header">
-                        <h2>Tổng Quan Sản Lượng</h2>
+                        <h3>Tổng Quan Sản Lượng</h3>
                         <p>Theo dõi quá trình thu mua và khai thác</p>
                     </div>
                     <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-header">
-                                <i class="fa-regular fa-warehouse-full" style="color: #059669;padding-right: 5px;"></i>
-                                <span class="stat-title">Tổng Sản Lượng Mủ Thu Mua</span>
-                            </div>
-                            <div class="card-body">
-                                <canvas id="rubberDonut">
-                                </canvas>
-                            </div>
-                        </div>
-                        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-                        <script>
-                            document.addEventListener("DOMContentLoaded", function () {
-                            const ctx = document.getElementById('rubberDonut').getContext('2d');
-                            const labels = @json($byType->pluck('product_name'));
-                            const data   = (@json($byType->pluck('total_qty'))).map(v => Number(v) || 0);
-                            const totalRubber = data.reduce((a, b) => a + b, 0);
-                            // Plugin: 2 dòng text ở giữa
-                            const centerText = {
-                                id: 'centerText',
-                                afterDraw(chart) {
-                                const {ctx, chartArea: {left, top, width, height}} = chart;
-                                const cx = left + width / 2;
-                                const cy = top + height / 2;
-
-                                ctx.save();
-                                ctx.textAlign = 'center';
-                                ctx.textBaseline = 'middle';
-                                // Dòng 1: tiêu đề
-                                ctx.fillStyle = '#6b7280';
-                                ctx.font = `${Math.min(width, height) / 5}px sans-serif`;
-                                // ctx.fillText('Tổng', cx, cy - 5);
-                                // Dòng 2: giá trị
-                                ctx.fillStyle = '#111827';
-                                ctx.font = `${Math.min(width, height) / 9}px sans-serif`;
-                                const formatted = new Intl.NumberFormat('vi-VN').format(totalRubber) + ' Kg';
-                                ctx.fillText(formatted, cx, cy + 9);
-                                ctx.restore();
-                                }
-                            };
-                            new Chart(ctx, {
-                                type: 'doughnut',
-                                data: {
-                                labels,
-                                datasets: [{
-                                    data,
-                                    backgroundColor: ['#059669','#22c55e','#eab308','#ef4444','#3b82f6','#8b5cf6','#ec4899','#14b8a6'],
-                                    borderWidth: 1
-                                }]
-                                },
-                                options: {
-                                responsive: true,
-                                cutout: '70%',
-                                plugins: {
-                                    legend: { position: 'right' },
-                                    tooltip: {
-                                    callbacks: {
-                                        label: function (context) {
-                                        const value = Number(context.raw) || 0;
-                                        const percent = totalRubber > 0 ? (value / totalRubber * 100).toFixed(1) : 0;
-                                        return `${context.label}: ${new Intl.NumberFormat('vi-VN').format(value)} (${percent}%)`;
-                                        }
-                                    }
-                                    }
-                                }
-                                },
-                                plugins: [centerText]
-                            });
-                            });
-                        </script>
-
+                        {{-- CARD: TỔNG SẢN LƯỢNG KHAI THÁC --}}
                         <div class="stat-card">
                             <div class="stat-header">
                                 <i class="fas fa-basket-shopping stat-icon"
@@ -241,70 +171,192 @@
                                 <span class="stat-title">Tổng Sản Lượng Khai Thác</span>
                             </div>
                             <div class="card-body">
+                                <div class="mini-filter" style="display:flex;gap:.5rem;align-items:center;">
+                                    <div class="form-control">
+                                        <label class="form-label" for="purchaseFrom">Từ Ngày</label>
+                                        <input type="date" id="harvestFrom"
+                                            value="{{ optional($fromDate)->toDateString() }}" class="form-control">
+                                    </div>
+                                    <div class="form-control">
+                                        <label class="form-label" for="purchaseFrom">Đến Ngày</label>
+                                        <input type="date" id="harvestTo"
+                                            value="{{ optional($toDate)->toDateString() }}" class="form-control">
+                                    </div>
+                                    <button id="harvestApply" class="btn btn-sm btn-primary">Lọc</button>
+                                </div>
                                 <canvas id="harvestDonut"></canvas>
                             </div>
                         </div>
-                        <script>
-                            document.addEventListener("DOMContentLoaded", function () {
-                                const ctx = document.getElementById('harvestDonut').getContext('2d');
-                                const labels = @json($harvestByProduct->pluck('product_name'));
-                                const data   = (@json($harvestByProduct->pluck('total_qty'))).map(v => Number(v) || 0);
-                                const totalHarvest = data.reduce((a, b) => a + b, 0);
-                                const centerText = {
-                                    id: 'centerText',
-                                    afterDraw(chart) {
-                                        const {ctx, chartArea: {left, top, width, height}} = chart;
-                                        const cx = left + width / 2;
-                                        const cy = top + height / 2;
-                                        ctx.save();
-                                        ctx.textAlign = 'center';
-                                        ctx.textBaseline = 'middle';
-                                        // dòng 1
-                                        ctx.fillStyle = '#6b7280';
-                                        ctx.font = `${Math.min(width, height) / 5}px sans-serif`;
-                                        // ctx.fillText('Tổng', cx, cy - 5);
-                                        // dòng 2
-                                        ctx.fillStyle = '#111827';
-                                        ctx.font = `${Math.min(width, height) / 9}px sans-serif`;
-                                        const formatted = new Intl.NumberFormat('vi-VN').format(totalHarvest) + ' Kg';
-                                        ctx.fillText(formatted, cx, cy + 9);
-                                        ctx.restore();
-                                    }
-                                };
-                                new Chart(ctx, {
-                                    type: 'doughnut',
-                                    data: {
-                                        labels: labels,
-                                        datasets: [{
-                                            data: data,
-                                            backgroundColor: [
-                                                '#059669','#22c55e','#eab308','#ef4444',
-                                                '#3b82f6','#8b5cf6','#ec4899','#14b8a6'
-                                            ],
-                                            borderWidth: 1
-                                        }]
-                                    },
-                                    options: {
-                                        responsive: true,
-                                        cutout: '70%',
-                                        plugins: {
-                                            legend: { position: 'right' },
-                                            tooltip: {
-                                                callbacks: {
-                                                    label: function (context) {
-                                                        const value = Number(context.raw) || 0;
-                                                        const percent = totalHarvest > 0 ? (value / totalHarvest * 100).toFixed(1) : 0;
-                                                        return `${context.label}: ${new Intl.NumberFormat('vi-VN').format(value)} (${percent}%)`;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    },
-                                    plugins: [centerText]
-                                });
-                            });
-                        </script>
+                        {{-- CARD: TỔNG SẢN LƯỢNG MỦ THU MUA --}}
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <i class="fa-regular fa-warehouse-full" style="color:#059669;padding-right:5px;"></i>
+                                <span class="stat-title">Tổng Sản Lượng Mủ Thu Mua</span>
+                            </div>
+                            <div class="mini-filter" style="display:flex;gap:.5rem;align-items:center;">
+                                <div class="form-control">
+                                    <label class="form-label" for="purchaseFrom">Từ Ngày</label>
+                                    <input type="date" id="purchaseFrom"
+                                        value="{{ optional($fromDate)->toDateString() }}" class="form-control">
+                                </div>
+                                <div class="form-control">
+                                    <label class="form-label" for="purchaseTo">Đến Ngày</label>
+                                    <input type="date" id="purchaseTo" value="{{ optional($toDate)->toDateString() }}"
+                                        class="form-control">
+                                </div>
+                                <button id="purchaseApply" class="btn btn-sm btn-primary">Lọc</button>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="rubberDonut"></canvas>
+                            </div>
+                        </div>
                     </div>
+
+                    {{-- Chỉ include 1 lần Chart.js trong trang --}}
+                    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                    <script>
+                        document.addEventListener("DOMContentLoaded", function () {
+                        // ===== Tham số endpoint JSON =====
+                        const purchaseUrl = @json(route('dashboard.purchaseSummary'));
+                        const harvestUrl  = @json(route('dashboard.harvestSummary'));
+
+                        // ===== Plugin text tổng ở giữa (tự tính theo dataset hiện tại) =====
+                        const centerTotalText = {
+                            id: 'centerTotalText',
+                            afterDraw(chart) {
+                            const { ctx, chartArea } = chart;
+                            if (!chartArea) return;
+                            const { left, top, width, height } = chartArea;
+                            const sum = (chart.data.datasets?.[0]?.data || [])
+                                .reduce((a, b) => a + (Number(b) || 0), 0);
+                            const cx = left + width / 2;
+                            const cy = top + height / 2;
+
+                            ctx.save();
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillStyle = '#111827';
+                            ctx.font = `${Math.min(width, height) / 9}px sans-serif`;
+                            ctx.fillText(new Intl.NumberFormat('vi-VN').format(sum) + ' Kg', cx, cy + 9);
+                            ctx.restore();
+                            }
+                        };
+
+                        // ===== Bảng màu dùng chung =====
+                        const COLORS = ['#059669','#22c55e','#eab308','#ef4444','#3b82f6','#8b5cf6','#ec4899','#14b8a6'];
+
+                        //  1) Donut Thu Mua (khởi tạo với dữ liệu ban đầu từ server) 
+                        const purchaseCtx = document.getElementById('rubberDonut').getContext('2d');
+                        const purchaseChart = new Chart(purchaseCtx, {
+                            type: 'doughnut',
+                            data: {
+                            labels: @json($byType->pluck('product_name')),
+                            datasets: [{
+                                data: (@json($byType->pluck('total_qty'))).map(v => Number(v) || 0),
+                                backgroundColor: COLORS,
+                                borderWidth: 1
+                            }]
+                            },
+                            options: {
+                            responsive: true,
+                            cutout: '70%',
+                            plugins: {
+                                legend: { position: 'right' },
+                                tooltip: {
+                                callbacks: {
+                                    label: function (ctx) {
+                                    const value = Number(ctx.raw) || 0;
+                                    const total = (ctx.chart.data.datasets[0].data || [])
+                                        .reduce((a, b) => a + (Number(b)||0), 0);
+                                    const percent = total > 0 ? (value/total*100).toFixed(1) : 0;
+                                    return `${ctx.label}: ${new Intl.NumberFormat('vi-VN').format(value)} (${percent}%)`;
+                                    }
+                                }
+                                }
+                            }
+                            },
+                            plugins: [centerTotalText]
+                        });
+
+                        async function reloadPurchase() {
+                            const from = document.getElementById('purchaseFrom').value;
+                            const to   = document.getElementById('purchaseTo').value;
+
+                            const url = new URL(purchaseUrl, window.location.origin);
+                            if (from) url.searchParams.set('from', from);
+                            if (to)   url.searchParams.set('to', to);
+
+                            const res = await fetch(url.toString());
+                            const json = await res.json();
+                            if (!json.ok) return;
+
+                            purchaseChart.data.labels = json.labels || [];
+                            purchaseChart.data.datasets[0].data = (json.data || []).map(v => Number(v) || 0);
+                            purchaseChart.update();
+                        }
+
+                        document.getElementById('purchaseApply').addEventListener('click', reloadPurchase);
+                        ['purchaseFrom','purchaseTo'].forEach(id => {
+                            document.getElementById(id).addEventListener('keyup', e => { if (e.key === 'Enter') reloadPurchase(); });
+                        });
+
+                        //  2) Donut Khai Thác (khởi tạo với dữ liệu ban đầu từ server) 
+                        const harvestCtx = document.getElementById('harvestDonut').getContext('2d');
+                        const harvestChart = new Chart(harvestCtx, {
+                            type: 'doughnut',
+                            data: {
+                            labels: @json($harvestByProduct->pluck('product_name')),
+                            datasets: [{
+                                data: (@json($harvestByProduct->pluck('total_qty'))).map(v => Number(v) || 0),
+                                backgroundColor: COLORS,
+                                borderWidth: 1
+                            }]
+                            },
+                            options: {
+                            responsive: true,
+                            cutout: '70%',
+                            plugins: {
+                                legend: { position: 'right' },
+                                tooltip: {
+                                callbacks: {
+                                    label: function (ctx) {
+                                    const value = Number(ctx.raw) || 0;
+                                    const total = (ctx.chart.data.datasets[0].data || [])
+                                        .reduce((a, b) => a + (Number(b)||0), 0);
+                                    const percent = total > 0 ? (value/total*100).toFixed(1) : 0;
+                                    return `${ctx.label}: ${new Intl.NumberFormat('vi-VN').format(value)} (${percent}%)`;
+                                    }
+                                }
+                                }
+                            }
+                            },
+                            plugins: [centerTotalText]
+                        });
+
+                        async function reloadHarvest() {
+                            const from = document.getElementById('harvestFrom').value;
+                            const to   = document.getElementById('harvestTo').value;
+
+                            const url = new URL(harvestUrl, window.location.origin);
+                            if (from) url.searchParams.set('from', from);
+                            if (to)   url.searchParams.set('to', to);
+
+                            const res = await fetch(url.toString());
+                            const json = await res.json();
+                            if (!json.ok) return;
+
+                            harvestChart.data.labels = json.labels || [];
+                            harvestChart.data.datasets[0].data = (json.data || []).map(v => Number(v) || 0);
+                            harvestChart.update();
+                        }
+
+                        document.getElementById('harvestApply').addEventListener('click', reloadHarvest);
+                        ['harvestFrom','harvestTo'].forEach(id => {
+                            document.getElementById(id).addEventListener('keyup', e => { if (e.key === 'Enter') reloadHarvest(); });
+                        });
+                        });
+                    </script>
+
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-header">
@@ -372,43 +424,43 @@
                         </div>
                         <script>
                             document.addEventListener('DOMContentLoaded', () => {
-  const ctx = document.getElementById('purchaseMonthlyLine').getContext('2d');
-  const labels = @json($labelsPurchase);
-  const purchase = (@json($dataMonthlyPurchase)).map(v => Number(v) || 0);
+                            const ctx = document.getElementById('purchaseMonthlyLine').getContext('2d');
+                            const labels = @json($labelsPurchase);
+                            const purchase = (@json($dataMonthlyPurchase)).map(v => Number(v) || 0);
 
-  new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'Thu mua',
-        data: purchase,
-        fill: false,
-        tension: 0.3,
-        pointRadius: 3,
-        borderWidth: 2
-        // không set màu → để Chart.js tự chọn
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: true },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => ' ' + new Intl.NumberFormat('vi-VN').format(Number(ctx.parsed.y)||0)
-          }
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { callback: v => new Intl.NumberFormat('vi-VN').format(v) }
-        }
-      }
-    }
-  });
-});
+                            new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                labels,
+                                datasets: [{
+                                    label: 'Thu mua',
+                                    data: purchase,
+                                    fill: false,
+                                    tension: 0.3,
+                                    pointRadius: 3,
+                                    borderWidth: 2
+                                    // không set màu → để Chart.js tự chọn
+                                }]
+                                },
+                                options: {
+                                responsive: true,
+                                plugins: {
+                                    legend: { display: true },
+                                    tooltip: {
+                                    callbacks: {
+                                        label: (ctx) => ' ' + new Intl.NumberFormat('vi-VN').format(Number(ctx.parsed.y)||0)
+                                    }
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                    beginAtZero: true,
+                                    ticks: { callback: v => new Intl.NumberFormat('vi-VN').format(v) }
+                                    }
+                                }
+                                }
+                            });
+                            });
                         </script>
                     </div>
                 </div>
@@ -653,487 +705,6 @@
     </div>
 </section>
 
-{{-- <script>
-    document.addEventListener("DOMContentLoaded", function() {
-            fetch("/farm-vehicle-statistics")
-                .then(response => response.json())
-                .then(data => {
-                    const legendMargin = {
-                        id: 'legendMargin',
-                        beforeInit(chart, legend, options) {
-                            let fitValue = chart.legend.fit;
-                            chart.legend.fit = function fit() {
-                                fitValue.bind(chart.legend)();
-                                return this.height += options.paddingTop;
-                            }
-                        },
-                        defaults: {
-                            paddingTop: 0 
-                        }
-                    };
-                   
-                    // === Biểu đồ Lô Hàng ===
-                    const validBatches = data.batches.filter(item => item.month !== null);
-
-                    const batchMonths = validBatches.map(item => item.month).sort((a, b) => a - b);
-
-                    const totalBatches = batchMonths.map(month => {
-                        const item = data.batches.find(b => b.month == month);
-                        return item ? item.total_batches : 0;
-                    });
-
-                    const completedBatches = batchMonths.map(month => {
-                        const item = data.batches.find(b => b.month == month);
-                        return item ? item.completed_batches : 0;
-                    });
-
-                    const pendingBatches = batchMonths.map(month => {
-                        const item = data.batches.find(b => b.month == month);
-                        return item ? item.pending_batches : 0;
-                    });
-                    const isSingleBar = batchMonths.length === 1;
-
-                    const ctxBatch = document.getElementById("batchChart");
-                    if (ctxBatch) {
-                        new Chart(ctxBatch, {
-                            type: "bar",
-                            data: {
-                                labels: batchMonths.map(m => `Tháng ${m}`),
-                                datasets: [{
-                                        label: "Đã kiểm nghiệm",
-                                        data: completedBatches,
-                                        backgroundColor: "rgba(75, 192, 75, 0.6)",
-                                        borderColor: "rgba(75, 192, 75, 1)",
-                                        borderWidth: 1,
-                                        barPercentage: isSingleBar ? 0.4 : 0.7,
-                                        categoryPercentage: isSingleBar ? 0.5 : 0.8,
-                                    },
-                                    {
-                                        label: "Chưa kiểm nghiệm",
-                                        data: pendingBatches,
-                                        backgroundColor: "rgba(178, 191, 199, 100)",
-                                        borderColor: "rgba(178, 191, 199, 1)",
-                                        borderWidth: 1,
-                                        barPercentage: isSingleBar ? 0.4 : 0.7,
-                                        categoryPercentage: isSingleBar ? 0.5 : 0.8,
-                                    }
-                                ]
-                            },
-                            options: {
-                                responsive: true,
-                                scales: {
-                                    x: {
-
-                                        stacked: true, // ✅ gộp cột theo chiều ngang
-                                        ticks: {
-                                            font: {
-                                                size: 16
-                                            }
-                                        }
-                                    },
-                                    y: {
-
-                                        stacked: true, // ✅ gộp cột theo chiều dọc
-                                        beginAtZero: true
-                                    }
-                                },
-                                plugins: {
-                                    legendMargin: { // <-- Set option of custom plugin
-                                        paddingTop: 20 // <---- override the default value
-                                    },
-                                    legend: {
-                                        onClick: (event) => {
-                                            event.preventDefault();
-                                        },
-                                    },
-                                    datalabels: {
-                                        color: 'white',
-                                        anchor: 'center',
-                                        align: 'center',
-                                        font: (context) => {
-                                            return {
-                                                size: window.innerWidth <= 768 ? 10 : 14
-                                            };
-                                        },
-                                        offset: -2,
-                                        formatter: (value) => {
-                                            return Number(value) === 0 ? null : value;
-                                        }
-                                    }
-                                },
-                            },
-                            // plugins: [generateTextLabelPlugin(14, '#fff')]
-                            plugins: [legendMargin, ChartDataLabels]
-                        });
-                    }
-
-
-                    // Hợp đồng - khách hàng
-                    const contractCount = data.countContractWithCustomers.contracts;
-
-                    const customerCount = data.countContractWithCustomers.customers;
-                    const contractCustomer = document.getElementById("barChartContractCustomer");
-                    if (contractCustomer) {
-                        new Chart(contractCustomer, {
-                            type: "bar",
-                            data: {
-                                labels: ["", ""], // 🔹 Gán labels rỗng để không hiển thị trên trục X
-                                datasets: [{
-                                        label: "Hợp Đồng",
-                                        data: [contractCount, 0], // Chỉ có dữ liệu cho Hợp Đồng
-                                        backgroundColor: "rgba(75, 192, 75, 0.6)",
-                                        borderColor: "rgba(75, 192, 75, 1)",
-                                        // borderWidth: 1,
-                                        barPercentage: 5, // Điều chỉnh độ rộng cột (giá trị từ 0 đến 1)
-                                        categoryPercentage: 0.1 // Điều chỉnh khoảng cách giữa các cột
-                                    },
-                                    {
-                                        label: "Khách Hàng",
-                                        data: [0, customerCount], // Chỉ có dữ liệu cho Khách Hàng
-                                        backgroundColor: "rgba(255, 99, 132, 0.6)", // Đỏ hồng
-                                        borderColor: "rgba(255, 99, 132, 1)",
-                                        // borderWidth: 1,
-                                        barPercentage: 5, // Điều chỉnh độ rộng cột (giá trị từ 0 đến 1)
-                                        categoryPercentage: 0.1 // Điều chỉnh khoảng cách giữa các cột
-                                    },
-                                ],
-                            },
-                            options: {
-                                responsive: true,
-                                scales: {
-
-                                    y: {
-                                        beginAtZero: true,
-                                        ticks: {
-                                            autoSkip: true, // Tự động bỏ bớt nếu có quá nhiều giá trị
-                                        },
-                                    }
-                                },
-                                plugins: {
-                                    legendMargin: { // <-- Set option of custom plugin
-                                        paddingTop: 20 // <---- override the default value
-                                    },
-                                    legend: {
-                                        onClick: (event) => {
-                                            event.preventDefault(); // Chặn event click
-                                        },
-                                    },
-                                    datalabels: {
-                                        color: (context) => {
-                                            return window.innerWidth <= 768 ? 'black' :
-                                                'white';
-                                        },
-                                        anchor: (context) => {
-                                            // Dynamically set anchor based on screen width
-                                            return window.innerWidth <= 768 ? 'end' :
-                                                'center'; // center on mobile
-                                        },
-                                        align: (context) => {
-                                            // Dynamically set align based on screen width
-                                            return window.innerWidth <= 768 ? 'top' :
-                                                'center'; // center on mobile
-                                        },
-                                        font: {
-                                            size: 14
-                                        },
-                                        offset: -2,
-                                        formatter: (value) => {
-                                            return Number(value) === 0 ? null : value;
-                                        }
-
-                                    }
-                                },
-                            },
-                            // plugins: [generateTextLabelPlugin(14, '#fff'), ]
-                            plugins: [legendMargin, ChartDataLabels]
-                        });
-                    }
-
-                    // === Biểu đồ số chuyến theo loại mủ từ từng nông trường ===
-                    const results = data.countTripByTypeOfPusFromPlantation.results;
-
-                    // Gom dữ liệu: { [farm_name]: { [name_pus]: total_trip } }
-                    const groupedData = {};
-                    results.forEach(item => {
-                        const farm = item.farm_code;
-                        const pus = item.name_pus;
-                        const total = item.total_pus;
-
-                        if (!groupedData[farm]) {
-                            groupedData[farm] = {};
-                        }
-                        groupedData[farm][pus] = total;
-                    });
-                    // Lấy danh sách nông trường
-                    const farmNames = Object.keys(groupedData);
-                    // Hàm tạo màu ngẫu nhiên dạng rgba
-                    function getColorMap(pusNames, opacity = 0.7) {
-                        const baseColors = [
-                            `rgba(75, 192, 75, ${opacity})`,
-                            `rgba(255, 159, 64, ${opacity})`,
-                            `rgba(255, 99, 132, ${opacity})`,
-                            `rgba(54, 162, 235, ${opacity})`,
-                            `rgba(255, 205, 86, ${opacity})`,
-                            `rgba(153, 102, 255, ${opacity})`,
-                            `rgba(100, 200, 100, ${opacity})`,
-                            `rgba(201, 203, 207, ${opacity})`,
-                        ];
-
-                        const map = {};
-                        let colorIndex = 0;
-                        pusNames.forEach(pus => {
-                            map[pus] = baseColors[colorIndex] || getRandomColor(opacity);
-                            colorIndex++;
-                        });
-
-                        return map;
-                    }
-
-
-                    function getRandomColor(opacity = 0.7) {
-                        const min = 60;
-                        const max = 200;
-                        const r = Math.floor(Math.random() * (max - min + 1)) + min;
-                        const g = Math.floor(Math.random() * (max - min + 1)) + min;
-                        const b = Math.floor(Math.random() * (max - min + 1)) + min;
-                        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-                    }
-                    // Lấy danh sách tất cả loại mủ (để đảm bảo đúng thứ tự cột)
-                    const pusNames = [...new Set(results.map(item => item.name_pus))];
-                    const colorMap = getColorMap(pusNames);
-                    // Xóa cache giữ cố định 1 màu cho các loại mủ
-                    localStorage.removeItem('pusColorMap');
-
-                    // Tạo datasets cho từng loại mủ
-                    const datasets = pusNames.map(pus => {
-                        return {
-                            label: pus,
-                            data: farmNames.map(farm => groupedData[farm][pus] || 0),
-                            backgroundColor: colorMap[pus] || 'rgba(201, 203, 207, 0.7)',
-
-                        };
-                    });
-
-                    let chartInstance = null;
-
-
-                    function createChart() {
-                        const ctxTrips = document.getElementById("tripTypeOfPusPlantationChart");
-
-                        if (ctxTrips) {
-                            const isMobile = window.innerWidth <= 768; // Kiểm tra kích thước màn hình
-                            const isSingleFarm = farmNames.length === 1;
-
-                            if (isMobile) {
-                                ctxTrips.height = isSingleFarm ? 150 : farmNames.length * 80;
-                            } else {
-                                ctxTrips.height = isSingleFarm ? 200 : 200;
-                            }
-
-                            const indexAxis = isMobile ? 'y' : 'x';
-
-                            const scales = {
-                                x: {
-                                    stacked: true,
-                                    ...(indexAxis === 'x' && {
-                                        title: {
-                                            display: true,
-                                            text: 'Nông Trường - Đơn vị',
-                                            font: {
-                                                weight: 'bold',
-                                                size: isMobile ? 10 : 14
-                                            }
-                                        }
-                                    })
-                                },
-                                y: {
-                                    stacked: true,
-                                    beginAtZero: true,
-                                    ...(indexAxis === 'y' && {
-                                        title: {
-                                            display: true,
-                                            text: 'Nông Trường - Đơn vị',
-                                            font: {
-                                                weight: 'bold',
-                                                size: isMobile ? 10 : 14
-                                            }
-                                        }
-                                    })
-                                }
-                            };
-                            if (chartInstance) {
-                                chartInstance.destroy();
-                            }
-                            chartInstance = new Chart(ctxTrips, {
-                                type: "bar",
-                                data: {
-                                    labels: farmNames,
-                                    datasets: datasets,
-                                },
-                                options: {
-                                    responsive: true,
-                                    scales: scales,
-                                    indexAxis: indexAxis,
-                                    elements: {
-                                        bar: {
-                                            maxBarThickness: isSingleFarm ? 30 : 60
-                                        }
-                                    },
-                                    plugins: {
-                                        legendMargin: { // <-- Set option of custom plugin
-                                            paddingTop: 20 // <---- override the default value
-                                        },
-                                        legend: {
-                                            onClick: (event) => {
-                                                event.preventDefault();
-                                            },
-                                        },
-                                        datalabels: {
-                                            color: 'white',
-                                            anchor: 'center',
-                                            align: 'center',
-                                            font: (context) => {
-                                                return {
-                                                    size: window.innerWidth <= 768 ? 10 : 12
-                                                };
-                                            },
-
-                                            offset: -2,
-                                            formatter: (value) => {
-                                                return Number(value) === 0 ? null : value;
-                                            }
-                                        },
-                                        tooltip: {
-                                            mode: 'index',
-                                            // intersect: false,
-
-                                        },
-                                    },
-                                    categoryPercentage: isSingleFarm ? 0.4 : 0.7,
-                                    barPercentage: isSingleFarm ? 0.5 : 0.8,
-                                },
-                                // plugins: [generateTextLabelPlugin(14, '#fff')]
-                                plugins: [legendMargin, ChartDataLabels]
-                            });
-                            // Kiểm tra nếu biểu đồ đã tồn tại, hủy bỏ nó trước khi tạo mới
-
-                        }
-                    }
-
-                    const chartContainer = document.getElementById("tripTypeOfPusPlantationChart");
-
-                    // Hàm debounce
-                    function debounce(func, wait = 200) {
-                        let timeout;
-                        return function(...args) {
-                            clearTimeout(timeout);
-                            timeout = setTimeout(() => func.apply(this, args), wait);
-                        };
-                    }
-
-                    // Tạo biểu đồ ban đầu
-                    createChart();
-
-                    // Debounce resize window, tránh gọi liên tục
-                    const debouncedCreateChart = debounce(createChart, 300);
-                    window.addEventListener('resize', debouncedCreateChart);
-
-                    // === Biểu đồ danh sách lô hàng ===
-                    const totalBatche = data.countBatchesCreateConnect.totalBatches;
-                    const linkedBatches = data.countBatchesCreateConnect.linkedBatches;
-                    const createConnectBatches = document.getElementById("listbatchChart");
-                    if (createConnectBatches) {
-                        new Chart(createConnectBatches, {
-                            type: "bar",
-                            data: {
-                                labels: ["", ""], // 🔹 Gán labels rỗng để không hiển thị trên trục X
-                                datasets: [{
-                                        label: "Đã tạo",
-                                        data: [totalBatche, 0], // Chỉ có dữ liệu cho Hợp Đồng
-                                        backgroundColor: "rgba(75, 192, 75, 0.6)",
-                                        borderColor: "rgba(75, 192, 75, 1)",
-                                        // borderWidth: 1,
-                                        barPercentage: 5, // Điều chỉnh độ rộng cột (giá trị từ 0 đến 1)
-                                        categoryPercentage: 0.1 // Điều chỉnh khoảng cách giữa các cột
-                                    },
-                                    {
-                                        label: "Đã liên kết",
-                                        data: [0,
-                                            linkedBatches
-                                        ], // Chỉ có dữ liệu cho Khách Hàng
-                                        backgroundColor: "rgba(255, 99, 132, 0.6)", // Đỏ hồng
-                                        borderColor: "rgba(255, 99, 132, 1)",
-                                        // borderWidth: 1,
-                                        barPercentage: 5, // Điều chỉnh độ rộng cột (giá trị từ 0 đến 1)
-                                        categoryPercentage: 0.1 // Điều chỉnh khoảng cách giữa các cột
-                                    },
-                                ],
-                            },
-                            options: {
-                                responsive: true,
-                                scales: {
-
-                                    y: {
-                                        beginAtZero: true,
-                                        ticks: {
-                                            autoSkip: true, // Tự động bỏ bớt nếu có quá nhiều giá trị
-                                        },
-                                    }
-                                },
-                                plugins: {
-                                    legendMargin: { // <-- Set option of custom plugin
-                                        paddingTop: 20 // <---- override the default value
-                                    },
-                                    legend: {
-                                        onClick: (event) => {
-                                            event.preventDefault(); // Chặn event click
-                                        },
-                                    },
-                                    datalabels: {
-                                        color: (context) => {
-                                            return window.innerWidth <= 768 ? 'black' :
-                                                'white';
-                                        },
-                                        anchor: (context) => {
-                                            // Dynamically set anchor based on screen width
-                                            return window.innerWidth <= 768 ? 'end' :
-                                                'center'; // center on mobile
-                                        },
-                                        align: (context) => {
-                                            // Dynamically set align based on screen width
-                                            return window.innerWidth <= 768 ? 'top' :
-                                                'center'; // center on mobile
-                                        },
-                                        font: {
-                                            size: 14
-                                        },
-                                        offset: -2,
-                                        formatter: (value) => {
-                                            return Number(value) === 0 ? null : value;
-                                        }
-
-                                    }
-                                },
-                            },
-                            // plugins: [generateTextLabelPlugin(14, '#fff'), ]
-                            plugins: [legendMargin, ChartDataLabels]
-                        });
-                    }
-
-                });
-
-        });
-</script> --}}
-{{-- @hasanyrole('Admin|Nông Trường|Xem Nông Trường')
-<div class="card">
-    <div class="card-header">
-        <div class="card-body">
-            <h4 style="text-align: center">Biểu đồ Xe và Nông Trường</h4>
-            <canvas id="farmVehicleChart"></canvas>
-        </div>
-    </div>
-</div>
-@endhasanyrole --}}
 @hasanyrole('Admin|Nông Trường|Xem Nông Trường')
 <div class="card">
     <div class="card-header">
@@ -1206,6 +777,7 @@
 
     /* Stats Grid */
     .stats-grid {
+        text-align: center;
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 1.5rem;
@@ -1220,7 +792,7 @@
     }
 
     .stat-header {
-        display: flex;
+        /* display: flex; */
         justify-content: between;
         align-items: center;
         margin-bottom: 1rem;
@@ -1568,6 +1140,34 @@
     /* Hidden class for view switching */
     .hidden {
         display: none;
+    }
+
+    @media(max-width: 500px) {
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .mini-filter {
+            display: block !important;
+        }
+
+        .form-control {
+            margin-top: 4px;
+        }
+
+        #harvestApply {
+            width: 100%;
+            margin-top: 3px;
+        }
+
+        #purchaseApply {
+            width: 100%;
+            margin-top: 3px;
+        }
+
     }
 </style>
 @endsection

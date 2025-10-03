@@ -115,7 +115,7 @@
                             <div class="form-group">
                                 <label class="form-label">Lô</label>
                                 <select class="form-select" id="task_lot">
-                                    <option value="">-- Tất cả --</option>
+                                    <option value="">Tất cả</option>
                                     @foreach($plots as $p)
                                     <option value="{{ $p->id }}">{{ $p->plotName }}</option>
                                     @endforeach

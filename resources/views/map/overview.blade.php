@@ -555,7 +555,7 @@
     gap: 6px;
     align-items: center;
     position: absolute;
-    z-index: 10;
+    z-index: 1;
     top: 8px;
     left: 0px;
     background: #ffffffd9;

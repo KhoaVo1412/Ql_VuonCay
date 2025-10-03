@@ -53,4 +53,8 @@ class Picking extends Model
     {
         return $this->hasMany(ProductProposalPicking::class, 'pickingID', 'id');
     }
+    public function inventoryTransactions()
+    {
+        return $this->morphMany(InventoryTransaction::class, 'reference');
+    }
 }
